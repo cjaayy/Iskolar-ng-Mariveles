@@ -3,7 +3,11 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { HelpWidget } from "@/components/layout/HelpWidget";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <>
       <AppShell>{children}</AppShell>

@@ -75,8 +75,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             `}
             role="alert"
           >
-            <span className="flex-shrink-0 mt-0.5">{toastIcons[toast.type]}</span>
-            <p className="text-sm font-body text-foreground flex-1">{toast.message}</p>
+            <span className="flex-shrink-0 mt-0.5">
+              {toastIcons[toast.type]}
+            </span>
+            <p className="text-sm font-body text-foreground flex-1">
+              {toast.message}
+            </p>
             <button
               onClick={() => removeToast(toast.id)}
               className="flex-shrink-0 text-muted-fg hover:text-foreground transition-colors"

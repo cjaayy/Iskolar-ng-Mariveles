@@ -6,7 +6,7 @@
 
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, HelpCircle } from "lucide-react";
 
@@ -73,7 +73,9 @@ export function Button({
         <span className="flex-shrink-0">{leftIcon}</span>
       ) : null}
       {children}
-      {rightIcon && !isLoading && <span className="flex-shrink-0">{rightIcon}</span>}
+      {rightIcon && !isLoading && (
+        <span className="flex-shrink-0">{rightIcon}</span>
+      )}
     </button>
   );
 }
@@ -119,7 +121,9 @@ export function Input({
             ${error ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20" : "border-input-border"}
           `}
           aria-invalid={!!error}
-          aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
+          aria-describedby={
+            error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined
+          }
           {...props}
         />
         <label
@@ -137,13 +141,20 @@ export function Input({
         </label>
       </div>
       {error && (
-        <p id={`${inputId}-error`} className="mt-1.5 text-xs text-coral-400 font-body flex items-center gap-1" role="alert">
+        <p
+          id={`${inputId}-error`}
+          className="mt-1.5 text-xs text-coral-400 font-body flex items-center gap-1"
+          role="alert"
+        >
           <span className="inline-block w-1 h-1 rounded-full bg-coral-400" />
           {error}
         </p>
       )}
       {hint && !error && (
-        <p id={`${inputId}-hint`} className="mt-1.5 text-xs text-muted-fg font-body">
+        <p
+          id={`${inputId}-hint`}
+          className="mt-1.5 text-xs text-muted-fg font-body"
+        >
           {hint}
         </p>
       )}
@@ -158,7 +169,13 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
   error?: string;
 }
 
-export function Textarea({ label, error, className = "", id, ...props }: TextareaProps) {
+export function Textarea({
+  label,
+  error,
+  className = "",
+  id,
+  ...props
+}: TextareaProps) {
   const textareaId = id || label.toLowerCase().replace(/\s/g, "-");
 
   return (
@@ -188,7 +205,9 @@ export function Textarea({ label, error, className = "", id, ...props }: Textare
         {label}
       </label>
       {error && (
-        <p className="mt-1.5 text-xs text-coral-400 font-body" role="alert">{error}</p>
+        <p className="mt-1.5 text-xs text-coral-400 font-body" role="alert">
+          {error}
+        </p>
       )}
     </div>
   );
@@ -210,7 +229,12 @@ const cardPadding = {
   lg: "p-8",
 };
 
-export function Card({ children, className = "", hover = false, padding = "md" }: CardProps) {
+export function Card({
+  children,
+  className = "",
+  hover = false,
+  padding = "md",
+}: CardProps) {
   return (
     <div
       className={`
@@ -238,7 +262,8 @@ interface BadgeProps {
 
 const badgeStyles: Record<BadgeVariant, string> = {
   success: "bg-sage-100 text-sage-500 dark:bg-sage-500/20 dark:text-sage-300",
-  warning: "bg-amber-50 text-amber-500 dark:bg-amber-500/20 dark:text-amber-300",
+  warning:
+    "bg-amber-50 text-amber-500 dark:bg-amber-500/20 dark:text-amber-300",
   error: "bg-coral-50 text-coral-500 dark:bg-coral-500/20 dark:text-coral-300",
   info: "bg-ocean-50 text-ocean-400 dark:bg-ocean-400/20 dark:text-ocean-200",
   neutral: "bg-muted text-muted-fg",
@@ -252,7 +277,12 @@ const dotStyles: Record<BadgeVariant, string> = {
   neutral: "bg-muted-fg",
 };
 
-export function Badge({ variant = "neutral", children, className = "", dot = false }: BadgeProps) {
+export function Badge({
+  variant = "neutral",
+  children,
+  className = "",
+  dot = false,
+}: BadgeProps) {
   return (
     <span
       className={`
@@ -262,7 +292,9 @@ export function Badge({ variant = "neutral", children, className = "", dot = fal
         ${className}
       `}
     >
-      {dot && <span className={`w-1.5 h-1.5 rounded-full ${dotStyles[variant]}`} />}
+      {dot && (
+        <span className={`w-1.5 h-1.5 rounded-full ${dotStyles[variant]}`} />
+      )}
       {children}
     </span>
   );
@@ -307,9 +339,13 @@ export function ProgressBar({
     <div className={className}>
       {(label || showValue) && (
         <div className="flex justify-between items-center mb-1.5">
-          {label && <span className="text-sm font-body text-foreground">{label}</span>}
+          {label && (
+            <span className="text-sm font-body text-foreground">{label}</span>
+          )}
           {showValue && (
-            <span className="text-sm font-body font-medium text-muted-fg">{clampedValue}%</span>
+            <span className="text-sm font-body font-medium text-muted-fg">
+              {clampedValue}%
+            </span>
           )}
         </div>
       )}
@@ -323,7 +359,10 @@ export function ProgressBar({
       >
         <div
           className={`${progressColors[color]} ${progressTrackSize[size]} rounded-full transition-all duration-700 ease-out`}
-          style={{ width: `${clampedValue}%`, ["--progress-width" as string]: `${clampedValue}%` }}
+          style={{
+            width: `${clampedValue}%`,
+            ["--progress-width" as string]: `${clampedValue}%`,
+          }}
         />
       </div>
     </div>
@@ -351,10 +390,13 @@ export function CircularProgress({
 }: CircularProgressProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (Math.min(100, Math.max(0, value)) / 100) * circumference;
+  const offset =
+    circumference - (Math.min(100, Math.max(0, value)) / 100) * circumference;
 
   return (
-    <div className={`relative inline-flex items-center justify-center ${className}`}>
+    <div
+      className={`relative inline-flex items-center justify-center ${className}`}
+    >
       <svg width={size} height={size} className="transform -rotate-90">
         <circle
           cx={size / 2}
@@ -396,11 +438,21 @@ interface CheckboxProps {
   id?: string;
 }
 
-export function Checkbox({ checked, onChange, label, className = "", id }: CheckboxProps) {
-  const checkboxId = id || `checkbox-${Math.random().toString(36).substring(7)}`;
+export function Checkbox({
+  checked,
+  onChange,
+  label,
+  className = "",
+  id,
+}: CheckboxProps) {
+  const checkboxId =
+    id || `checkbox-${Math.random().toString(36).substring(7)}`;
 
   return (
-    <label htmlFor={checkboxId} className={`inline-flex items-center gap-2.5 cursor-pointer group ${className}`}>
+    <label
+      htmlFor={checkboxId}
+      className={`inline-flex items-center gap-2.5 cursor-pointer group ${className}`}
+    >
       <div className="relative">
         <input
           type="checkbox"
@@ -415,9 +467,10 @@ export function Checkbox({ checked, onChange, label, className = "", id }: Check
             flex items-center justify-center
             group-hover:border-ocean-300
             peer-focus-visible:ring-2 peer-focus-visible:ring-ocean-400/30
-            ${checked
-              ? "bg-ocean-400 border-ocean-400"
-              : "bg-input-bg border-input-border"
+            ${
+              checked
+                ? "bg-ocean-400 border-ocean-400"
+                : "bg-input-bg border-input-border"
             }
           `}
         >
@@ -440,7 +493,9 @@ export function Checkbox({ checked, onChange, label, className = "", id }: Check
         </div>
       </div>
       {label && (
-        <span className={`text-sm font-body select-none transition-colors ${checked ? 'text-foreground' : 'text-muted-fg'}`}>
+        <span
+          className={`text-sm font-body select-none transition-colors ${checked ? "text-foreground" : "text-muted-fg"}`}
+        >
           {label}
         </span>
       )}
@@ -457,9 +512,16 @@ interface ToggleProps {
   className?: string;
 }
 
-export function Toggle({ checked, onChange, label, className = "" }: ToggleProps) {
+export function Toggle({
+  checked,
+  onChange,
+  label,
+  className = "",
+}: ToggleProps) {
   return (
-    <label className={`inline-flex items-center gap-3 cursor-pointer ${className}`}>
+    <label
+      className={`inline-flex items-center gap-3 cursor-pointer ${className}`}
+    >
       <div className="relative">
         <input
           type="checkbox"
@@ -483,7 +545,9 @@ export function Toggle({ checked, onChange, label, className = "" }: ToggleProps
           `}
         />
       </div>
-      {label && <span className="text-sm font-body text-foreground">{label}</span>}
+      {label && (
+        <span className="text-sm font-body text-foreground">{label}</span>
+      )}
     </label>
   );
 }
@@ -497,8 +561,14 @@ interface SkeletonProps {
   height?: string | number;
 }
 
-export function Skeleton({ className = "", variant = "text", width, height }: SkeletonProps) {
-  const baseClasses = "bg-muted animate-shimmer bg-[length:200%_100%] bg-gradient-to-r from-muted via-card-bg to-muted";
+export function Skeleton({
+  className = "",
+  variant = "text",
+  width,
+  height,
+}: SkeletonProps) {
+  const baseClasses =
+    "bg-muted animate-shimmer bg-[length:200%_100%] bg-gradient-to-r from-muted via-card-bg to-muted";
 
   const variantClasses = {
     text: "rounded-md h-4",
@@ -583,7 +653,12 @@ export function Breadcrumb({ items, className = "" }: BreadcrumbProps) {
       <ol className="flex items-center gap-1.5 text-sm font-body">
         {items.map((item, i) => (
           <li key={i} className="flex items-center gap-1.5">
-            {i > 0 && <ChevronRight className="w-3.5 h-3.5 text-muted-fg" aria-hidden="true" />}
+            {i > 0 && (
+              <ChevronRight
+                className="w-3.5 h-3.5 text-muted-fg"
+                aria-hidden="true"
+              />
+            )}
             {item.href && i < items.length - 1 ? (
               <a
                 href={item.href}
@@ -592,7 +667,13 @@ export function Breadcrumb({ items, className = "" }: BreadcrumbProps) {
                 {item.label}
               </a>
             ) : (
-              <span className={i === items.length - 1 ? "text-foreground font-medium" : "text-muted-fg"}>
+              <span
+                className={
+                  i === items.length - 1
+                    ? "text-foreground font-medium"
+                    : "text-muted-fg"
+                }
+              >
                 {item.label}
               </span>
             )}
@@ -668,12 +749,22 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   error?: string;
 }
 
-export function Select({ label, options, error, className = "", id, ...props }: SelectProps) {
+export function Select({
+  label,
+  options,
+  error,
+  className = "",
+  id,
+  ...props
+}: SelectProps) {
   const selectId = id || label.toLowerCase().replace(/\s/g, "-");
 
   return (
     <div className={className}>
-      <label htmlFor={selectId} className="block text-sm font-body font-medium text-foreground mb-1.5">
+      <label
+        htmlFor={selectId}
+        className="block text-sm font-body font-medium text-foreground mb-1.5"
+      >
         {label}
       </label>
       <select
@@ -695,7 +786,9 @@ export function Select({ label, options, error, className = "", id, ...props }: 
         ))}
       </select>
       {error && (
-        <p className="mt-1.5 text-xs text-coral-400 font-body" role="alert">{error}</p>
+        <p className="mt-1.5 text-xs text-coral-400 font-body" role="alert">
+          {error}
+        </p>
       )}
     </div>
   );
@@ -710,7 +803,12 @@ interface FilePillProps {
   className?: string;
 }
 
-export function FilePill({ name, size, onRemove, className = "" }: FilePillProps) {
+export function FilePill({
+  name,
+  size,
+  onRemove,
+  className = "",
+}: FilePillProps) {
   return (
     <div
       className={`
@@ -720,14 +818,24 @@ export function FilePill({ name, size, onRemove, className = "" }: FilePillProps
         ${className}
       `}
     >
-      <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <svg
+        className="w-4 h-4 flex-shrink-0"
+        viewBox="0 0 16 16"
+        fill="none"
+        aria-hidden="true"
+      >
         <path
           d="M4 1h5.586L13 4.414V14a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1z"
           stroke="currentColor"
           strokeWidth="1.5"
           strokeLinejoin="round"
         />
-        <path d="M9 1v4h4" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <path
+          d="M9 1v4h4"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
       </svg>
       <span className="truncate max-w-[150px]">{name}</span>
       {size && <span className="text-xs text-muted-fg">{size}</span>}
@@ -737,7 +845,14 @@ export function FilePill({ name, size, onRemove, className = "" }: FilePillProps
           className="ml-1 text-muted-fg hover:text-coral-400 transition-colors"
           aria-label={`Remove ${name}`}
         >
-          <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+          <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none">
+            <path
+              d="M3 3l8 8M11 3l-8 8"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
         </button>
       )}
     </div>

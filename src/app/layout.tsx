@@ -20,7 +20,8 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: "Iskolar ng Mariveles — Scholarship Requirements System",
-  description: "Track your scholarship requirements, upload documents, and stay on top of deadlines.",
+  description:
+    "Track your scholarship requirements, upload documents, and stay on top of deadlines.",
 };
 
 export default function RootLayout({
@@ -32,9 +33,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${sora.variable} ${outfit.variable} antialiased`}>
         <ThemeProvider>
-          <ToastProvider>
-            {children}
-          </ToastProvider>
+          <ToastProvider>{children}</ToastProvider>
         </ThemeProvider>
       </body>
     </html>

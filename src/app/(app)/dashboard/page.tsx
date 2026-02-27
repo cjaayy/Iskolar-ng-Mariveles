@@ -34,11 +34,41 @@ const studentName = "Maria";
 const profileCompletion = 72;
 
 const requirements = [
-  { id: 1, name: "Enrollment Certificate", progress: 100, status: "approved" as const, dueDate: "2026-03-10" },
-  { id: 2, name: "Certificate of Grades", progress: 100, status: "pending" as const, dueDate: "2026-03-15" },
-  { id: 3, name: "Income Tax Return", progress: 50, status: "in-progress" as const, dueDate: "2026-03-20" },
-  { id: 4, name: "Barangay Certificate", progress: 0, status: "missing" as const, dueDate: "2026-03-25" },
-  { id: 5, name: "Community Service Log", progress: 30, status: "in-progress" as const, dueDate: "2026-04-01" },
+  {
+    id: 1,
+    name: "Enrollment Certificate",
+    progress: 100,
+    status: "approved" as const,
+    dueDate: "2026-03-10",
+  },
+  {
+    id: 2,
+    name: "Certificate of Grades",
+    progress: 100,
+    status: "pending" as const,
+    dueDate: "2026-03-15",
+  },
+  {
+    id: 3,
+    name: "Income Tax Return",
+    progress: 50,
+    status: "in-progress" as const,
+    dueDate: "2026-03-20",
+  },
+  {
+    id: 4,
+    name: "Barangay Certificate",
+    progress: 0,
+    status: "missing" as const,
+    dueDate: "2026-03-25",
+  },
+  {
+    id: 5,
+    name: "Community Service Log",
+    progress: 30,
+    status: "in-progress" as const,
+    dueDate: "2026-04-01",
+  },
 ];
 
 const deadlines = [
@@ -48,17 +78,54 @@ const deadlines = [
 ];
 
 const activities = [
-  { id: 1, text: "Enrollment Certificate was approved", time: "2 hours ago", type: "success" as const },
-  { id: 2, text: "Certificate of Grades submitted for review", time: "5 hours ago", type: "info" as const },
-  { id: 3, text: "Income Tax Return partially uploaded", time: "1 day ago", type: "warning" as const },
-  { id: 4, text: "Profile information updated", time: "2 days ago", type: "info" as const },
-  { id: 5, text: "Scholarship application started", time: "5 days ago", type: "info" as const },
+  {
+    id: 1,
+    text: "Enrollment Certificate was approved",
+    time: "2 hours ago",
+    type: "success" as const,
+  },
+  {
+    id: 2,
+    text: "Certificate of Grades submitted for review",
+    time: "5 hours ago",
+    type: "info" as const,
+  },
+  {
+    id: 3,
+    text: "Income Tax Return partially uploaded",
+    time: "1 day ago",
+    type: "warning" as const,
+  },
+  {
+    id: 4,
+    text: "Profile information updated",
+    time: "2 days ago",
+    type: "info" as const,
+  },
+  {
+    id: 5,
+    text: "Scholarship application started",
+    time: "5 days ago",
+    type: "info" as const,
+  },
 ];
 
 const statusConfig = {
-  approved: { label: "Approved", variant: "success" as const, icon: CheckCircle2 },
-  pending: { label: "Pending Review", variant: "warning" as const, icon: Clock },
-  "in-progress": { label: "In Progress", variant: "info" as const, icon: TrendingUp },
+  approved: {
+    label: "Approved",
+    variant: "success" as const,
+    icon: CheckCircle2,
+  },
+  pending: {
+    label: "Pending Review",
+    variant: "warning" as const,
+    icon: Clock,
+  },
+  "in-progress": {
+    label: "In Progress",
+    variant: "info" as const,
+    icon: TrendingUp,
+  },
   missing: { label: "Missing", variant: "error" as const, icon: AlertCircle },
 };
 
@@ -90,9 +157,13 @@ function CountdownDisplay({ targetDate }: { targetDate: string }) {
   const isUrgent = days <= 3;
 
   return (
-    <div className={`flex items-center gap-1.5 text-sm font-body font-medium ${isUrgent ? 'text-coral-400' : 'text-muted-fg'}`}>
+    <div
+      className={`flex items-center gap-1.5 text-sm font-body font-medium ${isUrgent ? "text-coral-400" : "text-muted-fg"}`}
+    >
       <Clock className="w-3.5 h-3.5" />
-      <span>{days}d {hours}h {minutes}m</span>
+      <span>
+        {days}d {hours}h {minutes}m
+      </span>
     </div>
   );
 }
@@ -108,7 +179,11 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, y: 15 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" as const },
+  },
 };
 
 /* ======================== DASHBOARD PAGE ======================== */
@@ -121,34 +196,52 @@ export default function DashboardPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  const completedCount = requirements.filter((r) => r.status === "approved").length;
+  const completedCount = requirements.filter(
+    (r) => r.status === "approved",
+  ).length;
   const overallProgress = Math.round(
-    requirements.reduce((sum, r) => sum + r.progress, 0) / requirements.length
+    requirements.reduce((sum, r) => sum + r.progress, 0) / requirements.length,
   );
 
   if (isLoading) return <DashboardSkeleton />;
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-8">
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="space-y-8"
+    >
       {/* ---- Welcome Section ---- */}
       <motion.div variants={item}>
         <Card className="relative overflow-hidden">
           {/* Decorative gradient blob */}
-          <div className="absolute -top-12 -right-12 w-40 h-40 bg-gradient-to-br from-ocean-400/10 to-peach-300/10 rounded-full blur-2xl" aria-hidden="true" />
-          <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-gradient-to-tr from-peach-200/10 to-sage-200/10 rounded-full blur-2xl" aria-hidden="true" />
+          <div
+            className="absolute -top-12 -right-12 w-40 h-40 bg-gradient-to-br from-ocean-400/10 to-peach-300/10 rounded-full blur-2xl"
+            aria-hidden="true"
+          />
+          <div
+            className="absolute -bottom-8 -left-8 w-32 h-32 bg-gradient-to-tr from-peach-200/10 to-sage-200/10 rounded-full blur-2xl"
+            aria-hidden="true"
+          />
 
           <div className="relative flex flex-col md:flex-row md:items-center gap-6">
             {/* Text */}
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-2xl" aria-hidden="true">👋</span>
+                <span className="text-2xl" aria-hidden="true">
+                  👋
+                </span>
                 <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">
                   Magandang araw, {studentName}!
                 </h1>
               </div>
               <p className="font-body text-muted-fg mt-1 max-w-lg">
-                You&apos;ve completed <strong className="text-foreground">{completedCount} of {requirements.length}</strong> requirements.
-                Keep it up — you&apos;re doing great!
+                You&apos;ve completed{" "}
+                <strong className="text-foreground">
+                  {completedCount} of {requirements.length}
+                </strong>{" "}
+                requirements. Keep it up — you&apos;re doing great!
               </p>
 
               {/* Quick stats */}
@@ -159,7 +252,9 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <p className="text-muted-fg text-xs">Approved</p>
-                    <p className="font-medium text-foreground">{completedCount}</p>
+                    <p className="font-medium text-foreground">
+                      {completedCount}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-sm font-body">
@@ -169,7 +264,10 @@ export default function DashboardPage() {
                   <div>
                     <p className="text-muted-fg text-xs">Pending</p>
                     <p className="font-medium text-foreground">
-                      {requirements.filter((r) => r.status === "pending").length}
+                      {
+                        requirements.filter((r) => r.status === "pending")
+                          .length
+                      }
                     </p>
                   </div>
                 </div>
@@ -180,7 +278,10 @@ export default function DashboardPage() {
                   <div>
                     <p className="text-muted-fg text-xs">Missing</p>
                     <p className="font-medium text-foreground">
-                      {requirements.filter((r) => r.status === "missing").length}
+                      {
+                        requirements.filter((r) => r.status === "missing")
+                          .length
+                      }
                     </p>
                   </div>
                 </div>
@@ -189,12 +290,20 @@ export default function DashboardPage() {
 
             {/* Profile Completion Meter */}
             <div className="flex-shrink-0 flex flex-col items-center gap-2">
-              <CircularProgress value={profileCompletion} size={100} strokeWidth={8}>
+              <CircularProgress
+                value={profileCompletion}
+                size={100}
+                strokeWidth={8}
+              >
                 <div className="text-center">
-                  <span className="text-xl font-heading font-bold text-foreground">{profileCompletion}%</span>
+                  <span className="text-xl font-heading font-bold text-foreground">
+                    {profileCompletion}%
+                  </span>
                 </div>
               </CircularProgress>
-              <span className="text-xs font-body text-muted-fg">Profile Complete</span>
+              <span className="text-xs font-body text-muted-fg">
+                Profile Complete
+              </span>
             </div>
           </div>
         </Card>
@@ -225,7 +334,13 @@ export default function DashboardPage() {
                 value={overallProgress}
                 label="Overall Progress"
                 size="lg"
-                color={overallProgress >= 80 ? "sage" : overallProgress >= 50 ? "ocean" : "amber"}
+                color={
+                  overallProgress >= 80
+                    ? "sage"
+                    : overallProgress >= 50
+                      ? "ocean"
+                      : "amber"
+                }
               />
             </Card>
 
@@ -239,45 +354,65 @@ export default function DashboardPage() {
                     <Card hover padding="sm">
                       <div className="flex items-center gap-4">
                         {/* Status icon */}
-                        <div className={`
+                        <div
+                          className={`
                           w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
-                          ${req.status === 'approved' ? 'bg-sage-100 dark:bg-sage-500/10' : ''}
-                          ${req.status === 'pending' ? 'bg-amber-50 dark:bg-amber-500/10' : ''}
-                          ${req.status === 'in-progress' ? 'bg-ocean-50 dark:bg-ocean-400/10' : ''}
-                          ${req.status === 'missing' ? 'bg-coral-50 dark:bg-coral-500/10' : ''}
-                        `}>
-                          <StatusIcon className={`w-5 h-5
-                            ${req.status === 'approved' ? 'text-sage-500' : ''}
-                            ${req.status === 'pending' ? 'text-amber-500' : ''}
-                            ${req.status === 'in-progress' ? 'text-ocean-400' : ''}
-                            ${req.status === 'missing' ? 'text-coral-400' : ''}
-                          `} />
+                          ${req.status === "approved" ? "bg-sage-100 dark:bg-sage-500/10" : ""}
+                          ${req.status === "pending" ? "bg-amber-50 dark:bg-amber-500/10" : ""}
+                          ${req.status === "in-progress" ? "bg-ocean-50 dark:bg-ocean-400/10" : ""}
+                          ${req.status === "missing" ? "bg-coral-50 dark:bg-coral-500/10" : ""}
+                        `}
+                        >
+                          <StatusIcon
+                            className={`w-5 h-5
+                            ${req.status === "approved" ? "text-sage-500" : ""}
+                            ${req.status === "pending" ? "text-amber-500" : ""}
+                            ${req.status === "in-progress" ? "text-ocean-400" : ""}
+                            ${req.status === "missing" ? "text-coral-400" : ""}
+                          `}
+                          />
                         </div>
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <h3 className="font-body font-medium text-foreground text-sm truncate">{req.name}</h3>
-                            <Badge variant={config.variant} dot>{config.label}</Badge>
+                            <h3 className="font-body font-medium text-foreground text-sm truncate">
+                              {req.name}
+                            </h3>
+                            <Badge variant={config.variant} dot>
+                              {config.label}
+                            </Badge>
                           </div>
                           <div className="mt-2">
                             <ProgressBar
                               value={req.progress}
                               size="sm"
                               showValue={false}
-                              color={req.status === 'approved' ? 'sage' : req.status === 'missing' ? 'coral' : 'ocean'}
+                              color={
+                                req.status === "approved"
+                                  ? "sage"
+                                  : req.status === "missing"
+                                    ? "coral"
+                                    : "ocean"
+                              }
                             />
                           </div>
                           <div className="flex items-center justify-between mt-1.5">
                             <span className="text-xs font-body text-muted-fg">
-                              Due: {new Date(req.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                              Due:{" "}
+                              {new Date(req.dueDate).toLocaleDateString(
+                                "en-US",
+                                { month: "short", day: "numeric" },
+                              )}
                             </span>
-                            {req.status !== 'approved' && (
+                            {req.status !== "approved" && (
                               <Link
                                 href="/requirements"
                                 className="text-xs font-body text-ocean-400 hover:underline flex items-center gap-0.5"
                               >
-                                {req.status === 'missing' ? 'Upload' : 'Continue'}
+                                {req.status === "missing"
+                                  ? "Upload"
+                                  : "Continue"}
                                 <ChevronRight className="w-3 h-3" />
                               </Link>
                             )}
@@ -302,11 +437,20 @@ export default function DashboardPage() {
             </h2>
             <Card padding="none" className="divide-y divide-card-border">
               {deadlines.map((dl, i) => (
-                <div key={i} className="p-4 flex items-center justify-between gap-3">
+                <div
+                  key={i}
+                  className="p-4 flex items-center justify-between gap-3"
+                >
                   <div className="min-w-0">
-                    <p className="font-body text-sm font-medium text-foreground truncate">{dl.label}</p>
+                    <p className="font-body text-sm font-medium text-foreground truncate">
+                      {dl.label}
+                    </p>
                     <p className="text-xs font-body text-muted-fg">
-                      {new Date(dl.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                      {new Date(dl.date).toLocaleDateString("en-US", {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </p>
                   </div>
                   <CountdownDisplay targetDate={dl.date} />
@@ -326,15 +470,21 @@ export default function DashboardPage() {
             <Card padding="none" className="divide-y divide-card-border">
               {activities.map((act) => (
                 <div key={act.id} className="p-4 flex items-start gap-3">
-                  <div className={`
+                  <div
+                    className={`
                     w-2 h-2 rounded-full mt-1.5 flex-shrink-0
-                    ${act.type === 'success' ? 'bg-sage-400' : ''}
-                    ${act.type === 'info' ? 'bg-ocean-400' : ''}
-                    ${act.type === 'warning' ? 'bg-amber-400' : ''}
-                  `} />
+                    ${act.type === "success" ? "bg-sage-400" : ""}
+                    ${act.type === "info" ? "bg-ocean-400" : ""}
+                    ${act.type === "warning" ? "bg-amber-400" : ""}
+                  `}
+                  />
                   <div className="min-w-0">
-                    <p className="font-body text-sm text-foreground">{act.text}</p>
-                    <p className="text-xs font-body text-muted-fg mt-0.5">{act.time}</p>
+                    <p className="font-body text-sm text-foreground">
+                      {act.text}
+                    </p>
+                    <p className="text-xs font-body text-muted-fg mt-0.5">
+                      {act.time}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -345,8 +495,12 @@ export default function DashboardPage() {
           <motion.div variants={item}>
             <Card className="bg-gradient-to-br from-ocean-50 to-peach-50 dark:from-ocean-400/5 dark:to-peach-300/5 border-dashed border-2 border-ocean-200 dark:border-ocean-400/20 text-center">
               <Upload className="w-8 h-8 text-ocean-400 mx-auto mb-2" />
-              <p className="font-body text-sm font-medium text-foreground mb-1">Quick Upload</p>
-              <p className="font-body text-xs text-muted-fg mb-3">Drag a file here or click to upload</p>
+              <p className="font-body text-sm font-medium text-foreground mb-1">
+                Quick Upload
+              </p>
+              <p className="font-body text-xs text-muted-fg mb-3">
+                Drag a file here or click to upload
+              </p>
               <Link href="/requirements">
                 <button className="text-sm font-body text-ocean-400 hover:text-ocean-500 font-medium hover:underline transition-colors">
                   Go to Requirements →
@@ -400,7 +554,10 @@ function DashboardSkeleton() {
           <Skeleton width="50%" height={24} variant="rectangular" />
           <Card padding="none">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="p-4 border-b border-card-border last:border-0">
+              <div
+                key={i}
+                className="p-4 border-b border-card-border last:border-0"
+              >
                 <Skeleton width="70%" className="mb-2" />
                 <Skeleton width="40%" />
               </div>

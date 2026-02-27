@@ -7,8 +7,8 @@
 
 import React, { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Upload, FileText, Image, File, CheckCircle } from "lucide-react";
-import { Button, Select, Textarea, ProgressBar, FilePill } from "@/components/ui";
+import { X, Upload, FileText, Image as ImageIcon, File } from "lucide-react";
+import { Button, Select, Textarea, ProgressBar } from "@/components/ui";
 import { SuccessIllustration } from "@/components/illustrations";
 import { useToast } from "@/components/providers/ToastProvider";
 
@@ -27,7 +27,11 @@ const documentTypes = [
   { label: "Other", value: "other" },
 ];
 
-export function DocumentUploadModal({ isOpen, onClose, requirementName }: UploadModalProps) {
+export function DocumentUploadModal({
+  isOpen,
+  onClose,
+  requirementName,
+}: UploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [docType, setDocType] = useState("");
@@ -57,7 +61,7 @@ export function DocumentUploadModal({ isOpen, onClose, requirementName }: Upload
       const droppedFile = e.dataTransfer.files[0];
       if (droppedFile) handleFile(droppedFile);
     },
-    [handleFile]
+    [handleFile],
   );
 
   const handleUpload = async () => {
@@ -98,8 +102,10 @@ export function DocumentUploadModal({ isOpen, onClose, requirementName }: Upload
   };
 
   const getFileIcon = (type: string) => {
-    if (type.startsWith("image/")) return <Image className="w-5 h-5 text-peach-400" />;
-    if (type.includes("pdf")) return <FileText className="w-5 h-5 text-coral-400" />;
+    if (type.startsWith("image/"))
+      return <ImageIcon className="w-5 h-5 text-peach-400" />;
+    if (type.includes("pdf"))
+      return <FileText className="w-5 h-5 text-coral-400" />;
     return <File className="w-5 h-5 text-ocean-400" />;
   };
 
@@ -111,7 +117,9 @@ export function DocumentUploadModal({ isOpen, onClose, requirementName }: Upload
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-          onClick={(e) => e.target === e.currentTarget && !uploading && resetAndClose()}
+          onClick={(e) =>
+            e.target === e.currentTarget && !uploading && resetAndClose()
+          }
           role="dialog"
           aria-modal="true"
           aria-label="Upload document"
@@ -126,9 +134,13 @@ export function DocumentUploadModal({ isOpen, onClose, requirementName }: Upload
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-card-border">
               <div>
-                <h2 className="font-heading text-lg font-semibold text-foreground">Upload Document</h2>
+                <h2 className="font-heading text-lg font-semibold text-foreground">
+                  Upload Document
+                </h2>
                 {requirementName && (
-                  <p className="text-sm font-body text-muted-fg mt-0.5">for {requirementName}</p>
+                  <p className="text-sm font-body text-muted-fg mt-0.5">
+                    for {requirementName}
+                  </p>
                 )}
               </div>
               <button
@@ -162,42 +174,60 @@ export function DocumentUploadModal({ isOpen, onClose, requirementName }: Upload
                     </p>
                   </motion.div>
                 ) : (
-                  <motion.div key="form" exit={{ opacity: 0 }} className="space-y-5">
+                  <motion.div
+                    key="form"
+                    exit={{ opacity: 0 }}
+                    className="space-y-5"
+                  >
                     {/* Drop Zone */}
                     <div
-                      onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsDragging(true);
+                      }}
                       onDragLeave={() => setIsDragging(false)}
                       onDrop={handleDrop}
                       onClick={() => fileInputRef.current?.click()}
                       className={`
                         relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer
                         transition-all duration-200
-                        ${isDragging
-                          ? "border-ocean-400 bg-ocean-50/50 dark:bg-ocean-400/5 scale-[1.02]"
-                          : "border-card-border hover:border-ocean-300 hover:bg-muted/50"
+                        ${
+                          isDragging
+                            ? "border-ocean-400 bg-ocean-50/50 dark:bg-ocean-400/5 scale-[1.02]"
+                            : "border-card-border hover:border-ocean-300 hover:bg-muted/50"
                         }
                       `}
                       role="button"
                       tabIndex={0}
                       aria-label="Drop zone for file upload"
-                      onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && fileInputRef.current?.click()
+                      }
                     >
                       <input
                         ref={fileInputRef}
                         type="file"
                         className="hidden"
                         accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
-                        onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+                        onChange={(e) =>
+                          e.target.files?.[0] && handleFile(e.target.files[0])
+                        }
                       />
-                      <div className={`
+                      <div
+                        className={`
                         w-14 h-14 mx-auto mb-3 rounded-2xl flex items-center justify-center
                         transition-colors duration-200
                         ${isDragging ? "bg-ocean-100 dark:bg-ocean-400/20" : "bg-muted"}
-                      `}>
-                        <Upload className={`w-6 h-6 transition-colors ${isDragging ? "text-ocean-400" : "text-muted-fg"}`} />
+                      `}
+                      >
+                        <Upload
+                          className={`w-6 h-6 transition-colors ${isDragging ? "text-ocean-400" : "text-muted-fg"}`}
+                        />
                       </div>
                       <p className="font-body text-sm font-medium text-foreground mb-1">
-                        {isDragging ? "Drop your file here!" : "Drag & drop your file here"}
+                        {isDragging
+                          ? "Drop your file here!"
+                          : "Drag & drop your file here"}
                       </p>
                       <p className="font-body text-xs text-muted-fg">
                         PDF, PNG, JPG, or DOCX • Max 10MB
@@ -214,9 +244,10 @@ export function DocumentUploadModal({ isOpen, onClose, requirementName }: Upload
                         {/* Image preview */}
                         {preview && (
                           <div className="relative rounded-xl overflow-hidden border border-card-border">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={preview}
-                              alt="Preview"
+                              alt="Preview of uploaded document"
                               className="w-full h-48 object-cover"
                             />
                           </div>
@@ -226,11 +257,19 @@ export function DocumentUploadModal({ isOpen, onClose, requirementName }: Upload
                         <div className="flex items-center gap-3 p-3 rounded-xl bg-muted">
                           {getFileIcon(file.type)}
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-body font-medium text-foreground truncate">{file.name}</p>
-                            <p className="text-xs font-body text-muted-fg">{formatFileSize(file.size)}</p>
+                            <p className="text-sm font-body font-medium text-foreground truncate">
+                              {file.name}
+                            </p>
+                            <p className="text-xs font-body text-muted-fg">
+                              {formatFileSize(file.size)}
+                            </p>
                           </div>
                           <button
-                            onClick={(e) => { e.stopPropagation(); setFile(null); setPreview(null); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFile(null);
+                              setPreview(null);
+                            }}
                             className="text-muted-fg hover:text-coral-400 transition-colors"
                             aria-label="Remove file"
                           >
@@ -278,7 +317,11 @@ export function DocumentUploadModal({ isOpen, onClose, requirementName }: Upload
             {/* Footer */}
             {!success && (
               <div className="flex items-center justify-end gap-3 p-6 pt-0">
-                <Button variant="ghost" onClick={resetAndClose} disabled={uploading}>
+                <Button
+                  variant="ghost"
+                  onClick={resetAndClose}
+                  disabled={uploading}
+                >
                   Cancel
                 </Button>
                 <Button

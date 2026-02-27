@@ -7,7 +7,14 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HelpCircle, X, ChevronDown, ChevronUp, MessageCircle, ExternalLink } from "lucide-react";
+import {
+  HelpCircle,
+  X,
+  ChevronDown,
+  ChevronUp,
+  MessageCircle,
+  ExternalLink,
+} from "lucide-react";
 
 const faqs = [
   {
@@ -56,7 +63,9 @@ export function HelpWidget() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MessageCircle className="w-5 h-5" />
-                  <h3 className="font-heading text-base font-semibold">Help & FAQ</h3>
+                  <h3 className="font-heading text-base font-semibold">
+                    Help & FAQ
+                  </h3>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
@@ -74,13 +83,18 @@ export function HelpWidget() {
             {/* FAQ List */}
             <div className="max-h-80 overflow-y-auto p-2">
               {faqs.map((faq, i) => (
-                <div key={i} className="border-b border-card-border last:border-0">
+                <div
+                  key={i}
+                  className="border-b border-card-border last:border-0"
+                >
                   <button
                     onClick={() => setExpandedFaq(expandedFaq === i ? null : i)}
                     className="w-full text-left p-3 flex items-start justify-between gap-2 hover:bg-muted/50 rounded-xl transition-colors"
                     aria-expanded={expandedFaq === i}
                   >
-                    <span className="font-body text-sm font-medium text-foreground">{faq.q}</span>
+                    <span className="font-body text-sm font-medium text-foreground">
+                      {faq.q}
+                    </span>
                     {expandedFaq === i ? (
                       <ChevronUp className="w-4 h-4 text-muted-fg flex-shrink-0 mt-0.5" />
                     ) : (
@@ -128,9 +142,10 @@ export function HelpWidget() {
         className={`
           w-14 h-14 rounded-full shadow-soft-lg flex items-center justify-center
           transition-colors duration-200
-          ${isOpen
-            ? "bg-ocean-500 text-white"
-            : "bg-ocean-400 text-white hover:bg-ocean-500"
+          ${
+            isOpen
+              ? "bg-ocean-500 text-white"
+              : "bg-ocean-400 text-white hover:bg-ocean-500"
           }
         `}
         aria-label={isOpen ? "Close help" : "Open help"}

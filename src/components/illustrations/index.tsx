@@ -6,7 +6,13 @@
 import React from "react";
 
 /* -- Iskolar Mascot: A friendly owl with a graduation cap -- */
-export function Mascot({ className = "", size = 120 }: { className?: string; size?: number }) {
+export function Mascot({
+  className = "",
+  size = 120,
+}: {
+  className?: string;
+  size?: number;
+}) {
   return (
     <svg
       width={size}
@@ -38,29 +44,82 @@ export function Mascot({ className = "", size = 120 }: { className?: string; siz
       />
 
       {/* Eyes */}
-      <circle cx="48" cy="55" r="10" fill="white" stroke="#14213D" strokeWidth="1.5" />
-      <circle cx="72" cy="55" r="10" fill="white" stroke="#14213D" strokeWidth="1.5" />
+      <circle
+        cx="48"
+        cy="55"
+        r="10"
+        fill="white"
+        stroke="#14213D"
+        strokeWidth="1.5"
+      />
+      <circle
+        cx="72"
+        cy="55"
+        r="10"
+        fill="white"
+        stroke="#14213D"
+        strokeWidth="1.5"
+      />
       <circle cx="50" cy="54" r="5" fill="#14213D" />
       <circle cx="74" cy="54" r="5" fill="#14213D" />
       <circle cx="51.5" cy="52.5" r="1.5" fill="white" />
       <circle cx="75.5" cy="52.5" r="1.5" fill="white" />
 
       {/* Beak */}
-      <path d="M56 60 L60 67 L64 60" fill="#D4956E" stroke="#C17A4E" strokeWidth="1" strokeLinejoin="round" />
+      <path
+        d="M56 60 L60 67 L64 60"
+        fill="#D4956E"
+        stroke="#C17A4E"
+        strokeWidth="1"
+        strokeLinejoin="round"
+      />
 
       {/* Eyebrows - slightly uneven for personality */}
-      <path d="M39 46 Q44 42, 50 44" stroke="#14213D" strokeWidth="2" fill="none" strokeLinecap="round" />
-      <path d="M70 44 Q76 42, 81 46" stroke="#14213D" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path
+        d="M39 46 Q44 42, 50 44"
+        stroke="#14213D"
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <path
+        d="M70 44 Q76 42, 81 46"
+        stroke="#14213D"
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+      />
 
       {/* Graduation cap */}
       <polygon points="60,18 30,32 60,40 90,32" fill="#14213D" />
       <rect x="57" y="18" width="6" height="4" rx="1" fill="#4A6FA5" />
-      <line x1="85" y1="32" x2="88" y2="44" stroke="#14213D" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="88" cy="46" r="3" fill="#F5C026" stroke="#E0A800" strokeWidth="1" />
+      <line
+        x1="85"
+        y1="32"
+        x2="88"
+        y2="44"
+        stroke="#14213D"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <circle
+        cx="88"
+        cy="46"
+        r="3"
+        fill="#F5C026"
+        stroke="#E0A800"
+        strokeWidth="1"
+      />
 
       {/* Feet */}
-      <path d="M45 100 Q42 106, 38 104 Q42 108, 46 106 Q44 110, 48 108 L52 100" fill="#D4956E" />
-      <path d="M68 100 Q72 106, 76 104 Q72 108, 68 106 Q70 110, 66 108 L62 100" fill="#D4956E" />
+      <path
+        d="M45 100 Q42 106, 38 104 Q42 108, 46 106 Q44 110, 48 108 L52 100"
+        fill="#D4956E"
+      />
+      <path
+        d="M68 100 Q72 106, 76 104 Q72 108, 68 106 Q70 110, 66 108 L62 100"
+        fill="#D4956E"
+      />
 
       {/* Wings - slightly asymmetric for hand-drawn feel */}
       <path
@@ -145,7 +204,11 @@ export function BlobShape2({
 }
 
 /* -- Empty State Illustration -- */
-export function EmptyStateIllustration({ className = "" }: { className?: string }) {
+export function EmptyStateIllustration({
+  className = "",
+}: {
+  className?: string;
+}) {
   return (
     <svg
       width="200"
@@ -157,23 +220,104 @@ export function EmptyStateIllustration({ className = "" }: { className?: string 
       aria-hidden="true"
     >
       {/* Paper stack */}
-      <rect x="55" y="30" width="90" height="110" rx="6" fill="#F0E6E8" transform="rotate(3 100 85)" />
-      <rect x="50" y="25" width="90" height="110" rx="6" fill="#F7F0F1" transform="rotate(-2 95 80)" />
-      <rect x="52" y="20" width="90" height="110" rx="6" fill="white" stroke="#E2D6D8" strokeWidth="1.5" />
+      <rect
+        x="55"
+        y="30"
+        width="90"
+        height="110"
+        rx="6"
+        fill="#F0E6E8"
+        transform="rotate(3 100 85)"
+      />
+      <rect
+        x="50"
+        y="25"
+        width="90"
+        height="110"
+        rx="6"
+        fill="#F7F0F1"
+        transform="rotate(-2 95 80)"
+      />
+      <rect
+        x="52"
+        y="20"
+        width="90"
+        height="110"
+        rx="6"
+        fill="white"
+        stroke="#E2D6D8"
+        strokeWidth="1.5"
+      />
 
       {/* Lines on paper */}
-      <line x1="68" y1="45" x2="126" y2="45" stroke="#E2D6D8" strokeWidth="2" strokeLinecap="round" />
-      <line x1="68" y1="55" x2="120" y2="55" stroke="#E2D6D8" strokeWidth="2" strokeLinecap="round" />
-      <line x1="68" y1="65" x2="110" y2="65" stroke="#E2D6D8" strokeWidth="2" strokeLinecap="round" />
-      <line x1="68" y1="75" x2="115" y2="75" stroke="#E2D6D8" strokeWidth="2" strokeLinecap="round" />
+      <line
+        x1="68"
+        y1="45"
+        x2="126"
+        y2="45"
+        stroke="#E2D6D8"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <line
+        x1="68"
+        y1="55"
+        x2="120"
+        y2="55"
+        stroke="#E2D6D8"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <line
+        x1="68"
+        y1="65"
+        x2="110"
+        y2="65"
+        stroke="#E2D6D8"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <line
+        x1="68"
+        y1="75"
+        x2="115"
+        y2="75"
+        stroke="#E2D6D8"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
 
       {/* Magnifying glass */}
-      <circle cx="115" cy="100" r="18" fill="none" stroke="#4A6FA5" strokeWidth="3" />
-      <line x1="128" y1="113" x2="140" y2="125" stroke="#4A6FA5" strokeWidth="3" strokeLinecap="round" />
+      <circle
+        cx="115"
+        cy="100"
+        r="18"
+        fill="none"
+        stroke="#4A6FA5"
+        strokeWidth="3"
+      />
+      <line
+        x1="128"
+        y1="113"
+        x2="140"
+        y2="125"
+        stroke="#4A6FA5"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
       <circle cx="115" cy="100" r="12" fill="#4A6FA5" opacity="0.05" />
 
       {/* Question mark */}
-      <text x="110" y="106" fontSize="18" fill="#4A6FA5" fontFamily="Georgia" fontWeight="bold">?</text>
+      <text
+        x="110"
+        y="106"
+        fontSize="18"
+        fill="#4A6FA5"
+        fontFamily="Georgia"
+        fontWeight="bold"
+      >
+        ?
+      </text>
 
       {/* Decorative dots */}
       <circle cx="40" cy="40" r="3" fill="#E6B89C" opacity="0.5" />
@@ -185,7 +329,11 @@ export function EmptyStateIllustration({ className = "" }: { className?: string 
 }
 
 /* -- Success Illustration (for upload complete, etc.) -- */
-export function SuccessIllustration({ className = "" }: { className?: string }) {
+export function SuccessIllustration({
+  className = "",
+}: {
+  className?: string;
+}) {
   return (
     <svg
       width="120"
@@ -207,10 +355,42 @@ export function SuccessIllustration({ className = "" }: { className?: string }) 
         strokeLinejoin="round"
       />
       {/* Confetti particles */}
-      <rect x="20" y="20" width="6" height="3" rx="1" fill="#F5C026" transform="rotate(30 23 21)" />
-      <rect x="90" y="25" width="5" height="3" rx="1" fill="#4A6FA5" transform="rotate(-20 92 26)" />
-      <rect x="25" y="85" width="6" height="3" rx="1" fill="#E86555" transform="rotate(45 28 86)" />
-      <rect x="95" y="80" width="5" height="3" rx="1" fill="#E6B89C" transform="rotate(-35 97 81)" />
+      <rect
+        x="20"
+        y="20"
+        width="6"
+        height="3"
+        rx="1"
+        fill="#F5C026"
+        transform="rotate(30 23 21)"
+      />
+      <rect
+        x="90"
+        y="25"
+        width="5"
+        height="3"
+        rx="1"
+        fill="#4A6FA5"
+        transform="rotate(-20 92 26)"
+      />
+      <rect
+        x="25"
+        y="85"
+        width="6"
+        height="3"
+        rx="1"
+        fill="#E86555"
+        transform="rotate(45 28 86)"
+      />
+      <rect
+        x="95"
+        y="80"
+        width="5"
+        height="3"
+        rx="1"
+        fill="#E6B89C"
+        transform="rotate(-35 97 81)"
+      />
       <circle cx="15" cy="55" r="2" fill="#F5C026" />
       <circle cx="105" cy="55" r="2" fill="#4A6FA5" />
     </svg>
@@ -218,7 +398,11 @@ export function SuccessIllustration({ className = "" }: { className?: string }) 
 }
 
 /* -- 404 Illustration -- */
-export function NotFoundIllustration({ className = "" }: { className?: string }) {
+export function NotFoundIllustration({
+  className = "",
+}: {
+  className?: string;
+}) {
   return (
     <svg
       width="300"
@@ -230,10 +414,24 @@ export function NotFoundIllustration({ className = "" }: { className?: string })
       aria-hidden="true"
     >
       {/* Big "404" */}
-      <text x="40" y="130" fontSize="90" fontFamily="Georgia" fontWeight="bold" fill="#E2D6D8">
+      <text
+        x="40"
+        y="130"
+        fontSize="90"
+        fontFamily="Georgia"
+        fontWeight="bold"
+        fill="#E2D6D8"
+      >
         4
       </text>
-      <text x="200" y="130" fontSize="90" fontFamily="Georgia" fontWeight="bold" fill="#E2D6D8">
+      <text
+        x="200"
+        y="130"
+        fontSize="90"
+        fontFamily="Georgia"
+        fontWeight="bold"
+        fill="#E2D6D8"
+      >
         4
       </text>
 
@@ -242,22 +440,73 @@ export function NotFoundIllustration({ className = "" }: { className?: string })
       <circle cx="150" cy="102" r="34" fill="#FDF4F5" />
 
       {/* Eyes - swirly/confused */}
-      <circle cx="140" cy="90" r="8" fill="white" stroke="#14213D" strokeWidth="1.5" />
-      <circle cx="160" cy="90" r="8" fill="white" stroke="#14213D" strokeWidth="1.5" />
+      <circle
+        cx="140"
+        cy="90"
+        r="8"
+        fill="white"
+        stroke="#14213D"
+        strokeWidth="1.5"
+      />
+      <circle
+        cx="160"
+        cy="90"
+        r="8"
+        fill="white"
+        stroke="#14213D"
+        strokeWidth="1.5"
+      />
 
       {/* Spiral eyes for confusion */}
-      <path d="M137 90 Q140 86, 143 90 Q140 94, 137 90" stroke="#14213D" strokeWidth="1.5" fill="none" />
-      <path d="M157 90 Q160 86, 163 90 Q160 94, 157 90" stroke="#14213D" strokeWidth="1.5" fill="none" />
+      <path
+        d="M137 90 Q140 86, 143 90 Q140 94, 137 90"
+        stroke="#14213D"
+        strokeWidth="1.5"
+        fill="none"
+      />
+      <path
+        d="M157 90 Q160 86, 163 90 Q160 94, 157 90"
+        stroke="#14213D"
+        strokeWidth="1.5"
+        fill="none"
+      />
 
       {/* Beak */}
-      <path d="M146 96 L150 102 L154 96" fill="#D4956E" stroke="#C17A4E" strokeWidth="1" />
+      <path
+        d="M146 96 L150 102 L154 96"
+        fill="#D4956E"
+        stroke="#C17A4E"
+        strokeWidth="1"
+      />
 
       {/* Confused question marks */}
-      <text x="170" y="75" fontSize="14" fill="#4A6FA5" fontFamily="Georgia" opacity="0.6">?</text>
-      <text x="122" y="72" fontSize="10" fill="#E6B89C" fontFamily="Georgia" opacity="0.5">?</text>
+      <text
+        x="170"
+        y="75"
+        fontSize="14"
+        fill="#4A6FA5"
+        fontFamily="Georgia"
+        opacity="0.6"
+      >
+        ?
+      </text>
+      <text
+        x="122"
+        y="72"
+        fontSize="10"
+        fill="#E6B89C"
+        fontFamily="Georgia"
+        opacity="0.5"
+      >
+        ?
+      </text>
 
       {/* Small cap tilted */}
-      <polygon points="150,56 130,66 150,72 170,66" fill="#14213D" transform="rotate(-15 150 64)" />
+      <polygon
+        points="150,56 130,66 150,72 170,66"
+        fill="#14213D"
+        transform="rotate(-15 150 64)"
+      />
 
       {/* Ground line - wavy */}
       <path
@@ -269,8 +518,26 @@ export function NotFoundIllustration({ className = "" }: { className?: string })
       />
 
       {/* Scattered papers */}
-      <rect x="60" y="150" width="20" height="15" rx="2" fill="#F7F0F1" stroke="#E2D6D8" transform="rotate(-10 70 157)" />
-      <rect x="220" y="148" width="18" height="14" rx="2" fill="#F7F0F1" stroke="#E2D6D8" transform="rotate(8 229 155)" />
+      <rect
+        x="60"
+        y="150"
+        width="20"
+        height="15"
+        rx="2"
+        fill="#F7F0F1"
+        stroke="#E2D6D8"
+        transform="rotate(-10 70 157)"
+      />
+      <rect
+        x="220"
+        y="148"
+        width="18"
+        height="14"
+        rx="2"
+        fill="#F7F0F1"
+        stroke="#E2D6D8"
+        transform="rotate(8 229 155)"
+      />
     </svg>
   );
 }
@@ -297,14 +564,56 @@ export function ErrorIllustration({ className = "" }: { className?: string }) {
       />
 
       {/* Exclamation */}
-      <line x1="100" y1="70" x2="100" y2="110" stroke="#E0A800" strokeWidth="5" strokeLinecap="round" />
+      <line
+        x1="100"
+        y1="70"
+        x2="100"
+        y2="110"
+        stroke="#E0A800"
+        strokeWidth="5"
+        strokeLinecap="round"
+      />
       <circle cx="100" cy="130" r="4" fill="#E0A800" />
 
       {/* Decorative sparks */}
-      <line x1="60" y1="50" x2="50" y2="40" stroke="#E6B89C" strokeWidth="2" strokeLinecap="round" />
-      <line x1="140" y1="50" x2="150" y2="40" stroke="#E6B89C" strokeWidth="2" strokeLinecap="round" />
-      <line x1="55" y1="60" x2="42" y2="58" stroke="#4A6FA5" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
-      <line x1="145" y1="60" x2="158" y2="58" stroke="#4A6FA5" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
+      <line
+        x1="60"
+        y1="50"
+        x2="50"
+        y2="40"
+        stroke="#E6B89C"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <line
+        x1="140"
+        y1="50"
+        x2="150"
+        y2="40"
+        stroke="#E6B89C"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <line
+        x1="55"
+        y1="60"
+        x2="42"
+        y2="58"
+        stroke="#4A6FA5"
+        strokeWidth="2"
+        strokeLinecap="round"
+        opacity="0.4"
+      />
+      <line
+        x1="145"
+        y1="60"
+        x2="158"
+        y2="58"
+        stroke="#4A6FA5"
+        strokeWidth="2"
+        strokeLinecap="round"
+        opacity="0.4"
+      />
     </svg>
   );
 }

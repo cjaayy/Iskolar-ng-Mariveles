@@ -51,9 +51,21 @@ const initialStudent = {
 };
 
 const linkedScholarships = [
-  { name: "Iskolar ng Mariveles", status: "active" as const, award: "Full Tuition" },
-  { name: "DOST-SEI Merit Scholarship", status: "active" as const, award: "Stipend + Tuition" },
-  { name: "Barangay Scholarship", status: "expired" as const, award: "Book Allowance" },
+  {
+    name: "Iskolar ng Mariveles",
+    status: "active" as const,
+    award: "Full Tuition",
+  },
+  {
+    name: "DOST-SEI Merit Scholarship",
+    status: "active" as const,
+    award: "Stipend + Tuition",
+  },
+  {
+    name: "Barangay Scholarship",
+    status: "expired" as const,
+    award: "Book Allowance",
+  },
 ];
 
 /* -- Animations -- */
@@ -63,7 +75,11 @@ const stagger = {
 };
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.35 } },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.35, ease: "easeOut" as const },
+  },
 };
 
 /* ======================== PROFILE PAGE ======================== */
@@ -105,7 +121,7 @@ export default function ProfilePage() {
       const updated = { ...prev, [key]: !prev[key] };
       addToast(
         `${key.replace(/([A-Z])/g, " $1").toLowerCase()} ${updated[key] ? "enabled" : "disabled"}`,
-        updated[key] ? "info" : "warning"
+        updated[key] ? "info" : "warning",
       );
       return updated;
     });
@@ -114,7 +130,12 @@ export default function ProfilePage() {
   const profileCompletion = 72;
 
   return (
-    <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-6">
+    <motion.div
+      variants={stagger}
+      initial="hidden"
+      animate="show"
+      className="space-y-6"
+    >
       {/* Breadcrumb */}
       <motion.div variants={fadeUp}>
         <Breadcrumb
@@ -126,26 +147,35 @@ export default function ProfilePage() {
       </motion.div>
 
       {/* Page Header */}
-      <motion.div variants={fadeUp} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <motion.div
+        variants={fadeUp}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      >
         <div>
-          <h1 className="font-heading text-2xl font-bold text-foreground">My Profile</h1>
+          <h1 className="font-heading text-2xl font-bold text-foreground">
+            My Profile
+          </h1>
           <p className="font-body text-sm text-muted-fg mt-1">
             Manage your personal information and preferences.
           </p>
         </div>
         {!isEditing ? (
-          <Button
-            leftIcon={<Edit3 className="w-4 h-4" />}
-            onClick={handleEdit}
-          >
+          <Button leftIcon={<Edit3 className="w-4 h-4" />} onClick={handleEdit}>
             Edit Profile
           </Button>
         ) : (
           <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={handleCancel} leftIcon={<X className="w-4 h-4" />}>
+            <Button
+              variant="ghost"
+              onClick={handleCancel}
+              leftIcon={<X className="w-4 h-4" />}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSave} leftIcon={<Save className="w-4 h-4" />}>
+            <Button
+              onClick={handleSave}
+              leftIcon={<Save className="w-4 h-4" />}
+            >
               Save Changes
             </Button>
           </div>
@@ -164,7 +194,8 @@ export default function ProfilePage() {
             <div className="relative pt-10 pb-2">
               <div className="relative inline-block">
                 <div className="w-24 h-24 rounded-full bg-gradient-to-br from-ocean-300 to-peach-300 flex items-center justify-center text-3xl font-heading font-bold text-white border-4 border-card-bg shadow-soft">
-                  {student.firstName[0]}{student.lastName[0]}
+                  {student.firstName[0]}
+                  {student.lastName[0]}
                 </div>
                 {isEditing && (
                   <button
@@ -180,19 +211,27 @@ export default function ProfilePage() {
             <h2 className="font-heading text-xl font-bold text-foreground mt-2">
               {student.firstName} {student.lastName}
             </h2>
-            <p className="font-body text-sm text-muted-fg">{student.studentId}</p>
+            <p className="font-body text-sm text-muted-fg">
+              {student.studentId}
+            </p>
             <Badge variant="info" dot className="mt-2">
               {student.yearLevel}
             </Badge>
 
             {/* Profile completion */}
             <div className="mt-6 pt-4 border-t border-card-border">
-              <CircularProgress value={profileCompletion} size={70} strokeWidth={6}>
+              <CircularProgress
+                value={profileCompletion}
+                size={70}
+                strokeWidth={6}
+              >
                 <span className="text-sm font-heading font-bold text-foreground">
                   {profileCompletion}%
                 </span>
               </CircularProgress>
-              <p className="text-xs font-body text-muted-fg mt-2">Profile Completion</p>
+              <p className="text-xs font-body text-muted-fg mt-2">
+                Profile Completion
+              </p>
               <ProgressBar
                 value={profileCompletion}
                 size="sm"
@@ -216,8 +255,12 @@ export default function ProfilePage() {
                   className="flex items-start justify-between p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                 >
                   <div>
-                    <p className="font-body text-sm font-medium text-foreground">{s.name}</p>
-                    <p className="text-xs font-body text-muted-fg mt-0.5">{s.award}</p>
+                    <p className="font-body text-sm font-medium text-foreground">
+                      {s.name}
+                    </p>
+                    <p className="text-xs font-body text-muted-fg mt-0.5">
+                      {s.award}
+                    </p>
                   </div>
                   <Badge
                     variant={s.status === "active" ? "success" : "neutral"}
@@ -245,41 +288,67 @@ export default function ProfilePage() {
                 <Input
                   label="First Name"
                   value={editData.firstName}
-                  onChange={(e) => setEditData({ ...editData, firstName: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, firstName: e.target.value })
+                  }
                 />
                 <Input
                   label="Last Name"
                   value={editData.lastName}
-                  onChange={(e) => setEditData({ ...editData, lastName: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, lastName: e.target.value })
+                  }
                 />
                 <Input
                   label="Email"
                   type="email"
                   value={editData.email}
-                  onChange={(e) => setEditData({ ...editData, email: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, email: e.target.value })
+                  }
                   leftIcon={<Mail className="w-4 h-4" />}
                 />
                 <Input
                   label="Phone"
                   type="tel"
                   value={editData.phone}
-                  onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, phone: e.target.value })
+                  }
                   leftIcon={<Phone className="w-4 h-4" />}
                 />
                 <Input
                   label="Address"
                   value={editData.address}
-                  onChange={(e) => setEditData({ ...editData, address: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, address: e.target.value })
+                  }
                   leftIcon={<MapPin className="w-4 h-4" />}
                   className="sm:col-span-2"
                 />
               </div>
             ) : (
               <div className="space-y-4">
-                <InfoRow icon={<User className="w-4 h-4" />} label="Full Name" value={`${student.firstName} ${student.lastName}`} />
-                <InfoRow icon={<Mail className="w-4 h-4" />} label="Email" value={student.email} />
-                <InfoRow icon={<Phone className="w-4 h-4" />} label="Phone" value={student.phone} />
-                <InfoRow icon={<MapPin className="w-4 h-4" />} label="Address" value={student.address} />
+                <InfoRow
+                  icon={<User className="w-4 h-4" />}
+                  label="Full Name"
+                  value={`${student.firstName} ${student.lastName}`}
+                />
+                <InfoRow
+                  icon={<Mail className="w-4 h-4" />}
+                  label="Email"
+                  value={student.email}
+                />
+                <InfoRow
+                  icon={<Phone className="w-4 h-4" />}
+                  label="Phone"
+                  value={student.phone}
+                />
+                <InfoRow
+                  icon={<MapPin className="w-4 h-4" />}
+                  label="Address"
+                  value={student.address}
+                />
               </div>
             )}
           </Card>
@@ -302,28 +371,40 @@ export default function ProfilePage() {
                 <Input
                   label="GPA"
                   value={editData.gpa}
-                  onChange={(e) => setEditData({ ...editData, gpa: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, gpa: e.target.value })
+                  }
                 />
                 <Input
                   label="Course / Major"
                   value={editData.major}
-                  onChange={(e) => setEditData({ ...editData, major: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, major: e.target.value })
+                  }
                   className="sm:col-span-2"
                 />
                 <Input
                   label="Year Level"
                   value={editData.yearLevel}
-                  onChange={(e) => setEditData({ ...editData, yearLevel: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, yearLevel: e.target.value })
+                  }
                 />
                 <Input
                   label="School"
                   value={editData.school}
-                  onChange={(e) => setEditData({ ...editData, school: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, school: e.target.value })
+                  }
                 />
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <InfoRow icon={<Shield className="w-4 h-4" />} label="Student ID" value={student.studentId} />
+                <InfoRow
+                  icon={<Shield className="w-4 h-4" />}
+                  label="Student ID"
+                  value={student.studentId}
+                />
                 <InfoRow
                   label="GPA"
                   value={student.gpa}
@@ -333,9 +414,18 @@ export default function ProfilePage() {
                     </span>
                   }
                 />
-                <InfoRow icon={<GraduationCap className="w-4 h-4" />} label="Course" value={student.major} className="sm:col-span-2" />
+                <InfoRow
+                  icon={<GraduationCap className="w-4 h-4" />}
+                  label="Course"
+                  value={student.major}
+                  className="sm:col-span-2"
+                />
                 <InfoRow label="Year Level" value={student.yearLevel} />
-                <InfoRow icon={<Link2 className="w-4 h-4" />} label="School" value={student.school} />
+                <InfoRow
+                  icon={<Link2 className="w-4 h-4" />}
+                  label="School"
+                  value={student.school}
+                />
               </div>
             )}
           </Card>
@@ -420,7 +510,9 @@ function InfoRow({
       )}
       <div>
         <p className="text-xs font-body text-muted-fg">{label}</p>
-        <p className="text-sm font-body font-medium text-foreground mt-0.5">{value}</p>
+        <p className="text-sm font-body font-medium text-foreground mt-0.5">
+          {value}
+        </p>
       </div>
     </div>
   );
@@ -446,8 +538,12 @@ function NotificationToggle({
       <div className="flex items-start gap-3">
         {icon && <span className="mt-0.5 flex-shrink-0">{icon}</span>}
         <div>
-          <p className="font-body text-sm font-medium text-foreground">{label}</p>
-          <p className="font-body text-xs text-muted-fg mt-0.5">{description}</p>
+          <p className="font-body text-sm font-medium text-foreground">
+            {label}
+          </p>
+          <p className="font-body text-xs text-muted-fg mt-0.5">
+            {description}
+          </p>
         </div>
       </div>
       <Toggle checked={checked} onChange={onChange} />

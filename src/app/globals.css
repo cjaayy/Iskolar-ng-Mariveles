@@ -4,30 +4,30 @@
 
 /* ========== Light Theme (Default) ========== */
 :root {
-  --background: #FDF4F5;
-  --foreground: #2D3748;
-  --card-bg: #FFFFFF;
-  --card-border: #F0E6E8;
-  --input-bg: #FFFFFF;
-  --input-border: #E2D6D8;
-  --muted: #F7F0F1;
-  --muted-fg: #8B7E80;
-  --accent: #4A6FA5;
-  --accent-fg: #FFFFFF;
+  --background: #fdf4f5;
+  --foreground: #2d3748;
+  --card-bg: #ffffff;
+  --card-border: #f0e6e8;
+  --input-bg: #ffffff;
+  --input-border: #e2d6d8;
+  --muted: #f7f0f1;
+  --muted-fg: #8b7e80;
+  --accent: #4a6fa5;
+  --accent-fg: #ffffff;
 }
 
 /* ========== Dark Theme ========== */
 .dark {
-  --background: #14181E;
-  --foreground: #E8E2E3;
-  --card-bg: #1C2128;
-  --card-border: #2D353F;
-  --input-bg: #1C2128;
-  --input-border: #3D454F;
-  --muted: #232A33;
-  --muted-fg: #9CA3AF;
-  --accent: #7BA3D1;
-  --accent-fg: #0B1526;
+  --background: #14181e;
+  --foreground: #e8e2e3;
+  --card-bg: #1c2128;
+  --card-border: #2d353f;
+  --input-bg: #1c2128;
+  --input-border: #3d454f;
+  --muted: #232a33;
+  --muted-fg: #9ca3af;
+  --accent: #7ba3d1;
+  --accent-fg: #0b1526;
 }
 
 /* ========== Base Styles ========== */
@@ -93,7 +93,11 @@
 
   /* Dot pattern background */
   .dot-pattern {
-    background-image: radial-gradient(circle, var(--card-border) 1px, transparent 1px);
+    background-image: radial-gradient(
+      circle,
+      var(--card-border) 1px,
+      transparent 1px
+    );
     background-size: 24px 24px;
   }
 

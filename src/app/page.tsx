@@ -7,7 +7,15 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, GraduationCap, Sun, Moon } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  GraduationCap,
+  Sun,
+  Moon,
+} from "lucide-react";
 import { Mascot, BlobShape, BlobShape2 } from "@/components/illustrations";
 import { Button, Checkbox } from "@/components/ui";
 import { useTheme } from "@/components/providers/ThemeProvider";
@@ -18,15 +26,19 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+    {},
+  );
   const { theme, toggleTheme } = useTheme();
 
   const validate = () => {
     const newErrors: typeof errors = {};
     if (!email) newErrors.email = "We need your email to find your account";
-    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = "That doesn't look like a valid email";
+    else if (!/\S+@\S+\.\S+/.test(email))
+      newErrors.email = "That doesn't look like a valid email";
     if (!password) newErrors.password = "Don't forget your password!";
-    else if (password.length < 6) newErrors.password = "Password should be at least 6 characters";
+    else if (password.length < 6)
+      newErrors.password = "Password should be at least 6 characters";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -64,7 +76,10 @@ export default function LoginPage() {
       />
 
       {/* Dot pattern overlay */}
-      <div className="absolute inset-0 dot-pattern opacity-30 pointer-events-none" aria-hidden="true" />
+      <div
+        className="absolute inset-0 dot-pattern opacity-30 pointer-events-none"
+        aria-hidden="true"
+      />
 
       {/* Theme toggle */}
       <button
@@ -72,7 +87,11 @@ export default function LoginPage() {
         className="absolute top-4 right-4 z-10 p-2.5 rounded-xl bg-card-bg/80 backdrop-blur border border-card-border text-muted-fg hover:text-foreground transition-all hover:scale-105 shadow-soft"
         aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
       >
-        {theme === "light" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+        {theme === "light" ? (
+          <Moon className="w-5 h-5" />
+        ) : (
+          <Sun className="w-5 h-5" />
+        )}
       </button>
 
       {/* Login Card */}
@@ -124,7 +143,10 @@ export default function LoginPage() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => { setEmail(e.target.value); setErrors((p) => ({ ...p, email: undefined })); }}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setErrors((p) => ({ ...p, email: undefined }));
+                  }}
                   placeholder=" "
                   id="login-email"
                   className={`
@@ -168,7 +190,10 @@ export default function LoginPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: undefined })); }}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setErrors((p) => ({ ...p, password: undefined }));
+                  }}
                   placeholder=" "
                   id="login-password"
                   className={`
@@ -179,7 +204,9 @@ export default function LoginPage() {
                     ${errors.password ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20" : "border-input-border"}
                   `}
                   aria-invalid={!!errors.password}
-                  aria-describedby={errors.password ? "password-error" : undefined}
+                  aria-describedby={
+                    errors.password ? "password-error" : undefined
+                  }
                 />
                 <label
                   htmlFor="login-password"
@@ -196,7 +223,11 @@ export default function LoginPage() {
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-fg hover:text-foreground transition-colors"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
               {errors.password && (
@@ -265,7 +296,10 @@ export default function LoginPage() {
           {/* Footer */}
           <p className="text-center mt-8 text-sm font-body text-muted-fg">
             New scholar?{" "}
-            <a href="#" className="text-ocean-400 hover:text-ocean-500 font-medium hover:underline transition-colors">
+            <a
+              href="#"
+              className="text-ocean-400 hover:text-ocean-500 font-medium hover:underline transition-colors"
+            >
               Create an account
             </a>
           </p>
