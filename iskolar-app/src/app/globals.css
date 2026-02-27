@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========== Light Theme (Default) ========== */
+:root {
+  --background: #FDF4F5;
+  --foreground: #2D3748;
+  --card-bg: #FFFFFF;
+  --card-border: #F0E6E8;
+  --input-bg: #FFFFFF;
+  --input-border: #E2D6D8;
+  --muted: #F7F0F1;
+  --muted-fg: #8B7E80;
+  --accent: #4A6FA5;
+  --accent-fg: #FFFFFF;
+}
+
+/* ========== Dark Theme ========== */
+.dark {
+  --background: #14181E;
+  --foreground: #E8E2E3;
+  --card-bg: #1C2128;
+  --card-border: #2D353F;
+  --input-bg: #1C2128;
+  --input-border: #3D454F;
+  --muted: #232A33;
+  --muted-fg: #9CA3AF;
+  --accent: #7BA3D1;
+  --accent-fg: #0B1526;
+}
+
+/* ========== Base Styles ========== */
+@layer base {
+  * {
+    @apply border-card-border;
+  }
+
+  body {
+    color: var(--foreground);
+    background: var(--background);
+    font-family: var(--font-body), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom selection color */
+  ::selection {
+    background-color: rgba(74, 111, 165, 0.2);
+    color: var(--foreground);
+  }
+
+  /* Focus styles for accessibility */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ocean-400;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--muted);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--input-border);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-fg);
+  }
+}
+
+/* ========== Component Styles ========== */
+@layer components {
+  /* Hand-drawn border effect */
+  .hand-drawn-border {
+    border: 2px solid var(--card-border);
+    border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  }
+
+  /* Organic blob shape */
+  .blob-shape {
+    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+  }
+
+  /* Subtle paper texture */
+  .paper-texture {
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  }
+
+  /* Dot pattern background */
+  .dot-pattern {
+    background-image: radial-gradient(circle, var(--card-border) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Floating label input wrapper */
+  .floating-label-wrapper input:focus ~ label,
+  .floating-label-wrapper input:not(:placeholder-shown) ~ label {
+    @apply -translate-y-6 scale-90 text-ocean-400;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-ocean-400 to-peach-400;
+  }
+}
+
+/* ========== Utility Styles ========== */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Animation delay utilities */
+  .animation-delay-100 {
+    animation-delay: 100ms;
+  }
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+  .animation-delay-500 {
+    animation-delay: 500ms;
+  }
+  .animation-delay-700 {
+    animation-delay: 700ms;
+  }
+}
