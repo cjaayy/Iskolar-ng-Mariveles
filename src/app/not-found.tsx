@@ -16,8 +16,8 @@ export default function NotFound() {
           Oops! Page not found
         </h1>
         <p className="font-body text-muted-fg mb-8 leading-relaxed">
-          It looks like this page wandered off. Don&apos;t worry — even our owl
-          mascot gets lost sometimes!
+          It looks like this page wandered off. Don&apos;t worry — we&apos;ll
+          help you find your way back!
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">

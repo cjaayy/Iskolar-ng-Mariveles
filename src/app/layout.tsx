@@ -22,6 +22,13 @@ export const metadata: Metadata = {
   title: "Iskolar ng Mariveles — Scholarship Requirements System",
   description:
     "Track your scholarship requirements, upload documents, and stay on top of deadlines.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/mariveles-seal.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({

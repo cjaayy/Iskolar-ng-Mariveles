@@ -16,7 +16,8 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
-import { Mascot, BlobShape, BlobShape2 } from "@/components/illustrations";
+import Image from "next/image";
+import { BlobShape, BlobShape2 } from "@/components/illustrations";
 import { Button, Checkbox } from "@/components/ui";
 import { useTheme } from "@/components/providers/ThemeProvider";
 
@@ -110,7 +111,14 @@ export default function LoginPage() {
               transition={{ delay: 0.2, duration: 0.5, type: "spring" }}
               className="inline-block"
             >
-              <Mascot size={100} className="mx-auto mb-4 animate-float" />
+              <Image
+                src="/mariveles-seal.png"
+                alt="Bayan ng Mariveles seal"
+                width={100}
+                height={100}
+                className="mx-auto mb-4 animate-float"
+                priority
+              />
             </motion.div>
 
             <motion.div
