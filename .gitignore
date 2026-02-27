@@ -20,12 +20,18 @@
 .DS_Store
 *.pem
 
-# debug
+# editor
+.vscode/
+
+# debug / logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+*.log
 
 # local env files
+.env
 .env*.local
 
 # vercel
@@ -34,3 +40,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# SWC compiler cache
+.swc/
+
+# turbo
+.turbo
