@@ -22,8 +22,11 @@ if "!PORT_IN_USE!"=="0" echo Port 3000 is already free.
 if "!PORT_IN_USE!"=="1" echo Port 3000 has been freed.
 echo.
 
-:: Navigate to frontend directory
+:: Navigate to frontend directory (uppercase drive letter to avoid webpack warnings)
 cd /d "%~dp0..\frontend"
+for %%i in ("%CD%") do set "DRIVE=%%~di"
+set "DRIVE=%DRIVE:c:=C:%"
+cd /d "%DRIVE%%CD:~2%"
 
 :: Suppress punycode deprecation warning
 set NODE_OPTIONS=--no-deprecation
