@@ -22,8 +22,8 @@ if "!PORT_IN_USE!"=="0" echo Port 3000 is already free.
 if "!PORT_IN_USE!"=="1" echo Port 3000 has been freed.
 echo.
 
-:: Navigate to project root (drive letter already uppercase via %~dp0)
-cd /d "%~dp0.."
+:: Navigate to frontend directory
+cd /d "%~dp0..\frontend"
 
 :: Suppress punycode deprecation warning
 set NODE_OPTIONS=--no-deprecation
