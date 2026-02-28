@@ -28,4 +28,22 @@ start "" cmd /c "timeout /t 8 /nobreak >nul && start https://dev.cjaayy.dev"
 
 :: Start dev server + tunnel concurrently
 cd /d "%~dp0.."
+
+:: Normalize drive letter to uppercase to fix webpack cache warnings
+for %%i in ("%cd%") do set "DRIVE=%%~di"
+set "UPPER_DRIVE=%DRIVE%"
+if "%DRIVE%"=="c:" set "UPPER_DRIVE=C:"
+if "%DRIVE%"=="d:" set "UPPER_DRIVE=D:"
+if "%DRIVE%"=="e:" set "UPPER_DRIVE=E:"
+cd /d "%UPPER_DRIVE%%cd:~2%"
+
+:: Clear stale webpack cache
+if exist ".next" (
+    echo Clearing .next cache...
+    rmdir /s /q ".next"
+)
+
+:: Suppress punycode deprecation warning
+set NODE_OPTIONS=--no-deprecation
+
 npm run dev:tunnel
