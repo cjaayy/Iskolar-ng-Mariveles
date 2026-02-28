@@ -12,14 +12,17 @@
     "dev:quick": "concurrently --names \"next,tunnel\" --prefix-colors \"cyan,yellow\" \"npm run dev\" \"cloudflared tunnel --url http://localhost:3000\""
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "framer-motion": "^12.34.3",
     "lucide-react": "^0.575.0",
+    "mysql2": "^3.18.2",
     "next": "14.2.35",
     "react": "^18",
     "react-dom": "^18"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/bcrypt": "^6.0.0",
+    "@types/node": "^20.19.35",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "concurrently": "^9.2.1",
