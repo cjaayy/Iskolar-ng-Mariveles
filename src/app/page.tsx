@@ -169,10 +169,10 @@ export default function LoginPage() {
                 />
                 <label
                   htmlFor="login-email"
-                  className="absolute left-10 top-1/2 -translate-y-1/2 text-muted-fg font-body text-sm
-                    transition-all duration-200 pointer-events-none px-1
-                    peer-focus:-translate-y-9 peer-focus:scale-[0.85] peer-focus:text-ocean-400 peer-focus:font-medium peer-focus:bg-input-bg
-                    peer-[:not(:placeholder-shown)]:-translate-y-9 peer-[:not(:placeholder-shown)]:scale-[0.85] peer-[:not(:placeholder-shown)]:bg-input-bg"
+                  className="floating-label absolute left-10 top-1/2 -translate-y-1/2 text-muted-fg font-body text-sm
+                    transition-all duration-200 pointer-events-none
+                    peer-focus:-translate-y-9 peer-focus:scale-[0.85] peer-focus:text-ocean-400 peer-focus:font-medium
+                    peer-[:not(:placeholder-shown)]:-translate-y-9 peer-[:not(:placeholder-shown)]:scale-[0.85]"
                 >
                   Email address
                 </label>
@@ -218,10 +218,10 @@ export default function LoginPage() {
                 />
                 <label
                   htmlFor="login-password"
-                  className="absolute left-10 top-1/2 -translate-y-1/2 text-muted-fg font-body text-sm
-                    transition-all duration-200 pointer-events-none px-1
-                    peer-focus:-translate-y-9 peer-focus:scale-[0.85] peer-focus:text-ocean-400 peer-focus:font-medium peer-focus:bg-input-bg
-                    peer-[:not(:placeholder-shown)]:-translate-y-9 peer-[:not(:placeholder-shown)]:scale-[0.85] peer-[:not(:placeholder-shown)]:bg-input-bg"
+                  className="floating-label absolute left-10 top-1/2 -translate-y-1/2 text-muted-fg font-body text-sm
+                    transition-all duration-200 pointer-events-none
+                    peer-focus:-translate-y-9 peer-focus:scale-[0.85] peer-focus:text-ocean-400 peer-focus:font-medium
+                    peer-[:not(:placeholder-shown)]:-translate-y-9 peer-[:not(:placeholder-shown)]:scale-[0.85]"
                 >
                   Password
                 </label>

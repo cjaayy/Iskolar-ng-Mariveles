@@ -107,6 +107,22 @@
     @apply -translate-y-6 scale-90 text-ocean-400;
   }
 
+  /* Floating label background mask – covers the border behind the label text */
+  .floating-label {
+    z-index: 1;
+  }
+  input:focus ~ .floating-label,
+  input:not(:placeholder-shown) ~ .floating-label {
+    background-color: var(--input-bg);
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+    border-radius: 0.5rem;
+    border: 2px solid var(--input-border);
+  }
+  input:focus ~ .floating-label {
+    border-color: var(--accent);
+  }
+
   /* Gradient text */
   .gradient-text {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-ocean-400 to-peach-400;
