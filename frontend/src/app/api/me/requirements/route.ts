@@ -6,7 +6,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { query, execute } from "@db/connection";
-import { REQUIREMENT_CONFIGS } from "@db/requirements-config";
+import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
 interface ApplicationRow {
   id: number;

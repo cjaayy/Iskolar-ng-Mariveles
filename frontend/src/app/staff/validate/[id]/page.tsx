@@ -32,7 +32,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { Card, Badge, Button, Skeleton } from "@/components/ui";
-import { REQUIREMENT_CONFIGS } from "@db/requirements-config";
+import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
 /* -- Types -- */
 interface ApplicationDetail {

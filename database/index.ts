@@ -10,4 +10,3 @@
 export * from "./connection";
 export * from "./types";
 export * from "./eligibility";
-export * from "./requirements-config";
