@@ -1,12 +1,8 @@
 /**
- * database/eligibility.ts
+ * src/db/eligibility.ts
  * Pure-function eligibility checks — no DB calls, easy to unit-test.
  */
-import type {
-  ApplicantRow,
-  ScholarshipRow,
-  EligibilityResult,
-} from "./types";
+import type { ApplicantRow, ScholarshipRow, EligibilityResult } from "./types";
 
 /**
  * Returns whether an applicant meets all criteria for a scholarship,

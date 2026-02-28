@@ -1,5 +1,5 @@
 /**
- * database/requirements-config.ts
+ * src/db/requirements-config.ts
  * Static definition of all scholarship document requirements.
  * The API merges this with per-application submission statuses from the DB.
  */

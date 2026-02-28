@@ -1,5 +1,5 @@
 /**
- * database/connection.ts
+ * src/db/connection.ts
  * MySQL connection pool using mysql2/promise.
  * A single pool instance is cached in the Node.js module cache so that
  * hot-reloads in Next.js dev mode don't exhaust connections.

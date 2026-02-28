@@ -1,5 +1,5 @@
 /**
- * database/types.ts
+ * src/db/types.ts
  * TypeScript interfaces that mirror the MySQL schema tables.
  * Use these as the single source of truth for DB row shapes.
  */

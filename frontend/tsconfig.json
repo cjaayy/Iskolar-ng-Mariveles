@@ -19,18 +19,12 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@db": ["../database/index"],
-      "@db/*": ["../database/*"],
+      "@db": ["./src/db/index"],
+      "@db/*": ["./src/db/*"],
       "mysql2": ["./node_modules/mysql2"],
       "mysql2/*": ["./node_modules/mysql2/*"]
     }
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    "../database/**/*.ts"
-  ],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }

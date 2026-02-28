@@ -17,8 +17,9 @@ frontend/out/
 # production
 /build
 
-# uploaded files
-frontend/public/uploads/
+# uploaded files (keep the directory via .gitkeep)
+frontend/public/uploads/*
+!frontend/public/uploads/.gitkeep
 
 # misc
 .DS_Store
