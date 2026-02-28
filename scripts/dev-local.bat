@@ -1,4 +1,5 @@
 @echo off
+setlocal enabledelayedexpansion
 title Iskolar ng Mariveles - Local Dev
 echo ============================================
 echo   Iskolar ng Mariveles - Local Development
@@ -8,39 +9,40 @@ echo.
 :: Kill any process using port 3000
 echo Checking port 3000...
 set "PORT_IN_USE=0"
-for /f "tokens=5" %%a in ('netstat -ano 2^>nul ^| findstr ":3000 " ^| findstr /I "LISTENING"') do (
-    set "PORT_IN_USE=1"
-    echo Killing process on port 3000 ^(PID: %%a^)...
-    taskkill /F /PID %%a >nul 2>&1
+for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr /R ":3000[ $]" ^| findstr /I "LISTENING"') do (
+    set "PID=%%a"
+    echo !PID! | findstr /R "^[0-9][0-9]*$" >nul 2>&1
+    if !errorlevel!==0 (
+        set "PORT_IN_USE=1"
+        echo Killing process on port 3000 ^(PID: !PID!^)...
+        taskkill /F /PID !PID! >nul 2>&1
+    )
 )
-if "%PORT_IN_USE%"=="0" echo Port 3000 is already free.
-if "%PORT_IN_USE%"=="1" echo Port 3000 has been freed.
+if "!PORT_IN_USE!"=="0" echo Port 3000 is already free.
+if "!PORT_IN_USE!"=="1" echo Port 3000 has been freed.
 echo.
+
+:: Navigate to project root (drive letter already uppercase via %~dp0)
+cd /d "%~dp0.."
+
+:: Suppress punycode deprecation warning
+set NODE_OPTIONS=--no-deprecation
+
+:: Optionally clear stale webpack cache (pass --clean flag to force)
+if /i "%~1"=="--clean" (
+    if exist ".next" (
+        echo Clearing .next cache...
+        rmdir /s /q ".next"
+        echo Done.
+        echo.
+    )
+)
 
 echo Starting Next.js dev server on localhost:3000...
 echo.
 
 :: Open browser after a short delay
-start "" cmd /c "timeout /t 3 /nobreak >nul && start http://localhost:3000"
-
-:: Start dev server
-cd /d "%~dp0.."
-
-:: Normalize drive letter to uppercase to fix webpack cache warnings
-for %%i in ("%cd%") do set "DRIVE=%%~di"
-set "UPPER_DRIVE=%DRIVE%"
-if "%DRIVE%"=="c:" set "UPPER_DRIVE=C:"
-if "%DRIVE%"=="d:" set "UPPER_DRIVE=D:"
-if "%DRIVE%"=="e:" set "UPPER_DRIVE=E:"
-cd /d "%UPPER_DRIVE%%cd:~2%"
-
-:: Clear stale webpack cache
-if exist ".next" (
-    echo Clearing .next cache...
-    rmdir /s /q ".next"
-)
-
-:: Suppress punycode deprecation warning
-set NODE_OPTIONS=--no-deprecation
+start "" cmd /c "timeout /t 4 /nobreak >nul && start http://localhost:3000"
 
 npm run dev
+endlocal
