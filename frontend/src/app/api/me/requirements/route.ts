@@ -23,6 +23,8 @@ interface SubmissionRow {
   file_url: string | null;
   uploaded_at: Date | null;
   notes: string | null;
+  validator_notes: string | null;
+  validated_at: Date | null;
 }
 
 export async function GET(req: NextRequest) {
@@ -57,7 +59,7 @@ export async function GET(req: NextRequest) {
     // All submission statuses for this application
     const submissions = await query<SubmissionRow>(
       `
-      SELECT requirement_key, status, progress, file_name, file_url, uploaded_at, notes
+      SELECT requirement_key, status, progress, file_name, file_url, uploaded_at, notes, validator_notes, validated_at
       FROM requirement_submissions
       WHERE application_id = :application_id
     `,
@@ -98,6 +100,8 @@ export async function GET(req: NextRequest) {
         fileUrl: sub?.file_url ?? null,
         uploadedAt: sub?.uploaded_at ?? null,
         notes: sub?.notes ?? null,
+        validatorNotes: sub?.validator_notes ?? null,
+        validatedAt: sub?.validated_at ?? null,
       };
     });
 

@@ -15,6 +15,7 @@ import {
   Clock,
   AlertCircle,
   TrendingUp,
+  XCircle,
   FileText,
   Eye,
   Calendar,
@@ -22,6 +23,8 @@ import {
   ChevronUp,
   ExternalLink,
   Info,
+  MessageSquare,
+  RefreshCw,
 } from "lucide-react";
 import {
   Card,
@@ -40,7 +43,12 @@ import {
 } from "@/components/providers/SessionProvider";
 
 /* -- Types -- */
-type RequirementStatus = "approved" | "pending" | "in-progress" | "missing";
+type RequirementStatus =
+  | "approved"
+  | "pending"
+  | "in-progress"
+  | "missing"
+  | "rejected";
 type FilterType = "all" | RequirementStatus;
 
 interface Requirement {
@@ -55,6 +63,8 @@ interface Requirement {
   sampleUrl?: string;
   uploadedFile?: string;
   group: "personal" | "academic" | "financial";
+  validatorNotes?: string | null;
+  validatedAt?: string | null;
 }
 
 /* -- Mock Data removed – loaded from /api/me/requirements -- */
@@ -71,6 +81,7 @@ const statusConfig: Record<
   pending: { label: "Pending Review", variant: "warning", icon: Clock },
   "in-progress": { label: "In Progress", variant: "info", icon: TrendingUp },
   missing: { label: "Missing", variant: "error", icon: AlertCircle },
+  rejected: { label: "Rejected", variant: "error", icon: XCircle },
 };
 
 const groupLabels = {
@@ -202,6 +213,7 @@ export default function RequirementsPage() {
     "in-progress": requirements.filter((r) => r.status === "in-progress")
       .length,
     missing: requirements.filter((r) => r.status === "missing").length,
+    rejected: requirements.filter((r) => r.status === "rejected").length,
   };
 
   if (isLoading) {
@@ -306,6 +318,7 @@ export default function RequirementsPage() {
                 "pending",
                 "in-progress",
                 "missing",
+                "rejected",
               ] as FilterType[]
             ).map((f) => (
               <button
@@ -448,16 +461,21 @@ function RequirementRow({
   onUpload: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const config = statusConfig[req.status];
+  const config = statusConfig[req.status] ?? statusConfig.missing;
   // StatusIcon available via config.icon if needed
   const dueDate = new Date(req.dueDate);
   const isOverdue = dueDate < new Date() && req.status !== "approved";
   const daysDiff = Math.ceil(
     (dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
   );
+  const isRejected = req.status === "rejected";
 
   return (
-    <Card padding="none" hover className="overflow-hidden">
+    <Card
+      padding="none"
+      hover
+      className={`overflow-hidden ${isRejected ? "ring-2 ring-coral-400/30" : ""}`}
+    >
       <div className="p-4 sm:p-5">
         <div className="flex items-start gap-3">
           {/* Checkbox */}
@@ -483,16 +501,59 @@ function RequirementRow({
               </div>
             </div>
 
+            {/* Rejection reason banner */}
+            {isRejected && req.validatorNotes && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-3 flex items-start gap-2.5 p-3 rounded-xl bg-coral-50 dark:bg-coral-500/10 border border-coral-200 dark:border-coral-500/20"
+              >
+                <MessageSquare className="w-4 h-4 text-coral-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-body font-semibold text-coral-500 dark:text-coral-400 mb-0.5">
+                    Reason for Rejection
+                  </p>
+                  <p className="text-sm font-body text-coral-600 dark:text-coral-300">
+                    {req.validatorNotes}
+                  </p>
+                  {req.validatedAt && (
+                    <p className="text-xs font-body text-coral-400 mt-1">
+                      Rejected on{" "}
+                      {new Date(req.validatedAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {isRejected && !req.validatorNotes && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-3 flex items-center gap-2 p-3 rounded-xl bg-coral-50 dark:bg-coral-500/10 border border-coral-200 dark:border-coral-500/20"
+              >
+                <XCircle className="w-4 h-4 text-coral-400 flex-shrink-0" />
+                <p className="text-sm font-body text-coral-500 dark:text-coral-400">
+                  This document was rejected. Please re-upload a corrected
+                  version.
+                </p>
+              </motion.div>
+            )}
+
             {/* Progress */}
             <div className="mt-3">
               <ProgressBar
-                value={req.progress}
+                value={isRejected ? 0 : req.progress}
                 size="sm"
                 showValue
                 color={
                   req.status === "approved"
                     ? "sage"
-                    : req.status === "missing"
+                    : req.status === "missing" || isRejected
                       ? "coral"
                       : "ocean"
                 }
@@ -542,15 +603,27 @@ function RequirementRow({
                   )}
                 </button>
 
-                {req.status !== "approved" && (
+                {isRejected ? (
                   <Button
                     size="sm"
-                    variant="secondary"
+                    variant="primary"
                     onClick={onUpload}
-                    leftIcon={<Upload className="w-3.5 h-3.5" />}
+                    leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
+                    className="!bg-coral-400 hover:!bg-coral-500"
                   >
-                    Upload
+                    Re-upload
                   </Button>
+                ) : (
+                  req.status !== "approved" && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={onUpload}
+                      leftIcon={<Upload className="w-3.5 h-3.5" />}
+                    >
+                      Upload
+                    </Button>
+                  )
                 )}
               </div>
             </div>

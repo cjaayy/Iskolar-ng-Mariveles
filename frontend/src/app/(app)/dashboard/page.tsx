@@ -19,6 +19,8 @@ import {
   TrendingUp,
   Star,
   ChevronRight,
+  XCircle,
+  MessageSquare,
 } from "lucide-react";
 import {
   Card,
@@ -39,17 +41,17 @@ type ApiRequirement = {
   key: string;
   name: string;
   description: string;
-  status: "approved" | "pending" | "in-progress" | "missing";
+  status: "approved" | "pending" | "in-progress" | "missing" | "rejected";
   progress: number;
   dueDate: string;
   helpTip: string;
   group: string;
+  validatorNotes?: string | null;
+  validatedAt?: string | null;
 };
 
 /* -- Derive activity items from requirement statuses -- */
-function generateActivities(
-  reqs: ApiRequirement[],
-): {
+function generateActivities(reqs: ApiRequirement[]): {
   id: number;
   text: string;
   time: string;
@@ -105,6 +107,11 @@ const statusConfig = {
     icon: TrendingUp,
   },
   missing: { label: "Missing", variant: "error" as const, icon: AlertCircle },
+  rejected: {
+    label: "Rejected",
+    variant: "error" as const,
+    icon: XCircle,
+  },
 };
 
 /* -- Countdown Timer Hook -- */
@@ -378,7 +385,7 @@ export default function DashboardPage() {
             {/* Requirement Cards */}
             <motion.div variants={container} className="space-y-3">
               {dashReqs.map((req) => {
-                const config = statusConfig[req.status];
+                const config = statusConfig[req.status] ?? statusConfig.missing;
                 const StatusIcon = config.icon;
                 return (
                   <motion.div key={req.id} variants={item}>
@@ -392,6 +399,7 @@ export default function DashboardPage() {
                           ${req.status === "pending" ? "bg-amber-50 dark:bg-amber-500/10" : ""}
                           ${req.status === "in-progress" ? "bg-ocean-50 dark:bg-ocean-400/10" : ""}
                           ${req.status === "missing" ? "bg-coral-50 dark:bg-coral-500/10" : ""}
+                          ${req.status === "rejected" ? "bg-coral-50 dark:bg-coral-500/10" : ""}
                         `}
                         >
                           <StatusIcon
@@ -400,6 +408,7 @@ export default function DashboardPage() {
                             ${req.status === "pending" ? "text-amber-500" : ""}
                             ${req.status === "in-progress" ? "text-ocean-400" : ""}
                             ${req.status === "missing" ? "text-coral-400" : ""}
+                            ${req.status === "rejected" ? "text-coral-400" : ""}
                           `}
                           />
                         </div>
@@ -428,6 +437,17 @@ export default function DashboardPage() {
                               }
                             />
                           </div>
+
+                          {/* Rejection reason */}
+                          {req.status === "rejected" && req.validatorNotes && (
+                            <div className="flex items-start gap-2 mt-2 p-2 rounded-lg bg-coral-50 dark:bg-coral-500/10 border border-coral-200 dark:border-coral-500/20">
+                              <MessageSquare className="w-3.5 h-3.5 text-coral-400 mt-0.5 flex-shrink-0" />
+                              <p className="text-xs font-body text-coral-500 dark:text-coral-400 line-clamp-2">
+                                {req.validatorNotes}
+                              </p>
+                            </div>
+                          )}
+
                           <div className="flex items-center justify-between mt-1.5">
                             <span className="text-xs font-body text-muted-fg">
                               Due:{" "}
@@ -439,11 +459,17 @@ export default function DashboardPage() {
                             {req.status !== "approved" && (
                               <Link
                                 href="/requirements"
-                                className="text-xs font-body text-ocean-400 hover:underline flex items-center gap-0.5"
+                                className={`text-xs font-body flex items-center gap-0.5 hover:underline ${
+                                  req.status === "rejected"
+                                    ? "text-coral-400 font-medium"
+                                    : "text-ocean-400"
+                                }`}
                               >
-                                {req.status === "missing"
-                                  ? "Upload"
-                                  : "Continue"}
+                                {req.status === "rejected"
+                                  ? "Re-upload"
+                                  : req.status === "missing"
+                                    ? "Upload"
+                                    : "Continue"}
                                 <ChevronRight className="w-3 h-3" />
                               </Link>
                             )}
