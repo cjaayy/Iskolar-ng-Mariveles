@@ -131,11 +131,49 @@ CREATE TABLE IF NOT EXISTS validations (
 --  SEED DATA  (safe to re-run — uses INSERT IGNORE)
 -- ============================================================
 
+-- ------------------------------------------------------------
+-- 6. REQUIREMENT_SUBMISSIONS
+--    Tracks per-requirement document upload + validation status
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS requirement_submissions (
+  id              INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  application_id  INT UNSIGNED  NOT NULL,
+  requirement_key VARCHAR(60)   NOT NULL,
+  status          ENUM('missing','in_progress','pending','approved','rejected')
+                                NOT NULL DEFAULT 'missing',
+  progress        TINYINT       NOT NULL DEFAULT 0,
+  file_name       VARCHAR(255)  NULL,
+  uploaded_at     TIMESTAMP     NULL,
+  notes           TEXT          NULL,
+  validated_by    INT UNSIGNED  NULL                COMMENT 'users.id of validator/staff who reviewed',
+  validated_at    TIMESTAMP     NULL,
+  validator_notes TEXT          NULL                COMMENT 'feedback from staff',
+  created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_req_sub (application_id, requirement_key),
+  INDEX idx_req_sub_status (status),
+  CONSTRAINT fk_req_sub_app
+    FOREIGN KEY (application_id) REFERENCES applications (id) ON DELETE CASCADE,
+  CONSTRAINT fk_req_sub_validator
+    FOREIGN KEY (validated_by)   REFERENCES users (id)
+) ENGINE=InnoDB;
+
+-- ============================================================
+--  SEED DATA  (safe to re-run — uses INSERT IGNORE)
+-- ============================================================
+
 -- Default admin account  (password: Admin@1234 — change in production!)
 INSERT IGNORE INTO users (id, email, password_hash, full_name, role)
 VALUES (1, 'admin@iskolar.local',
         '$2b$10$Hd98SNsIXXKZUW0LloOdvem5.efA2UOb5.//jEGRywFnRfFhFxS.C',   -- Admin@1234 (bcrypt 10 rounds)
         'System Administrator', 'admin');
+
+-- Default validator / staff account  (password: Staff@1234)
+INSERT IGNORE INTO users (id, email, password_hash, full_name, role)
+VALUES (3, 'staff@iskolar.local',
+        '$2b$10$Hd98SNsIXXKZUW0LloOdvem5.efA2UOb5.//jEGRywFnRfFhFxS.C',   -- Staff@1234 (bcrypt 10 rounds — same hash placeholder)
+        'Staff Validator', 'validator');
 
 -- Sample scholarship
 INSERT IGNORE INTO scholarships

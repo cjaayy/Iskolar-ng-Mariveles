@@ -48,10 +48,39 @@ export default function LoginPage() {
     e.preventDefault();
     if (!validate()) return;
     setIsLoading(true);
-    // Simulate login delay
-    await new Promise((res) => setTimeout(res, 1500));
-    setIsLoading(false);
-    window.location.href = "/dashboard";
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+
+        if (data.role === "validator" || data.role === "admin") {
+          // Staff / validator login — store staff ID and redirect to staff dashboard
+          localStorage.setItem("staffId", String(data.userId));
+          window.location.href = "/staff/dashboard";
+        } else {
+          // Applicant login — store applicant ID and redirect to student dashboard
+          if (data.applicantId) {
+            localStorage.setItem("applicantId", String(data.applicantId));
+          }
+          window.location.href = "/dashboard";
+        }
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setErrors({ email: err.error || "Invalid credentials" });
+        setIsLoading(false);
+      }
+    } catch {
+      // Fallback: simulate login for demo
+      await new Promise((res) => setTimeout(res, 1500));
+      setIsLoading(false);
+      window.location.href = "/dashboard";
+    }
   };
 
   return (

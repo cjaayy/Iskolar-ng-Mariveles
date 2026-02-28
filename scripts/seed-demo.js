@@ -26,6 +26,9 @@ async function run() {
       file_name       VARCHAR(255)  NULL,
       uploaded_at     TIMESTAMP     NULL,
       notes           TEXT          NULL,
+      validated_by    INT UNSIGNED  NULL,
+      validated_at    TIMESTAMP     NULL,
+      validator_notes TEXT          NULL,
       created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
@@ -35,6 +38,29 @@ async function run() {
     ) ENGINE=InnoDB
   `);
   console.log("✓ requirement_submissions table ready");
+
+  // 1b. Add validator columns if they don't exist (for existing installs)
+  try {
+    await pool.execute(
+      `ALTER TABLE requirement_submissions ADD COLUMN validated_by INT UNSIGNED NULL AFTER notes`,
+    );
+  } catch {
+    /* column may already exist */
+  }
+  try {
+    await pool.execute(
+      `ALTER TABLE requirement_submissions ADD COLUMN validated_at TIMESTAMP NULL AFTER validated_by`,
+    );
+  } catch {
+    /* column may already exist */
+  }
+  try {
+    await pool.execute(
+      `ALTER TABLE requirement_submissions ADD COLUMN validator_notes TEXT NULL AFTER validated_at`,
+    );
+  } catch {
+    /* column may already exist */
+  }
 
   // 2. Demo user
   const hash = await bcrypt.hash("Demo@1234", 10);
@@ -70,11 +96,18 @@ async function run() {
   );
   console.log("✓ Requirement submissions cleared — all 8 start as missing");
 
+  // 6. Staff / Validator account
+  const staffHash = await bcrypt.hash("Staff@1234", 10);
+  await pool.execute(
+    "INSERT IGNORE INTO users (id, email, password_hash, full_name, role) VALUES (3, ?, ?, ?, ?)",
+    ["staff@iskolar.local", staffHash, "Staff Validator", "validator"],
+  );
+  console.log("✓ Staff user (staff@iskolar.local / Staff@1234)");
+
   await pool.end();
   console.log("\nDemo data seeded successfully!");
-  console.log("  Email:    demo@iskolar.local");
-  console.log("  Password: Demo@1234");
-  console.log("  Applicant ID: 1");
+  console.log("  Applicant → demo@iskolar.local / Demo@1234 (Applicant ID: 1)");
+  console.log("  Staff     → staff@iskolar.local / Staff@1234 (Validator)");
 }
 
 run().catch((e) => {
