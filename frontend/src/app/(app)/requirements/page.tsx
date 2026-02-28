@@ -5,7 +5,7 @@
 
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload,
@@ -34,6 +34,10 @@ import {
 } from "@/components/ui";
 import { EmptyStateIllustration } from "@/components/illustrations";
 import { DocumentUploadModal } from "@/components/requirements/DocumentUploadModal";
+import {
+  useSession,
+  DEMO_APPLICANT_ID,
+} from "@/components/providers/SessionProvider";
 
 /* -- Types -- */
 type RequirementStatus = "approved" | "pending" | "in-progress" | "missing";
@@ -41,6 +45,7 @@ type FilterType = "all" | RequirementStatus;
 
 interface Requirement {
   id: number;
+  key: string;
   name: string;
   description: string;
   status: RequirementStatus;
@@ -52,108 +57,7 @@ interface Requirement {
   group: "personal" | "academic" | "financial";
 }
 
-/* -- Mock Data -- */
-const requirements: Requirement[] = [
-  {
-    id: 1,
-    name: "Enrollment Certificate",
-    description:
-      "Official certificate from the registrar confirming current enrollment status.",
-    status: "approved",
-    progress: 100,
-    dueDate: "2026-03-10",
-    helpTip:
-      "Request this from your school's registrar office. Usually ready within 2-3 business days.",
-    sampleUrl: "#",
-    uploadedFile: "enrollment_cert_2026.pdf",
-    group: "academic",
-  },
-  {
-    id: 2,
-    name: "Certificate of Grades",
-    description:
-      "Official transcript or grade report for the most recent semester.",
-    status: "pending",
-    progress: 100,
-    dueDate: "2026-03-15",
-    helpTip:
-      "Must show all subjects for the current semester with your general weighted average.",
-    sampleUrl: "#",
-    uploadedFile: "grades_2025_2026.pdf",
-    group: "academic",
-  },
-  {
-    id: 3,
-    name: "Income Tax Return (ITR)",
-    description: "Parent or guardian's latest ITR or Certificate of No Income.",
-    status: "in-progress",
-    progress: 50,
-    dueDate: "2026-03-20",
-    helpTip:
-      "If your parent/guardian has no income, submit a notarized Certificate of No Income instead.",
-    sampleUrl: "#",
-    group: "financial",
-  },
-  {
-    id: 4,
-    name: "Barangay Certificate",
-    description: "Certificate of residency from your local barangay hall.",
-    status: "missing",
-    progress: 0,
-    dueDate: "2026-03-25",
-    helpTip:
-      "Visit your barangay hall with a valid ID. The certificate is usually free or minimal cost.",
-    sampleUrl: "#",
-    group: "personal",
-  },
-  {
-    id: 5,
-    name: "Community Service Log",
-    description: "Completed community service hours with supervisor sign-off.",
-    status: "in-progress",
-    progress: 30,
-    dueDate: "2026-04-01",
-    helpTip:
-      "Log at least 20 hours of community service. Each entry needs a supervisor signature.",
-    group: "personal",
-  },
-  {
-    id: 6,
-    name: "2x2 ID Photo",
-    description: "Recent 2x2 ID photo with white background.",
-    status: "approved",
-    progress: 100,
-    dueDate: "2026-03-10",
-    helpTip:
-      "Must be taken within the last 6 months. White background, formal attire.",
-    uploadedFile: "id_photo.jpg",
-    group: "personal",
-  },
-  {
-    id: 7,
-    name: "Birth Certificate (PSA)",
-    description: "PSA-issued birth certificate. Photocopy is acceptable.",
-    status: "approved",
-    progress: 100,
-    dueDate: "2026-03-10",
-    helpTip:
-      "Must be PSA-issued (not local civil registrar). Order online at PSA Serbilis if needed.",
-    uploadedFile: "birth_cert_psa.pdf",
-    group: "personal",
-  },
-  {
-    id: 8,
-    name: "Parent/Guardian Consent",
-    description: "Signed consent form from parent or legal guardian.",
-    status: "missing",
-    progress: 0,
-    dueDate: "2026-03-30",
-    helpTip:
-      "Download the consent form template, have it signed and notarized.",
-    sampleUrl: "#",
-    group: "personal",
-  },
-];
+/* -- Mock Data removed – loaded from /api/me/requirements -- */
 
 const statusConfig: Record<
   RequirementStatus,
@@ -198,6 +102,9 @@ const fadeUp = {
 /* ======================== REQUIREMENTS PAGE ======================== */
 
 export default function RequirementsPage() {
+  const { user } = useSession();
+  const [isLoading, setIsLoading] = useState(true);
+  const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [filter, setFilter] = useState<FilterType>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
@@ -210,12 +117,37 @@ export default function RequirementsPage() {
   const [uploadModal, setUploadModal] = useState<{
     open: boolean;
     name?: string;
+    reqKey?: string;
   }>({ open: false });
-  const [checkedItems, setCheckedItems] = useState<Set<number>>(
-    new Set(
-      requirements.filter((r) => r.status === "approved").map((r) => r.id),
-    ),
-  );
+  const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
+
+  // Load requirements from API on mount
+  const loadRequirements = useCallback(async () => {
+    try {
+      const res = await fetch("/api/me/requirements", {
+        headers: { "x-applicant-id": String(DEMO_APPLICANT_ID) },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const reqs: Requirement[] = data.requirements ?? [];
+        setRequirements(reqs);
+        // Pre-check approved items
+        setCheckedItems(
+          new Set(reqs.filter((r) => r.status === "approved").map((r) => r.id)),
+        );
+      }
+    } catch (e) {
+      console.error("[Requirements] Failed to load", e);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRequirements();
+  }, [loadRequirements]);
+
+  void user; // session available for future auth gating
 
   /* Filtered requirements */
   const filtered = useMemo(() => {
@@ -226,7 +158,7 @@ export default function RequirementsPage() {
         r.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesFilter && matchesSearch;
     });
-  }, [filter, searchQuery]);
+  }, [filter, searchQuery, requirements]);
 
   /* Grouped */
   const grouped = useMemo(() => {
@@ -255,9 +187,13 @@ export default function RequirementsPage() {
     });
   };
 
-  const overallProgress = Math.round(
-    requirements.reduce((sum, r) => sum + r.progress, 0) / requirements.length,
-  );
+  const overallProgress =
+    requirements.length > 0
+      ? Math.round(
+          requirements.reduce((sum, r) => sum + r.progress, 0) /
+            requirements.length,
+        )
+      : 0;
 
   const filterCounts: Record<FilterType, number> = {
     all: requirements.length,
@@ -267,6 +203,19 @@ export default function RequirementsPage() {
       .length,
     missing: requirements.filter((r) => r.status === "missing").length,
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-ocean-400 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-body text-muted-fg">
+            Loading requirements…
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -428,7 +377,11 @@ export default function RequirementsPage() {
                           isChecked={checkedItems.has(req.id)}
                           onToggle={() => toggleCheck(req.id)}
                           onUpload={() =>
-                            setUploadModal({ open: true, name: req.name })
+                            setUploadModal({
+                              open: true,
+                              name: req.name,
+                              reqKey: req.key,
+                            })
                           }
                         />
                       ))}
@@ -473,6 +426,9 @@ export default function RequirementsPage() {
         isOpen={uploadModal.open}
         onClose={() => setUploadModal({ open: false })}
         requirementName={uploadModal.name}
+        requirementKey={uploadModal.reqKey}
+        applicantId={DEMO_APPLICANT_ID}
+        onSuccess={loadRequirements}
       />
     </>
   );

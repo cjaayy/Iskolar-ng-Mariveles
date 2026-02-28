@@ -8,6 +8,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/components/providers/ThemeProvider";
+import { useSession } from "@/components/providers/SessionProvider";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -162,6 +163,10 @@ export function Sidebar({
 /* ======================== HEADER ======================== */
 
 export function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
+  const { user } = useSession();
+  const initials = user
+    ? `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`
+    : "?";
   return (
     <header className="sticky top-0 z-30 bg-card-bg/80 backdrop-blur-md border-b border-card-border px-4 lg:px-8 py-3">
       <div className="flex items-center justify-between">
@@ -218,8 +223,11 @@ export function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
           </button>
 
           {/* Avatar */}
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-ocean-300 to-peach-300 flex items-center justify-center text-sm font-heading font-bold text-white">
-            M
+          <div
+            className="w-8 h-8 rounded-full bg-gradient-to-br from-ocean-300 to-peach-300 flex items-center justify-center text-sm font-heading font-bold text-white"
+            title={user?.fullName ?? ""}
+          >
+            {initials}
           </div>
         </div>
       </div>

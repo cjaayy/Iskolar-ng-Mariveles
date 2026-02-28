@@ -16,6 +16,9 @@ interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   requirementName?: string;
+  requirementKey?: string;
+  applicantId?: number;
+  onSuccess?: () => void;
 }
 
 const documentTypes = [
@@ -31,6 +34,9 @@ export function DocumentUploadModal({
   isOpen,
   onClose,
   requirementName,
+  requirementKey,
+  applicantId,
+  onSuccess,
 }: UploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -69,19 +75,53 @@ export function DocumentUploadModal({
     setUploading(true);
     setProgress(0);
 
-    // Simulate upload with progress
-    for (let i = 0; i <= 100; i += 5) {
-      await new Promise((r) => setTimeout(r, 80));
-      setProgress(i);
+    // Animate progress to 90% while calling the API
+    const tick = setInterval(() => {
+      setProgress((p) => (p < 90 ? p + 10 : p));
+    }, 120);
+
+    try {
+      if (requirementKey && applicantId) {
+        const res = await fetch("/api/me/requirements", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-applicant-id": String(applicantId),
+          },
+          body: JSON.stringify({
+            requirementKey,
+            fileName: file.name,
+            notes: notes || null,
+          }),
+        });
+        clearInterval(tick);
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error ?? "Upload failed");
+        }
+      } else {
+        // Fallback: no DB key provided, just simulate
+        clearInterval(tick);
+        await new Promise((r) => setTimeout(r, 800));
+      }
+
+      setProgress(100);
+      setUploading(false);
+      setSuccess(true);
+      addToast("Document uploaded successfully!", "success");
+
+      setTimeout(() => {
+        onSuccess?.();
+        resetAndClose();
+      }, 2000);
+    } catch (err) {
+      clearInterval(tick);
+      setUploading(false);
+      setProgress(0);
+      const msg =
+        err instanceof Error ? err.message : "Upload failed. Please try again.";
+      addToast(msg, "error");
     }
-
-    setUploading(false);
-    setSuccess(true);
-    addToast("Document uploaded successfully!", "success");
-
-    setTimeout(() => {
-      resetAndClose();
-    }, 2000);
   };
 
   const resetAndClose = () => {

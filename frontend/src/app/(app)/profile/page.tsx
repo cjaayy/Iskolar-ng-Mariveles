@@ -5,7 +5,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   User,
@@ -35,38 +35,32 @@ import {
 } from "@/components/ui";
 import { useToast } from "@/components/providers/ToastProvider";
 import { WavySeparator } from "@/components/illustrations";
+import {
+  useSession,
+  DEMO_APPLICANT_ID,
+} from "@/components/providers/SessionProvider";
 
-/* -- Mock student data -- */
-const initialStudent = {
-  firstName: "Maria",
-  lastName: "Santos",
-  email: "maria.santos@student.edu.ph",
-  phone: "+63 917 123 4567",
-  address: "Brgy. San Isidro, Mariveles, Bataan",
-  gpa: "1.45",
-  major: "Bachelor of Science in Information Technology",
-  yearLevel: "3rd Year",
-  studentId: "2023-00142",
-  school: "Mariveles National High School - College Dept.",
-};
+/* -- Scholarship link type from /api/me -- */
+interface ScholarshipLink {
+  name: string;
+  grantor: string;
+  status: "active" | "pending";
+  award: string;
+}
 
-const linkedScholarships = [
-  {
-    name: "Iskolar ng Mariveles",
-    status: "active" as const,
-    award: "Full Tuition",
-  },
-  {
-    name: "DOST-SEI Merit Scholarship",
-    status: "active" as const,
-    award: "Stipend + Tuition",
-  },
-  {
-    name: "Barangay Scholarship",
-    status: "expired" as const,
-    award: "Book Allowance",
-  },
-];
+/* -- Student form data type -- */
+interface StudentForm {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  gpa: string;
+  major: string;
+  yearLevel: string;
+  studentId: string;
+  school: string;
+}
 
 /* -- Animations -- */
 const stagger = {
@@ -85,10 +79,68 @@ const fadeUp = {
 /* ======================== PROFILE PAGE ======================== */
 
 export default function ProfilePage() {
+  const { user, loading: sessionLoading, refresh } = useSession();
   const [isEditing, setIsEditing] = useState(false);
-  const [student, setStudent] = useState(initialStudent);
-  const [editData, setEditData] = useState(initialStudent);
   const { addToast } = useToast();
+  const [linkedScholarships, setLinkedScholarships] = useState<
+    ScholarshipLink[]
+  >([]);
+  const [saving, setSaving] = useState(false);
+
+  // Build empty student form
+  const emptyForm: StudentForm = {
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+    gpa: "",
+    major: "",
+    yearLevel: "",
+    studentId: "",
+    school: "",
+  };
+
+  const [student, setStudent] = useState<StudentForm>(emptyForm);
+  const [editData, setEditData] = useState<StudentForm>(emptyForm);
+
+  // Sync state when session loads
+  useEffect(() => {
+    if (!user) return;
+    const form: StudentForm = {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.contactNumber ?? "",
+      address: user.address ?? "",
+      gpa: user.gpa > 0 ? String(user.gpa) : "",
+      major: user.course,
+      yearLevel: user.yearLevelLabel,
+      studentId: user.studentNumber,
+      school: user.college,
+    };
+    setStudent(form);
+    setEditData(form);
+  }, [user]);
+
+  // Load linked scholarships from /api/me
+  const loadScholarships = useCallback(async () => {
+    try {
+      const res = await fetch("/api/me", {
+        headers: { "x-applicant-id": String(DEMO_APPLICANT_ID) },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLinkedScholarships(data.scholarships ?? []);
+      }
+    } catch (e) {
+      console.error("[Profile] Failed to load scholarships", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadScholarships();
+  }, [loadScholarships]);
 
   /* Notification settings */
   const [notifications, setNotifications] = useState({
@@ -105,10 +157,36 @@ export default function ProfilePage() {
     setIsEditing(true);
   };
 
-  const handleSave = () => {
-    setStudent(editData);
-    setIsEditing(false);
-    addToast("Profile updated successfully!", "success");
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/me/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-applicant-id": String(DEMO_APPLICANT_ID),
+        },
+        body: JSON.stringify({
+          firstName: editData.firstName,
+          lastName: editData.lastName,
+          contactNumber: editData.phone,
+          address: editData.address,
+        }),
+      });
+      if (res.ok) {
+        setStudent(editData);
+        setIsEditing(false);
+        addToast("Profile updated successfully!", "success");
+        await refresh();
+      } else {
+        const body = await res.json().catch(() => ({}));
+        addToast(body.error ?? "Failed to save. Please try again.", "error");
+      }
+    } catch {
+      addToast("Connection error. Please try again.", "error");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -127,7 +205,18 @@ export default function ProfilePage() {
     });
   };
 
-  const profileCompletion = 72;
+  const profileCompletion = user?.profileCompletion ?? 0;
+
+  if (sessionLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-ocean-400 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-body text-muted-fg">Loading profile…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -175,6 +264,7 @@ export default function ProfilePage() {
             <Button
               onClick={handleSave}
               leftIcon={<Save className="w-4 h-4" />}
+              isLoading={saving}
             >
               Save Changes
             </Button>

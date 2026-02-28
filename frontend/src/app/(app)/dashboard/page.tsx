@@ -5,7 +5,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
@@ -28,87 +28,65 @@ import {
   Skeleton,
 } from "@/components/ui";
 import { WavySeparator } from "@/components/illustrations";
+import {
+  useSession,
+  DEMO_APPLICANT_ID,
+} from "@/components/providers/SessionProvider";
 
-/* -- Mock Data -- */
-const studentName = "Maria";
-const profileCompletion = 72;
+/* -- Requirement type (matches API response shape) -- */
+type ApiRequirement = {
+  id: number;
+  key: string;
+  name: string;
+  description: string;
+  status: "approved" | "pending" | "in-progress" | "missing";
+  progress: number;
+  dueDate: string;
+  helpTip: string;
+  group: string;
+};
 
-const requirements = [
-  {
-    id: 1,
-    name: "Enrollment Certificate",
-    progress: 100,
-    status: "approved" as const,
-    dueDate: "2026-03-10",
-  },
-  {
-    id: 2,
-    name: "Certificate of Grades",
-    progress: 100,
-    status: "pending" as const,
-    dueDate: "2026-03-15",
-  },
-  {
-    id: 3,
-    name: "Income Tax Return",
-    progress: 50,
-    status: "in-progress" as const,
-    dueDate: "2026-03-20",
-  },
-  {
-    id: 4,
-    name: "Barangay Certificate",
-    progress: 0,
-    status: "missing" as const,
-    dueDate: "2026-03-25",
-  },
-  {
-    id: 5,
-    name: "Community Service Log",
-    progress: 30,
-    status: "in-progress" as const,
-    dueDate: "2026-04-01",
-  },
-];
-
-const deadlines = [
-  { label: "Income Tax Return", date: "2026-03-20", urgent: true },
-  { label: "Barangay Certificate", date: "2026-03-25", urgent: false },
-  { label: "Community Service Log", date: "2026-04-01", urgent: false },
-];
-
-const activities = [
-  {
-    id: 1,
-    text: "Enrollment Certificate was approved",
-    time: "2 hours ago",
-    type: "success" as const,
-  },
-  {
-    id: 2,
-    text: "Certificate of Grades submitted for review",
-    time: "5 hours ago",
-    type: "info" as const,
-  },
-  {
-    id: 3,
-    text: "Income Tax Return partially uploaded",
-    time: "1 day ago",
-    type: "warning" as const,
-  },
-  {
-    id: 4,
-    text: "Profile information updated",
-    time: "2 days ago",
-    type: "info" as const,
-  },
-  {
-    id: 5,
-    text: "Scholarship application started",
-    time: "5 days ago",
-    type: "info" as const,
-  },
-];
+/* -- Derive activity items from requirement statuses -- */
+function generateActivities(
+  reqs: ApiRequirement[],
+): {
+  id: number;
+  text: string;
+  time: string;
+  type: "success" | "info" | "warning";
+}[] {
+  const acts: {
+    id: number;
+    text: string;
+    time: string;
+    type: "success" | "info" | "warning";
+  }[] = [];
+  for (const r of reqs) {
+    if (r.status === "approved") {
+      acts.push({
+        id: acts.length + 1,
+        text: `${r.name} was approved`,
+        time: "recently",
+        type: "success",
+      });
+    } else if (r.status === "pending") {
+      acts.push({
+        id: acts.length + 1,
+        text: `${r.name} submitted for review`,
+        time: "recently",
+        type: "info",
+      });
+    } else if (r.status === "in-progress") {
+      acts.push({
+        id: acts.length + 1,
+        text: `${r.name} partially uploaded`,
+        time: "in progress",
+        type: "warning",
+      });
+    }
+  }
+  return acts.slice(0, 5);
+}
 
 const statusConfig = {
   approved: {
@@ -189,21 +167,74 @@ const item = {
 /* ======================== DASHBOARD PAGE ======================== */
 
 export default function DashboardPage() {
+  const { user } = useSession();
   const [isLoading, setIsLoading] = useState(true);
+  const [requirements, setRequirements] = useState<ApiRequirement[]>([]);
+
+  const loadRequirements = useCallback(async () => {
+    try {
+      const res = await fetch("/api/me/requirements", {
+        headers: { "x-applicant-id": String(DEMO_APPLICANT_ID) },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRequirements(data.requirements ?? []);
+      }
+    } catch (e) {
+      console.error("[Dashboard] Failed to load requirements", e);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
+    loadRequirements();
+  }, [loadRequirements]);
+
+  // Wait for both user session and requirements before removing skeleton
+  const loading = isLoading || !user;
 
   const completedCount = requirements.filter(
     (r) => r.status === "approved",
   ).length;
-  const overallProgress = Math.round(
-    requirements.reduce((sum, r) => sum + r.progress, 0) / requirements.length,
-  );
+  const overallProgress =
+    requirements.length > 0
+      ? Math.round(
+          requirements.reduce((sum, r) => sum + r.progress, 0) /
+            requirements.length,
+        )
+      : 0;
 
-  if (isLoading) return <DashboardSkeleton />;
+  // Deadlines: non-approved requirements sorted by due date, top 3
+  const deadlines = requirements
+    .filter((r) => r.status !== "approved")
+    .sort(
+      (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
+    )
+    .slice(0, 3)
+    .map((r) => ({
+      label: r.name,
+      date: r.dueDate,
+      urgent:
+        Math.ceil((new Date(r.dueDate).getTime() - Date.now()) / 86_400_000) <=
+        7,
+    }));
+
+  // Activity feed derived from requirement statuses
+  const activities = generateActivities(requirements);
+
+  const studentName = user?.firstName ?? "...";
+  const profileCompletion = user?.profileCompletion ?? 0;
+
+  // Show top-5 requirements on dashboard (prioritise actionable first)
+  const dashReqs = [
+    ...requirements.filter((r) => r.status === "missing"),
+    ...requirements.filter((r) => r.status === "in-progress"),
+    ...requirements.filter((r) => r.status === "pending"),
+    ...requirements.filter((r) => r.status === "approved"),
+  ].slice(0, 5);
+
+  if (loading) return <DashboardSkeleton />;
 
   return (
     <motion.div
@@ -346,7 +377,7 @@ export default function DashboardPage() {
 
             {/* Requirement Cards */}
             <motion.div variants={container} className="space-y-3">
-              {requirements.map((req) => {
+              {dashReqs.map((req) => {
                 const config = statusConfig[req.status];
                 const StatusIcon = config.icon;
                 return (
@@ -436,26 +467,34 @@ export default function DashboardPage() {
               Upcoming Deadlines
             </h2>
             <Card padding="none" className="divide-y divide-card-border">
-              {deadlines.map((dl, i) => (
-                <div
-                  key={i}
-                  className="p-4 flex items-center justify-between gap-3"
-                >
-                  <div className="min-w-0">
-                    <p className="font-body text-sm font-medium text-foreground truncate">
-                      {dl.label}
-                    </p>
-                    <p className="text-xs font-body text-muted-fg">
-                      {new Date(dl.date).toLocaleDateString("en-US", {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </p>
+              {deadlines.length > 0 ? (
+                deadlines.map((dl, i) => (
+                  <div
+                    key={i}
+                    className="p-4 flex items-center justify-between gap-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-body text-sm font-medium text-foreground truncate">
+                        {dl.label}
+                      </p>
+                      <p className="text-xs font-body text-muted-fg">
+                        {new Date(dl.date).toLocaleDateString("en-US", {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </p>
+                    </div>
+                    <CountdownDisplay targetDate={dl.date} />
                   </div>
-                  <CountdownDisplay targetDate={dl.date} />
+                ))
+              ) : (
+                <div className="p-4">
+                  <p className="text-sm font-body text-muted-fg text-center">
+                    All deadlines met! 🎉
+                  </p>
                 </div>
-              ))}
+              )}
             </Card>
           </motion.div>
 
@@ -468,26 +507,34 @@ export default function DashboardPage() {
               Recent Activity
             </h2>
             <Card padding="none" className="divide-y divide-card-border">
-              {activities.map((act) => (
-                <div key={act.id} className="p-4 flex items-start gap-3">
-                  <div
-                    className={`
+              {activities.length > 0 ? (
+                activities.map((act) => (
+                  <div key={act.id} className="p-4 flex items-start gap-3">
+                    <div
+                      className={`
                     w-2 h-2 rounded-full mt-1.5 flex-shrink-0
                     ${act.type === "success" ? "bg-sage-400" : ""}
                     ${act.type === "info" ? "bg-ocean-400" : ""}
                     ${act.type === "warning" ? "bg-amber-400" : ""}
                   `}
-                  />
-                  <div className="min-w-0">
-                    <p className="font-body text-sm text-foreground">
-                      {act.text}
-                    </p>
-                    <p className="text-xs font-body text-muted-fg mt-0.5">
-                      {act.time}
-                    </p>
+                    />
+                    <div className="min-w-0">
+                      <p className="font-body text-sm text-foreground">
+                        {act.text}
+                      </p>
+                      <p className="text-xs font-body text-muted-fg mt-0.5">
+                        {act.time}
+                      </p>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="p-4">
+                  <p className="text-sm font-body text-muted-fg text-center">
+                    No activity yet
+                  </p>
                 </div>
-              ))}
+              )}
             </Card>
           </motion.div>
 
