@@ -23,7 +23,7 @@ export function Input({
   const inputId = id || label.toLowerCase().replace(/\s/g, "-");
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative pt-5 ${className}`}>
       <div className="relative">
         {leftIcon && (
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-fg pointer-events-none">
@@ -51,10 +51,10 @@ export function Input({
         <label
           htmlFor={inputId}
           className={`
-            absolute top-1/2 -translate-y-1/2 text-muted-fg font-body
+            absolute top-1/2 -translate-y-1/2 text-muted-fg font-body px-1
             transition-all duration-200 pointer-events-none select-none
-            peer-focus:-translate-y-9 peer-focus:scale-[0.85] peer-focus:text-ocean-400 peer-focus:font-medium
-            peer-[:not(:placeholder-shown)]:-translate-y-9 peer-[:not(:placeholder-shown)]:scale-[0.85]
+            peer-focus:-translate-y-9 peer-focus:scale-[0.85] peer-focus:text-ocean-400 peer-focus:font-medium peer-focus:bg-input-bg
+            peer-[:not(:placeholder-shown)]:-translate-y-9 peer-[:not(:placeholder-shown)]:scale-[0.85] peer-[:not(:placeholder-shown)]:bg-input-bg
             ${leftIcon ? "left-10" : "left-4"}
             ${error ? "peer-focus:text-coral-400" : ""}
           `}

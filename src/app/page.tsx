@@ -145,7 +145,7 @@ export default function LoginPage() {
             noValidate
           >
             {/* Email */}
-            <div>
+            <div className="pt-5">
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg pointer-events-none" />
                 <input
@@ -170,9 +170,9 @@ export default function LoginPage() {
                 <label
                   htmlFor="login-email"
                   className="absolute left-10 top-1/2 -translate-y-1/2 text-muted-fg font-body text-sm
-                    transition-all duration-200 pointer-events-none
-                    peer-focus:-translate-y-9 peer-focus:scale-[0.85] peer-focus:text-ocean-400 peer-focus:font-medium
-                    peer-[:not(:placeholder-shown)]:-translate-y-9 peer-[:not(:placeholder-shown)]:scale-[0.85]"
+                    transition-all duration-200 pointer-events-none px-1
+                    peer-focus:-translate-y-9 peer-focus:scale-[0.85] peer-focus:text-ocean-400 peer-focus:font-medium peer-focus:bg-input-bg
+                    peer-[:not(:placeholder-shown)]:-translate-y-9 peer-[:not(:placeholder-shown)]:scale-[0.85] peer-[:not(:placeholder-shown)]:bg-input-bg"
                 >
                   Email address
                 </label>
@@ -192,7 +192,7 @@ export default function LoginPage() {
             </div>
 
             {/* Password */}
-            <div>
+            <div className="pt-5">
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg pointer-events-none" />
                 <input
@@ -219,9 +219,9 @@ export default function LoginPage() {
                 <label
                   htmlFor="login-password"
                   className="absolute left-10 top-1/2 -translate-y-1/2 text-muted-fg font-body text-sm
-                    transition-all duration-200 pointer-events-none
-                    peer-focus:-translate-y-9 peer-focus:scale-[0.85] peer-focus:text-ocean-400 peer-focus:font-medium
-                    peer-[:not(:placeholder-shown)]:-translate-y-9 peer-[:not(:placeholder-shown)]:scale-[0.85]"
+                    transition-all duration-200 pointer-events-none px-1
+                    peer-focus:-translate-y-9 peer-focus:scale-[0.85] peer-focus:text-ocean-400 peer-focus:font-medium peer-focus:bg-input-bg
+                    peer-[:not(:placeholder-shown)]:-translate-y-9 peer-[:not(:placeholder-shown)]:scale-[0.85] peer-[:not(:placeholder-shown)]:bg-input-bg"
                 >
                   Password
                 </label>
