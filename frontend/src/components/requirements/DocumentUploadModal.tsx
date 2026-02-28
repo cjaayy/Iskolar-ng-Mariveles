@@ -82,6 +82,25 @@ export function DocumentUploadModal({
 
     try {
       if (requirementKey && applicantId) {
+        // Step 1: Upload the actual file to /api/upload
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("requirementKey", requirementKey);
+        formData.append("applicantId", String(applicantId));
+
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!uploadRes.ok) {
+          const err = await uploadRes.json().catch(() => ({}));
+          throw new Error(err.error ?? "File upload failed");
+        }
+
+        const uploadData = await uploadRes.json();
+
+        // Step 2: Record the submission in the database with the file URL
         const res = await fetch("/api/me/requirements", {
           method: "POST",
           headers: {
@@ -91,6 +110,7 @@ export function DocumentUploadModal({
           body: JSON.stringify({
             requirementKey,
             fileName: file.name,
+            fileUrl: uploadData.fileUrl,
             notes: notes || null,
           }),
         });

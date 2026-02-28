@@ -20,6 +20,7 @@ interface SubmissionRow {
   status: string;
   progress: number;
   file_name: string | null;
+  file_url: string | null;
   uploaded_at: Date | null;
   notes: string | null;
 }
@@ -56,7 +57,7 @@ export async function GET(req: NextRequest) {
     // All submission statuses for this application
     const submissions = await query<SubmissionRow>(
       `
-      SELECT requirement_key, status, progress, file_name, uploaded_at, notes
+      SELECT requirement_key, status, progress, file_name, file_url, uploaded_at, notes
       FROM requirement_submissions
       WHERE application_id = :application_id
     `,
@@ -94,6 +95,7 @@ export async function GET(req: NextRequest) {
         status,
         progress: sub?.progress ?? 0,
         uploadedFile: sub?.file_name ?? null,
+        fileUrl: sub?.file_url ?? null,
         uploadedAt: sub?.uploaded_at ?? null,
         notes: sub?.notes ?? null,
       };
@@ -124,9 +126,10 @@ export async function POST(req: NextRequest) {
   const body = (await req.json()) as {
     requirementKey: string;
     fileName?: string;
+    fileUrl?: string;
     notes?: string;
   };
-  const { requirementKey, fileName, notes } = body;
+  const { requirementKey, fileName, fileUrl, notes } = body;
 
   if (!requirementKey) {
     return NextResponse.json(
@@ -155,20 +158,32 @@ export async function POST(req: NextRequest) {
     // Upsert submission row — status becomes "pending" (under review), progress = 100
     await execute(
       `INSERT INTO requirement_submissions
-         (application_id, requirement_key, status, progress, file_name, uploaded_at, notes)
-       VALUES (:application_id, :requirement_key, 'pending', 100, :file_name, NOW(), :notes)
+         (application_id, requirement_key, status, progress, file_name, file_url, uploaded_at, notes)
+       VALUES (:application_id, :requirement_key, 'pending', 100, :file_name, :file_url, NOW(), :notes)
        ON DUPLICATE KEY UPDATE
          status      = 'pending',
          progress    = 100,
          file_name   = VALUES(file_name),
+         file_url    = VALUES(file_url),
          uploaded_at = NOW(),
-         notes       = VALUES(notes)`,
+         notes       = VALUES(notes),
+         validated_by    = NULL,
+         validated_at    = NULL,
+         validator_notes = NULL`,
       {
         application_id: application.id,
         requirement_key: requirementKey,
         file_name: fileName ?? null,
+        file_url: fileUrl ?? null,
         notes: notes ?? null,
       },
+    );
+
+    // Move application back to under_review so staff knows there's new docs to review
+    await execute(
+      `UPDATE applications SET status = 'under_review'
+       WHERE id = :id AND status IN ('approved', 'rejected')`,
+      { id: application.id },
     );
 
     return NextResponse.json({ success: true });

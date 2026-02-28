@@ -6,6 +6,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@db/connection";
+import { REQUIREMENT_CONFIGS } from "@db/requirements-config";
 
 interface StaffApplicationRow {
   id: number;
@@ -89,7 +90,7 @@ export async function GET(req: NextRequest) {
         ap.year_level,
         s.name            AS scholarship_name,
         s.grantor,
-        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id) AS total_requirements,
+        ${REQUIREMENT_CONFIGS.length} AS total_requirements,
         (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'approved') AS approved_requirements,
         (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'pending') AS pending_requirements
       FROM applications a

@@ -6,6 +6,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@db/connection";
+import { REQUIREMENT_CONFIGS } from "@db/requirements-config";
 
 interface RouteContext {
   params: { id: string };
@@ -63,7 +64,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     }
 
     // All requirement submissions for this application
-    const requirements = await query(
+    const submissions = await query<Record<string, unknown>>(
       `
       SELECT
         rs.*,
@@ -75,6 +76,31 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       `,
       { application_id: id },
     );
+
+    // Merge ALL requirement configs with actual submissions
+    // so staff sees the full picture: submitted, pending, missing
+    const subMap = Object.fromEntries(
+      submissions.map((s) => [s.requirement_key, s]),
+    );
+
+    const requirements = REQUIREMENT_CONFIGS.map((config, idx) => {
+      const sub = subMap[config.key] ?? null;
+      return {
+        id: sub ? (sub.id as number) : -(idx + 1), // negative id for unsubmitted
+        application_id: id,
+        requirement_key: config.key,
+        status: (sub?.status as string) ?? "missing",
+        progress: (sub?.progress as number) ?? 0,
+        file_name: (sub?.file_name as string) ?? null,
+        file_url: (sub?.file_url as string) ?? null,
+        uploaded_at: (sub?.uploaded_at as string) ?? null,
+        notes: (sub?.notes as string) ?? null,
+        validated_by: (sub?.validated_by as number) ?? null,
+        validated_at: (sub?.validated_at as string) ?? null,
+        validator_notes: (sub?.validator_notes as string) ?? null,
+        validator_name: (sub?.validator_name as string) ?? null,
+      };
+    });
 
     // Validation history
     const history = await query(

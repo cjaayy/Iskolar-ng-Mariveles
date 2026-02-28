@@ -24,6 +24,7 @@ async function run() {
                                     NOT NULL DEFAULT 'missing',
       progress        TINYINT       NOT NULL DEFAULT 0,
       file_name       VARCHAR(255)  NULL,
+      file_url        VARCHAR(500)  NULL,
       uploaded_at     TIMESTAMP     NULL,
       notes           TEXT          NULL,
       validated_by    INT UNSIGNED  NULL,
@@ -39,7 +40,14 @@ async function run() {
   `);
   console.log("✓ requirement_submissions table ready");
 
-  // 1b. Add validator columns if they don't exist (for existing installs)
+  // 1b. Add columns if they don't exist (for existing installs)
+  try {
+    await pool.execute(
+      `ALTER TABLE requirement_submissions ADD COLUMN file_url VARCHAR(500) NULL AFTER file_name`,
+    );
+  } catch {
+    /* column may already exist */
+  }
   try {
     await pool.execute(
       `ALTER TABLE requirement_submissions ADD COLUMN validated_by INT UNSIGNED NULL AFTER notes`,

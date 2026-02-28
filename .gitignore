@@ -17,6 +17,9 @@ frontend/out/
 # production
 /build
 
+# uploaded files
+frontend/public/uploads/
+
 # misc
 .DS_Store
 *.pem

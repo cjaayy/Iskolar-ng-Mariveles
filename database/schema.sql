@@ -143,6 +143,7 @@ CREATE TABLE IF NOT EXISTS requirement_submissions (
                                 NOT NULL DEFAULT 'missing',
   progress        TINYINT       NOT NULL DEFAULT 0,
   file_name       VARCHAR(255)  NULL,
+  file_url        VARCHAR(500)  NULL                COMMENT 'server path to uploaded file',
   uploaded_at     TIMESTAMP     NULL,
   notes           TEXT          NULL,
   validated_by    INT UNSIGNED  NULL                COMMENT 'users.id of validator/staff who reviewed',
