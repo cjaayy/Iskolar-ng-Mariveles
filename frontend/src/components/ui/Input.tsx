@@ -51,7 +51,7 @@ export function Input({
         <label
           htmlFor={inputId}
           className={`
-            floating-label absolute top-1/2 -translate-y-1/2 text-muted-fg font-body
+            floating-label absolute top-1/2 -translate-y-1/2 text-muted-fg font-body text-sm
             transition-all duration-200 pointer-events-none select-none
             peer-focus:-translate-y-9 peer-focus:scale-[0.85] peer-focus:text-ocean-400 peer-focus:font-medium
             peer-[:not(:placeholder-shown)]:-translate-y-9 peer-[:not(:placeholder-shown)]:scale-[0.85]
