@@ -25,6 +25,9 @@ import {
   Info,
   MessageSquare,
   RefreshCw,
+  User,
+  BookOpen,
+  Wallet,
 } from "lucide-react";
 import {
   Card,
@@ -91,9 +94,9 @@ const groupLabels = {
 };
 
 const groupIcons = {
-  personal: "👤",
-  academic: "📚",
-  financial: "💰",
+  personal: User,
+  academic: BookOpen,
+  financial: Wallet,
 };
 
 /* -- Animations -- */
@@ -356,9 +359,13 @@ export default function RequirementsPage() {
                   className="flex items-center gap-2 w-full text-left group"
                   aria-expanded={isExpanded}
                 >
-                  <span className="text-lg" aria-hidden="true">
-                    {groupIcons[group as keyof typeof groupIcons]}
-                  </span>
+                  {React.createElement(
+                    groupIcons[group as keyof typeof groupIcons],
+                    {
+                      className: "w-5 h-5 text-primary",
+                      "aria-hidden": true,
+                    },
+                  )}
                   <h2 className="font-heading text-base font-semibold text-foreground">
                     {groupLabels[group as keyof typeof groupLabels]}
                   </h2>
