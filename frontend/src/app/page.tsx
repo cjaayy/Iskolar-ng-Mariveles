@@ -84,32 +84,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center p-4">
-      {/* Background blobs */}
-      <BlobShape
-        className="absolute -top-20 -left-20 animate-blob-morph opacity-60"
-        size={400}
-        color="#4A6FA5"
-        opacity={0.08}
-      />
-      <BlobShape2
-        className="absolute -bottom-32 -right-20 animate-blob-morph opacity-60"
-        size={500}
-        color="#E6B89C"
-        opacity={0.1}
-      />
-      <BlobShape
-        className="absolute top-1/3 right-0 animate-float"
-        size={200}
-        color="#F5C026"
-        opacity={0.06}
-      />
-
-      {/* Dot pattern overlay */}
-      <div
-        className="absolute inset-0 dot-pattern opacity-30 pointer-events-none"
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
+      {/* Background image */}
+      <Image
+        src="/image.png"
+        alt=""
+        fill
+        className="object-cover"
+        priority
         aria-hidden="true"
       />
+
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
 
       {/* Theme toggle */}
       <button
@@ -131,7 +118,7 @@ export default function LoginPage() {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="relative w-full max-w-md"
       >
-        <div className="bg-card-bg/90 backdrop-blur-lg border border-card-border rounded-3xl shadow-soft-lg p-8 md:p-10">
+        <div className="bg-transparent border border-white/20 rounded-3xl p-8 md:p-10">
           {/* Header with mascot */}
           <div className="text-center mb-8">
             <motion.div
@@ -296,7 +283,7 @@ export default function LoginPage() {
             {/* Submit */}
             <Button
               type="submit"
-              className="w-full"
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
               size="lg"
               isLoading={isLoading}
             >
