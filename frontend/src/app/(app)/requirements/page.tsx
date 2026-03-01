@@ -263,12 +263,6 @@ export default function RequirementsPage() {
               Track and upload all your scholarship documents in one place.
             </p>
           </div>
-          <Button
-            leftIcon={<Upload className="w-4 h-4" />}
-            onClick={() => setUploadModal({ open: true })}
-          >
-            Upload Document
-          </Button>
         </motion.div>
 
         {/* Overall Progress */}
