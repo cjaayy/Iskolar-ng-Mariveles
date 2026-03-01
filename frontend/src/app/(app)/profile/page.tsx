@@ -5,7 +5,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   User,
@@ -20,19 +20,8 @@ import {
   BellOff,
   Shield,
   Link2,
-  Camera,
-  Award,
 } from "lucide-react";
-import {
-  Card,
-  Button,
-  Input,
-  Toggle,
-  Badge,
-  ProgressBar,
-  Breadcrumb,
-  CircularProgress,
-} from "@/components/ui";
+import { Card, Button, Input, Toggle, Breadcrumb } from "@/components/ui";
 import { useToast } from "@/components/providers/ToastProvider";
 import { WavySeparator } from "@/components/illustrations";
 import {
@@ -82,9 +71,6 @@ export default function ProfilePage() {
   const { user, loading: sessionLoading, refresh } = useSession();
   const [isEditing, setIsEditing] = useState(false);
   const { addToast } = useToast();
-  const [linkedScholarships, setLinkedScholarships] = useState<
-    ScholarshipLink[]
-  >([]);
   const [saving, setSaving] = useState(false);
 
   // Build empty student form
@@ -122,25 +108,6 @@ export default function ProfilePage() {
     setStudent(form);
     setEditData(form);
   }, [user]);
-
-  // Load linked scholarships from /api/me
-  const loadScholarships = useCallback(async () => {
-    try {
-      const res = await fetch("/api/me", {
-        headers: { "x-applicant-id": String(DEMO_APPLICANT_ID) },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setLinkedScholarships(data.scholarships ?? []);
-      }
-    } catch (e) {
-      console.error("[Profile] Failed to load scholarships", e);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadScholarships();
-  }, [loadScholarships]);
 
   /* Notification settings */
   const [notifications, setNotifications] = useState({
@@ -204,8 +171,6 @@ export default function ProfilePage() {
       return updated;
     });
   };
-
-  const profileCompletion = user?.profileCompletion ?? 0;
 
   if (sessionLoading) {
     return (
@@ -272,100 +237,9 @@ export default function ProfilePage() {
         )}
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* ---- Left Column: Profile Card ---- */}
-        <motion.div variants={fadeUp} className="lg:col-span-1 space-y-6">
-          {/* Profile Card */}
-          <Card className="text-center relative overflow-hidden">
-            {/* Gradient banner */}
-            <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-br from-ocean-400 to-peach-300 rounded-t-2xl" />
-
-            {/* Avatar */}
-            <div className="relative pt-10 pb-2">
-              <div className="relative inline-block">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-ocean-300 to-peach-300 flex items-center justify-center text-3xl font-heading font-bold text-white border-4 border-card-bg shadow-soft">
-                  {student.firstName[0]}
-                  {student.lastName[0]}
-                </div>
-                {isEditing && (
-                  <button
-                    className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-ocean-400 text-white flex items-center justify-center shadow-soft hover:bg-ocean-500 transition-colors"
-                    aria-label="Change photo"
-                  >
-                    <Camera className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <h2 className="font-heading text-xl font-bold text-foreground mt-2">
-              {student.firstName} {student.lastName}
-            </h2>
-            <p className="font-body text-sm text-muted-fg">
-              {student.studentId}
-            </p>
-            <Badge variant="info" dot className="mt-2">
-              {student.yearLevel}
-            </Badge>
-
-            {/* Profile completion */}
-            <div className="mt-6 pt-4 border-t border-card-border">
-              <CircularProgress
-                value={profileCompletion}
-                size={70}
-                strokeWidth={6}
-              >
-                <span className="text-sm font-heading font-bold text-foreground">
-                  {profileCompletion}%
-                </span>
-              </CircularProgress>
-              <p className="text-xs font-body text-muted-fg mt-2">
-                Profile Completion
-              </p>
-              <ProgressBar
-                value={profileCompletion}
-                size="sm"
-                showValue={false}
-                color="ocean"
-                className="mt-2"
-              />
-            </div>
-          </Card>
-
-          {/* Linked Scholarships */}
-          <Card>
-            <h3 className="font-heading text-base font-semibold text-foreground flex items-center gap-2 mb-4">
-              <Award className="w-5 h-5 text-muted-fg" />
-              Linked Scholarships
-            </h3>
-            <div className="space-y-3">
-              {linkedScholarships.map((s, i) => (
-                <div
-                  key={i}
-                  className="flex items-start justify-between p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
-                >
-                  <div>
-                    <p className="font-body text-sm font-medium text-foreground">
-                      {s.name}
-                    </p>
-                    <p className="text-xs font-body text-muted-fg mt-0.5">
-                      {s.award}
-                    </p>
-                  </div>
-                  <Badge
-                    variant={s.status === "active" ? "success" : "neutral"}
-                    dot
-                  >
-                    {s.status === "active" ? "Active" : "Expired"}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </motion.div>
-
-        {/* ---- Right Column: Details ---- */}
-        <motion.div variants={fadeUp} className="lg:col-span-2 space-y-6">
+      <div className="space-y-6">
+        {/* ---- Details ---- */}
+        <motion.div variants={fadeUp} className="space-y-6">
           {/* Personal Information */}
           <Card>
             <h3 className="font-heading text-base font-semibold text-foreground flex items-center gap-2 mb-5">
