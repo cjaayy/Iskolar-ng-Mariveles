@@ -6,6 +6,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { useSession } from "@/components/providers/SessionProvider";
@@ -18,7 +19,6 @@ import {
   Menu,
   X,
   LogOut,
-  GraduationCap,
   Bell,
 } from "lucide-react";
 
@@ -70,8 +70,14 @@ export function Sidebar({
             className="flex items-center gap-3 group"
             onClick={onClose}
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-ocean-400 to-peach-300 flex items-center justify-center shadow-soft group-hover:scale-105 transition-transform">
-              <GraduationCap className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-soft group-hover:scale-105 transition-transform">
+              <Image
+                src="/mariveles-seal.png"
+                alt="Mariveles seal"
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
+              />
             </div>
             <div>
               <h1 className="font-heading text-lg font-bold text-foreground leading-tight">
