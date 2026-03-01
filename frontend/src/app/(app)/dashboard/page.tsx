@@ -13,11 +13,8 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
-  Upload,
   ArrowRight,
-  Calendar,
   TrendingUp,
-  Star,
   ChevronRight,
   XCircle,
   MessageSquare,
@@ -51,44 +48,6 @@ type ApiRequirement = {
 };
 
 /* -- Derive activity items from requirement statuses -- */
-function generateActivities(reqs: ApiRequirement[]): {
-  id: number;
-  text: string;
-  time: string;
-  type: "success" | "info" | "warning";
-}[] {
-  const acts: {
-    id: number;
-    text: string;
-    time: string;
-    type: "success" | "info" | "warning";
-  }[] = [];
-  for (const r of reqs) {
-    if (r.status === "approved") {
-      acts.push({
-        id: acts.length + 1,
-        text: `${r.name} was approved`,
-        time: "recently",
-        type: "success",
-      });
-    } else if (r.status === "pending") {
-      acts.push({
-        id: acts.length + 1,
-        text: `${r.name} submitted for review`,
-        time: "recently",
-        type: "info",
-      });
-    } else if (r.status === "in-progress") {
-      acts.push({
-        id: acts.length + 1,
-        text: `${r.name} partially uploaded`,
-        time: "in progress",
-        type: "warning",
-      });
-    }
-  }
-  return acts.slice(0, 5);
-}
 
 const statusConfig = {
   approved: {
@@ -113,45 +72,6 @@ const statusConfig = {
     icon: XCircle,
   },
 };
-
-/* -- Countdown Timer Hook -- */
-function useCountdown(targetDate: string) {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
-
-  useEffect(() => {
-    const calculate = () => {
-      const diff = new Date(targetDate).getTime() - Date.now();
-      if (diff <= 0) return { days: 0, hours: 0, minutes: 0 };
-      return {
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((diff / (1000 * 60)) % 60),
-      };
-    };
-    setTimeLeft(calculate());
-    const interval = setInterval(() => setTimeLeft(calculate()), 60000);
-    return () => clearInterval(interval);
-  }, [targetDate]);
-
-  return timeLeft;
-}
-
-/* -- Countdown display component -- */
-function CountdownDisplay({ targetDate }: { targetDate: string }) {
-  const { days, hours, minutes } = useCountdown(targetDate);
-  const isUrgent = days <= 3;
-
-  return (
-    <div
-      className={`flex items-center gap-1.5 text-sm font-body font-medium ${isUrgent ? "text-coral-400" : "text-muted-fg"}`}
-    >
-      <Clock className="w-3.5 h-3.5" />
-      <span>
-        {days}d {hours}h {minutes}m
-      </span>
-    </div>
-  );
-}
 
 /* -- Stagger animation helpers -- */
 const container = {
@@ -212,23 +132,7 @@ export default function DashboardPage() {
         )
       : 0;
 
-  // Deadlines: non-approved requirements sorted by due date, top 3
-  const deadlines = requirements
-    .filter((r) => r.status !== "approved")
-    .sort(
-      (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
-    )
-    .slice(0, 3)
-    .map((r) => ({
-      label: r.name,
-      date: r.dueDate,
-      urgent:
-        Math.ceil((new Date(r.dueDate).getTime() - Date.now()) / 86_400_000) <=
-        7,
-    }));
-
-  // Activity feed derived from requirement statuses
-  const activities = generateActivities(requirements);
+  // Deadlines & activity removed
 
   const studentName = user?.firstName ?? "...";
   const profileCompletion = user?.profileCompletion ?? 0;
@@ -348,9 +252,9 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* ---- Main Grid ---- */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Requirements Column (2/3) */}
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 gap-8">
+        {/* Requirements Column */}
+        <div className="space-y-6">
           {/* Progress Overview */}
           <motion.div variants={item}>
             <div className="flex items-center justify-between mb-4">
@@ -476,105 +380,6 @@ export default function DashboardPage() {
                 );
               })}
             </motion.div>
-          </motion.div>
-        </div>
-
-        {/* Right Sidebar (1/3) */}
-        <div className="space-y-6">
-          {/* Deadlines */}
-          <motion.div variants={item}>
-            <h2 className="font-heading text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
-              <Calendar className="w-5 h-5 text-muted-fg" />
-              Upcoming Deadlines
-            </h2>
-            <Card padding="none" className="divide-y divide-card-border">
-              {deadlines.length > 0 ? (
-                deadlines.map((dl, i) => (
-                  <div
-                    key={i}
-                    className="p-4 flex items-center justify-between gap-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-body text-sm font-medium text-foreground truncate">
-                        {dl.label}
-                      </p>
-                      <p className="text-xs font-body text-muted-fg">
-                        {new Date(dl.date).toLocaleDateString("en-US", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </p>
-                    </div>
-                    <CountdownDisplay targetDate={dl.date} />
-                  </div>
-                ))
-              ) : (
-                <div className="p-4">
-                  <p className="text-sm font-body text-muted-fg text-center">
-                    All deadlines met! 🎉
-                  </p>
-                </div>
-              )}
-            </Card>
-          </motion.div>
-
-          <WavySeparator />
-
-          {/* Activity Feed */}
-          <motion.div variants={item}>
-            <h2 className="font-heading text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
-              <Star className="w-5 h-5 text-muted-fg" />
-              Recent Activity
-            </h2>
-            <Card padding="none" className="divide-y divide-card-border">
-              {activities.length > 0 ? (
-                activities.map((act) => (
-                  <div key={act.id} className="p-4 flex items-start gap-3">
-                    <div
-                      className={`
-                    w-2 h-2 rounded-full mt-1.5 flex-shrink-0
-                    ${act.type === "success" ? "bg-sage-400" : ""}
-                    ${act.type === "info" ? "bg-ocean-400" : ""}
-                    ${act.type === "warning" ? "bg-amber-400" : ""}
-                  `}
-                    />
-                    <div className="min-w-0">
-                      <p className="font-body text-sm text-foreground">
-                        {act.text}
-                      </p>
-                      <p className="text-xs font-body text-muted-fg mt-0.5">
-                        {act.time}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-4">
-                  <p className="text-sm font-body text-muted-fg text-center">
-                    No activity yet
-                  </p>
-                </div>
-              )}
-            </Card>
-          </motion.div>
-
-          {/* Quick Upload CTA */}
-          <motion.div variants={item}>
-            <Card className="bg-gradient-to-br from-ocean-50 to-peach-50 dark:from-ocean-400/5 dark:to-peach-300/5 border-dashed border-2 border-ocean-200 dark:border-ocean-400/20 text-center">
-              <Upload className="w-8 h-8 text-muted-fg mx-auto mb-2" />
-              <p className="font-body text-sm font-medium text-foreground mb-1">
-                Quick Upload
-              </p>
-              <p className="font-body text-xs text-muted-fg mb-3">
-                Drag a file here or click to upload
-              </p>
-              <Link href="/requirements">
-                <button className="text-sm font-body text-ocean-400 hover:text-ocean-500 font-medium hover:underline transition-colors">
-                  Go to Requirements →
-                </button>
-              </Link>
-            </Card>
           </motion.div>
         </div>
       </div>
