@@ -8,7 +8,7 @@
 import React, { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Upload, FileText, Image as ImageIcon, File } from "lucide-react";
-import { Button, Select, Textarea, ProgressBar } from "@/components/ui";
+import { Button, Textarea, ProgressBar } from "@/components/ui";
 import { SuccessIllustration } from "@/components/illustrations";
 import { useToast } from "@/components/providers/ToastProvider";
 
@@ -21,15 +21,6 @@ interface UploadModalProps {
   onSuccess?: () => void;
 }
 
-const documentTypes = [
-  { label: "Certificate", value: "certificate" },
-  { label: "Transcript / Grades", value: "transcript" },
-  { label: "Government ID", value: "gov-id" },
-  { label: "Tax Document", value: "tax" },
-  { label: "Barangay Document", value: "barangay" },
-  { label: "Other", value: "other" },
-];
-
 export function DocumentUploadModal({
   isOpen,
   onClose,
@@ -40,7 +31,6 @@ export function DocumentUploadModal({
 }: UploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [docType, setDocType] = useState("");
   const [notes, setNotes] = useState("");
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -147,7 +137,6 @@ export function DocumentUploadModal({
   const resetAndClose = () => {
     setFile(null);
     setPreview(null);
-    setDocType("");
     setNotes("");
     setProgress(0);
     setSuccess(false);
@@ -339,14 +328,6 @@ export function DocumentUploadModal({
                       </motion.div>
                     )}
 
-                    {/* Document Type */}
-                    <Select
-                      label="Document Type"
-                      options={documentTypes}
-                      value={docType}
-                      onChange={(e) => setDocType(e.target.value)}
-                    />
-
                     {/* Notes */}
                     <Textarea
                       label="Additional Notes (optional)"
@@ -386,7 +367,7 @@ export function DocumentUploadModal({
                 </Button>
                 <Button
                   onClick={handleUpload}
-                  disabled={!file || !docType || uploading}
+                  disabled={!file || uploading}
                   isLoading={uploading}
                   leftIcon={<Upload className="w-4 h-4" />}
                 >
