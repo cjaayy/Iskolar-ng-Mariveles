@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   ClipboardList,
   User,
+  FileUser,
   Sun,
   Moon,
   Menu,
@@ -25,6 +26,7 @@ import {
 /* -- Navigation items -- */
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/basic-info", label: "Basic Information", icon: FileUser },
   { href: "/requirements", label: "Requirements", icon: ClipboardList },
   { href: "/profile", label: "Profile", icon: User },
 ];
