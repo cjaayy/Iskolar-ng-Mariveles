@@ -18,10 +18,6 @@ import {
 
 const faqs = [
   {
-    q: "What is the Dashboard?",
-    a: "The Dashboard is your home page. It displays the official Iskolar ng Mariveles seal and program name.",
-  },
-  {
     q: "How do I fill out my Basic Information?",
     a: "Go to the Basic Information page from the sidebar. It has 4 tabs: Personal Information, Parents, Education, and Others. Fill in each section and click Save.",
   },
