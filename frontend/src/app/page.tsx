@@ -156,11 +156,8 @@ export default function LoginPage() {
               transition={{ delay: 0.4 }}
             >
               <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground mb-1">
-                Welcome back, Iskolar!
+                Iskolar ng Mariveles
               </h1>
-              <p className="font-body text-muted-fg text-sm">
-                Sign in to track your scholarship journey
-              </p>
             </motion.div>
           </div>
 
@@ -305,41 +302,7 @@ export default function LoginPage() {
             >
               Sign In
             </Button>
-
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-card-border" />
-              </div>
-              <div className="relative flex justify-center">
-                <span className="bg-card-bg px-4 text-xs font-body text-muted-fg">
-                  or continue with
-                </span>
-              </div>
-            </div>
-
-            {/* School Credentials */}
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              size="lg"
-              leftIcon={<GraduationCap className="w-5 h-5" />}
-            >
-              School Credentials
-            </Button>
           </motion.form>
-
-          {/* Footer */}
-          <p className="text-center mt-8 text-sm font-body text-muted-fg">
-            New scholar?{" "}
-            <a
-              href="#"
-              className="text-ocean-400 hover:text-ocean-500 font-medium hover:underline transition-colors"
-            >
-              Create an account
-            </a>
-          </p>
         </div>
 
         {/* Hand-drawn decorative element under the card */}
