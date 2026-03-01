@@ -18,28 +18,36 @@ import {
 
 const faqs = [
   {
-    q: "How do I upload a document?",
-    a: "Go to the Requirements page and click the 'Upload' button next to any requirement. You can also drag and drop files directly into the upload zone.",
+    q: "What is the Dashboard?",
+    a: "The Dashboard is your home page. It displays the official Iskolar ng Mariveles seal and program name.",
   },
   {
-    q: "What file formats are accepted?",
-    a: "We accept PDF, PNG, JPG/JPEG, and DOCX files. Maximum file size is 10MB per document.",
+    q: "How do I fill out my Basic Information?",
+    a: "Go to the Basic Information page from the sidebar. It has 4 tabs: Personal Information, Parents, Education, and Others. Fill in each section and click Save.",
   },
   {
-    q: "How long does document review take?",
-    a: "Documents are typically reviewed within 3-5 business days. You'll receive a notification once your document has been reviewed.",
+    q: "How do I upload a requirement?",
+    a: "Go to the Requirements page and click the upload button on any requirement card. You can upload PDF, PNG, JPG/JPEG, or DOCX files (max 10MB).",
   },
   {
     q: "Can I replace an uploaded document?",
-    a: "Yes! Simply go to the requirement and click 'Upload' again. The new document will replace the previous one.",
+    a: "Yes! Go to the requirement and click the upload button again. The new file will replace the previous one.",
   },
   {
-    q: "What if I miss a deadline?",
-    a: "Contact the scholarship office immediately. Extensions may be granted on a case-by-case basis. Keep an eye on your deadline reminders!",
+    q: "How do I view my Profile?",
+    a: "Click Profile in the sidebar. It shows a read-only view of all your information organized under Personal Information, Parents, Education, and Others tabs.",
   },
   {
     q: "How do I update my personal information?",
-    a: "Go to your Profile page and click 'Edit Profile'. You can update your contact information, address, and other details.",
+    a: "Go to the Basic Information page to edit your details. Changes made there will also be reflected on your Profile page.",
+  },
+  {
+    q: "How long does document review take?",
+    a: "Documents are typically reviewed within 3-5 business days. Check the Requirements page for status updates on each document.",
+  },
+  {
+    q: "What if I miss a deadline?",
+    a: "Contact the scholarship office immediately. Extensions may be granted on a case-by-case basis.",
   },
 ];
 
