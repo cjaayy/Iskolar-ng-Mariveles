@@ -533,7 +533,7 @@ function PersonalInfoTab({ form, update }: TabProps) {
       {/* Row 4 — Address */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Input
-          label="House No./Unit No./Bldg/Floor, Street, Subdivision"
+          label="House/Unit/Street"
           placeholder="Enter Location"
           value={form.house_street}
           onChange={(e) => update("house_street", e.target.value)}
