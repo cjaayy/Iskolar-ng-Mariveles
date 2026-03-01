@@ -35,13 +35,20 @@ ALTER TABLE applicants
 
 -- Education details
 ALTER TABLE applicants
-  ADD COLUMN IF NOT EXISTS previous_school   VARCHAR(200)          NULL AFTER guardian_contact,
-  ADD COLUMN IF NOT EXISTS previous_school_address VARCHAR(255)    NULL AFTER previous_school,
-  ADD COLUMN IF NOT EXISTS year_graduated    YEAR                  NULL AFTER previous_school_address;
+  ADD COLUMN IF NOT EXISTS primary_school            VARCHAR(200)  NULL AFTER guardian_contact,
+  ADD COLUMN IF NOT EXISTS primary_address            VARCHAR(255)  NULL AFTER primary_school,
+  ADD COLUMN IF NOT EXISTS primary_year_graduated     YEAR          NULL AFTER primary_address,
+  ADD COLUMN IF NOT EXISTS secondary_school           VARCHAR(200)  NULL AFTER primary_year_graduated,
+  ADD COLUMN IF NOT EXISTS secondary_address          VARCHAR(255)  NULL AFTER secondary_school,
+  ADD COLUMN IF NOT EXISTS secondary_year_graduated   YEAR          NULL AFTER secondary_address,
+  ADD COLUMN IF NOT EXISTS tertiary_school            VARCHAR(200)  NULL AFTER secondary_year_graduated,
+  ADD COLUMN IF NOT EXISTS tertiary_address           VARCHAR(255)  NULL AFTER tertiary_school,
+  ADD COLUMN IF NOT EXISTS tertiary_year_graduated    YEAR          NULL AFTER tertiary_address,
+  ADD COLUMN IF NOT EXISTS tertiary_program           VARCHAR(200)  NULL AFTER tertiary_year_graduated;
 
 -- Others
 ALTER TABLE applicants
-  ADD COLUMN IF NOT EXISTS skills            TEXT                  NULL AFTER year_graduated,
+  ADD COLUMN IF NOT EXISTS skills            TEXT                  NULL AFTER tertiary_program,
   ADD COLUMN IF NOT EXISTS hobbies           TEXT                  NULL AFTER skills,
   ADD COLUMN IF NOT EXISTS organizations     TEXT                  NULL AFTER hobbies,
   ADD COLUMN IF NOT EXISTS awards            TEXT                  NULL AFTER organizations;

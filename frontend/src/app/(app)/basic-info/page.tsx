@@ -65,9 +65,16 @@ interface BasicInfoForm {
   year_level: string;
   student_number: string;
   gpa: string;
-  previous_school: string;
-  previous_school_address: string;
-  year_graduated: string;
+  primary_school: string;
+  primary_address: string;
+  primary_year_graduated: string;
+  secondary_school: string;
+  secondary_address: string;
+  secondary_year_graduated: string;
+  tertiary_school: string;
+  tertiary_address: string;
+  tertiary_year_graduated: string;
+  tertiary_program: string;
   /* others */
   skills: string;
   hobbies: string;
@@ -105,9 +112,16 @@ const emptyForm: BasicInfoForm = {
   year_level: "",
   student_number: "",
   gpa: "",
-  previous_school: "",
-  previous_school_address: "",
-  year_graduated: "",
+  primary_school: "",
+  primary_address: "",
+  primary_year_graduated: "",
+  secondary_school: "",
+  secondary_address: "",
+  secondary_year_graduated: "",
+  tertiary_school: "",
+  tertiary_address: "",
+  tertiary_year_graduated: "",
+  tertiary_program: "",
   skills: "",
   hobbies: "",
   organizations: "",
@@ -244,10 +258,25 @@ export default function BasicInfoPage() {
         year_level: data.year_level != null ? String(data.year_level) : "",
         student_number: data.student_number ?? "",
         gpa: data.gpa != null ? String(data.gpa) : "",
-        previous_school: data.previous_school ?? "",
-        previous_school_address: data.previous_school_address ?? "",
-        year_graduated:
-          data.year_graduated != null ? String(data.year_graduated) : "",
+        primary_school: data.primary_school ?? "",
+        primary_address: data.primary_address ?? "",
+        primary_year_graduated:
+          data.primary_year_graduated != null
+            ? String(data.primary_year_graduated)
+            : "",
+        secondary_school: data.secondary_school ?? "",
+        secondary_address: data.secondary_address ?? "",
+        secondary_year_graduated:
+          data.secondary_year_graduated != null
+            ? String(data.secondary_year_graduated)
+            : "",
+        tertiary_school: data.tertiary_school ?? "",
+        tertiary_address: data.tertiary_address ?? "",
+        tertiary_year_graduated:
+          data.tertiary_year_graduated != null
+            ? String(data.tertiary_year_graduated)
+            : "",
+        tertiary_program: data.tertiary_program ?? "",
         skills: data.skills ?? "",
         hobbies: data.hobbies ?? "",
         organizations: data.organizations ?? "",
@@ -276,8 +305,6 @@ export default function BasicInfoPage() {
       // Convert numeric strings back to numbers
       if (payload.height_cm) payload.height_cm = Number(payload.height_cm);
       if (payload.weight_kg) payload.weight_kg = Number(payload.weight_kg);
-      if (payload.year_graduated)
-        payload.year_graduated = Number(payload.year_graduated);
       // Remove read-only education fields
       delete payload.course;
       delete payload.college;
@@ -619,49 +646,93 @@ function ParentsTab({ form, update }: TabProps) {
 /* ── Education ── */
 function EducationTab({ form, update }: TabProps) {
   return (
-    <div className="space-y-6">
-      {/* Current enrollment (read-only from session) */}
+    <div className="space-y-8">
+      {/* Primary */}
       <div>
         <h3 className="font-heading text-base font-semibold text-foreground mb-4">
-          Current Enrollment
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Input label="Course / Program" value={form.course} disabled />
-          <Input label="College / University" value={form.college} disabled />
-          <Input label="Year Level" value={form.year_level} disabled />
-          <Input label="Student Number" value={form.student_number} disabled />
-          <Input label="GPA" value={form.gpa} disabled />
-        </div>
-        <p className="text-xs text-muted-fg mt-2">
-          These fields are managed by your profile. Go to Profile to update
-          them.
-        </p>
-      </div>
-
-      {/* Previous school */}
-      <div>
-        <h3 className="font-heading text-base font-semibold text-foreground mb-4">
-          Previous School
+          Primary
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Input
-            label="School Name"
-            placeholder="Enter Previous School"
-            value={form.previous_school}
-            onChange={(e) => update("previous_school", e.target.value)}
+            label="Name of School"
+            placeholder="Enter Primary School Name"
+            value={form.primary_school}
+            onChange={(e) => update("primary_school", e.target.value)}
           />
           <Input
-            label="School Address"
+            label="Address"
             placeholder="Enter School Address"
-            value={form.previous_school_address}
-            onChange={(e) => update("previous_school_address", e.target.value)}
+            value={form.primary_address}
+            onChange={(e) => update("primary_address", e.target.value)}
           />
           <Input
             label="Year Graduated"
-            placeholder="e.g. 2024"
+            placeholder="e.g. 2018"
             type="number"
-            value={form.year_graduated}
-            onChange={(e) => update("year_graduated", e.target.value)}
+            value={form.primary_year_graduated}
+            onChange={(e) => update("primary_year_graduated", e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Secondary */}
+      <div>
+        <h3 className="font-heading text-base font-semibold text-foreground mb-4">
+          Secondary
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Input
+            label="Name of School"
+            placeholder="Enter Secondary School Name"
+            value={form.secondary_school}
+            onChange={(e) => update("secondary_school", e.target.value)}
+          />
+          <Input
+            label="Address"
+            placeholder="Enter School Address"
+            value={form.secondary_address}
+            onChange={(e) => update("secondary_address", e.target.value)}
+          />
+          <Input
+            label="Year Graduated"
+            placeholder="e.g. 2022"
+            type="number"
+            value={form.secondary_year_graduated}
+            onChange={(e) => update("secondary_year_graduated", e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Tertiary (Post-Secondary) */}
+      <div>
+        <h3 className="font-heading text-base font-semibold text-foreground mb-4">
+          Tertiary (Post-Secondary)
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Input
+            label="Name of School"
+            placeholder="Enter Tertiary School Name"
+            value={form.tertiary_school}
+            onChange={(e) => update("tertiary_school", e.target.value)}
+          />
+          <Input
+            label="Program"
+            placeholder="Enter Program / Course"
+            value={form.tertiary_program}
+            onChange={(e) => update("tertiary_program", e.target.value)}
+          />
+          <Input
+            label="Address"
+            placeholder="Enter School Address"
+            value={form.tertiary_address}
+            onChange={(e) => update("tertiary_address", e.target.value)}
+          />
+          <Input
+            label="Year Graduated"
+            placeholder="e.g. 2026"
+            type="number"
+            value={form.tertiary_year_graduated}
+            onChange={(e) => update("tertiary_year_graduated", e.target.value)}
           />
         </div>
       </div>

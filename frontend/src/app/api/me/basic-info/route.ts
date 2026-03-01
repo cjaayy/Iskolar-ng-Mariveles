@@ -41,9 +41,16 @@ interface BasicInfoRow {
   year_level: number;
   student_number: string;
   gpa: number;
-  previous_school: string | null;
-  previous_school_address: string | null;
-  year_graduated: number | null;
+  primary_school: string | null;
+  primary_address: string | null;
+  primary_year_graduated: number | null;
+  secondary_school: string | null;
+  secondary_address: string | null;
+  secondary_year_graduated: number | null;
+  tertiary_school: string | null;
+  tertiary_address: string | null;
+  tertiary_year_graduated: number | null;
+  tertiary_program: string | null;
   /* others */
   skills: string | null;
   hobbies: string | null;
@@ -70,7 +77,9 @@ export async function GET(req: NextRequest) {
          mother_name, mother_occupation, mother_contact,
          guardian_name, guardian_relation, guardian_contact,
          course, college, year_level, student_number, gpa,
-         previous_school, previous_school_address, year_graduated,
+         primary_school, primary_address, primary_year_graduated,
+         secondary_school, secondary_address, secondary_year_graduated,
+         tertiary_school, tertiary_address, tertiary_year_graduated, tertiary_program,
          skills, hobbies, organizations, awards
        FROM applicants
        WHERE id = :id
@@ -123,9 +132,16 @@ const ALLOWED_FIELDS = new Set([
   "guardian_name",
   "guardian_relation",
   "guardian_contact",
-  "previous_school",
-  "previous_school_address",
-  "year_graduated",
+  "primary_school",
+  "primary_address",
+  "primary_year_graduated",
+  "secondary_school",
+  "secondary_address",
+  "secondary_year_graduated",
+  "tertiary_school",
+  "tertiary_address",
+  "tertiary_year_graduated",
+  "tertiary_program",
   "skills",
   "hobbies",
   "organizations",
