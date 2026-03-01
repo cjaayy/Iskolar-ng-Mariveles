@@ -7,35 +7,13 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  User,
-  GraduationCap,
-  Mail,
-  Phone,
-  MapPin,
-  Edit3,
-  Save,
-  X,
-  Bell,
-  BellOff,
-  Shield,
-  Link2,
-} from "lucide-react";
-import { Card, Button, Input, Toggle, Breadcrumb } from "@/components/ui";
+import { User, Mail, Phone, MapPin, Edit3, Save, X } from "lucide-react";
+import { Card, Button, Input, Breadcrumb } from "@/components/ui";
 import { useToast } from "@/components/providers/ToastProvider";
-import { WavySeparator } from "@/components/illustrations";
 import {
   useSession,
   DEMO_APPLICANT_ID,
 } from "@/components/providers/SessionProvider";
-
-/* -- Scholarship link type from /api/me -- */
-interface ScholarshipLink {
-  name: string;
-  grantor: string;
-  status: "active" | "pending";
-  award: string;
-}
 
 /* -- Student form data type -- */
 interface StudentForm {
@@ -109,16 +87,6 @@ export default function ProfilePage() {
     setEditData(form);
   }, [user]);
 
-  /* Notification settings */
-  const [notifications, setNotifications] = useState({
-    emailDeadlines: true,
-    emailUpdates: true,
-    smsReminders: false,
-    pushNotifications: true,
-    weeklyDigest: true,
-    marketingEmails: false,
-  });
-
   const handleEdit = () => {
     setEditData(student);
     setIsEditing(true);
@@ -159,17 +127,6 @@ export default function ProfilePage() {
   const handleCancel = () => {
     setEditData(student);
     setIsEditing(false);
-  };
-
-  const handleNotificationChange = (key: keyof typeof notifications) => {
-    setNotifications((prev) => {
-      const updated = { ...prev, [key]: !prev[key] };
-      addToast(
-        `${key.replace(/([A-Z])/g, " $1").toLowerCase()} ${updated[key] ? "enabled" : "disabled"}`,
-        updated[key] ? "info" : "warning",
-      );
-      return updated;
-    });
   };
 
   if (sessionLoading) {
@@ -316,138 +273,6 @@ export default function ProfilePage() {
               </div>
             )}
           </Card>
-
-          {/* Academic Information */}
-          <Card>
-            <h3 className="font-heading text-base font-semibold text-foreground flex items-center gap-2 mb-5">
-              <GraduationCap className="w-5 h-5 text-muted-fg" />
-              Academic Information
-            </h3>
-
-            {isEditing ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="Student ID"
-                  value={editData.studentId}
-                  disabled
-                  hint="Student ID cannot be changed"
-                />
-                <Input
-                  label="GPA"
-                  value={editData.gpa}
-                  onChange={(e) =>
-                    setEditData({ ...editData, gpa: e.target.value })
-                  }
-                />
-                <Input
-                  label="Course / Major"
-                  value={editData.major}
-                  onChange={(e) =>
-                    setEditData({ ...editData, major: e.target.value })
-                  }
-                  className="sm:col-span-2"
-                />
-                <Input
-                  label="Year Level"
-                  value={editData.yearLevel}
-                  onChange={(e) =>
-                    setEditData({ ...editData, yearLevel: e.target.value })
-                  }
-                />
-                <Input
-                  label="School"
-                  value={editData.school}
-                  onChange={(e) =>
-                    setEditData({ ...editData, school: e.target.value })
-                  }
-                />
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <InfoRow
-                  icon={<Shield className="w-4 h-4" />}
-                  label="Student ID"
-                  value={student.studentId}
-                />
-                <InfoRow
-                  label="GPA"
-                  value={student.gpa}
-                  icon={
-                    <span className="w-4 h-4 rounded-full bg-sage-100 dark:bg-sage-500/10 flex items-center justify-center text-[10px] font-bold text-sage-500">
-                      A
-                    </span>
-                  }
-                />
-                <InfoRow
-                  icon={<GraduationCap className="w-4 h-4" />}
-                  label="Course"
-                  value={student.major}
-                  className="sm:col-span-2"
-                />
-                <InfoRow label="Year Level" value={student.yearLevel} />
-                <InfoRow
-                  icon={<Link2 className="w-4 h-4" />}
-                  label="School"
-                  value={student.school}
-                />
-              </div>
-            )}
-          </Card>
-
-          <WavySeparator />
-
-          {/* Notification Settings */}
-          <Card>
-            <h3 className="font-heading text-base font-semibold text-foreground flex items-center gap-2 mb-5">
-              <Bell className="w-5 h-5 text-muted-fg" />
-              Notification Preferences
-            </h3>
-
-            <div className="space-y-4">
-              <NotificationToggle
-                label="Deadline Reminders"
-                description="Get notified before document deadlines"
-                checked={notifications.emailDeadlines}
-                onChange={() => handleNotificationChange("emailDeadlines")}
-                icon={<Bell className="w-4 h-4 text-muted-fg" />}
-              />
-              <NotificationToggle
-                label="Application Updates"
-                description="Notifications when documents are reviewed"
-                checked={notifications.emailUpdates}
-                onChange={() => handleNotificationChange("emailUpdates")}
-                icon={<Mail className="w-4 h-4 text-muted-fg" />}
-              />
-              <NotificationToggle
-                label="SMS Reminders"
-                description="Receive text message alerts for urgent deadlines"
-                checked={notifications.smsReminders}
-                onChange={() => handleNotificationChange("smsReminders")}
-                icon={<Phone className="w-4 h-4 text-muted-fg" />}
-              />
-              <NotificationToggle
-                label="Push Notifications"
-                description="Browser push notifications for real-time updates"
-                checked={notifications.pushNotifications}
-                onChange={() => handleNotificationChange("pushNotifications")}
-                icon={<Bell className="w-4 h-4 text-muted-fg" />}
-              />
-              <NotificationToggle
-                label="Weekly Digest"
-                description="Summary of your scholarship progress every Monday"
-                checked={notifications.weeklyDigest}
-                onChange={() => handleNotificationChange("weeklyDigest")}
-                icon={<Mail className="w-4 h-4 text-muted-fg" />}
-              />
-              <NotificationToggle
-                label="Marketing & Tips"
-                description="Scholarship tips, events, and opportunities"
-                checked={notifications.marketingEmails}
-                onChange={() => handleNotificationChange("marketingEmails")}
-                icon={<BellOff className="w-4 h-4 text-muted-fg" />}
-              />
-            </div>
-          </Card>
         </motion.div>
       </div>
     </motion.div>
@@ -478,39 +303,6 @@ function InfoRow({
           {value}
         </p>
       </div>
-    </div>
-  );
-}
-
-/* ======================== NOTIFICATION TOGGLE ======================== */
-
-function NotificationToggle({
-  label,
-  description,
-  checked,
-  onChange,
-  icon,
-}: {
-  label: string;
-  description: string;
-  checked: boolean;
-  onChange: () => void;
-  icon?: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-colors -mx-3">
-      <div className="flex items-start gap-3">
-        {icon && <span className="mt-0.5 flex-shrink-0">{icon}</span>}
-        <div>
-          <p className="font-body text-sm font-medium text-foreground">
-            {label}
-          </p>
-          <p className="font-body text-xs text-muted-fg mt-0.5">
-            {description}
-          </p>
-        </div>
-      </div>
-      <Toggle checked={checked} onChange={onChange} />
     </div>
   );
 }
