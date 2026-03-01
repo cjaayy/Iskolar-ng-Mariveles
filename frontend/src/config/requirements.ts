@@ -52,7 +52,7 @@ export const REQUIREMENT_CONFIGS: RequirementConfig[] = [
   },
   {
     key: "id_photo",
-    name: "2x2 ID Photos (2 pcs)",
+    name: "2x2 ID Photos",
     description:
       "Two (2) pieces of recent 2x2 colored ID photographs with white background.",
     group: "personal",
