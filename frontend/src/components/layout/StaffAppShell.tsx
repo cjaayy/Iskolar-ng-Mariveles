@@ -73,15 +73,13 @@ function StaffSidebar({
             className="flex items-center gap-3 group"
             onClick={onClose}
           >
-            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-soft group-hover:scale-105 transition-transform">
-              <Image
-                src="/mariveles-seal.png"
-                alt="Mariveles seal"
-                width={40}
-                height={40}
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <Image
+              src="/mariveles-seal.png"
+              alt="Mariveles seal"
+              width={40}
+              height={40}
+              className="w-10 h-10 group-hover:scale-105 transition-transform"
+            />
             <div>
               <h1 className="font-heading text-lg font-bold text-foreground leading-tight">
                 Iskolar
