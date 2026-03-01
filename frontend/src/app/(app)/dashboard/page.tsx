@@ -286,7 +286,7 @@ export default function DashboardPage() {
               <div className="flex flex-wrap gap-4 mt-4">
                 <div className="flex items-center gap-2 text-sm font-body">
                   <div className="w-8 h-8 rounded-lg bg-sage-100 dark:bg-sage-500/10 flex items-center justify-center">
-                    <CheckCircle2 className="w-4 h-4 text-sage-500" />
+                    <CheckCircle2 className="w-4 h-4 text-muted-fg" />
                   </div>
                   <div>
                     <p className="text-muted-fg text-xs">Approved</p>
@@ -297,7 +297,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex items-center gap-2 text-sm font-body">
                   <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
-                    <Clock className="w-4 h-4 text-amber-500" />
+                    <Clock className="w-4 h-4 text-muted-fg" />
                   </div>
                   <div>
                     <p className="text-muted-fg text-xs">Pending</p>
@@ -311,7 +311,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex items-center gap-2 text-sm font-body">
                   <div className="w-8 h-8 rounded-lg bg-coral-50 dark:bg-coral-500/10 flex items-center justify-center">
-                    <AlertCircle className="w-4 h-4 text-coral-400" />
+                    <AlertCircle className="w-4 h-4 text-muted-fg" />
                   </div>
                   <div>
                     <p className="text-muted-fg text-xs">Missing</p>
@@ -355,7 +355,7 @@ export default function DashboardPage() {
           <motion.div variants={item}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-heading text-lg font-semibold text-foreground flex items-center gap-2">
-                <FileText className="w-5 h-5 text-ocean-400" />
+                <FileText className="w-5 h-5 text-muted-fg" />
                 Requirements Progress
               </h2>
               <Link
@@ -403,12 +403,7 @@ export default function DashboardPage() {
                         `}
                         >
                           <StatusIcon
-                            className={`w-5 h-5
-                            ${req.status === "approved" ? "text-sage-500" : ""}
-                            ${req.status === "pending" ? "text-amber-500" : ""}
-                            ${req.status === "in-progress" ? "text-ocean-400" : ""}
-                            ${req.status === "missing" ? "text-coral-400" : ""}
-                            ${req.status === "rejected" ? "text-coral-400" : ""}
+                            className={`w-5 h-5 text-muted-fg
                           `}
                           />
                         </div>
@@ -441,7 +436,7 @@ export default function DashboardPage() {
                           {/* Rejection reason */}
                           {req.status === "rejected" && req.validatorNotes && (
                             <div className="flex items-start gap-2 mt-2 p-2 rounded-lg bg-coral-50 dark:bg-coral-500/10 border border-coral-200 dark:border-coral-500/20">
-                              <MessageSquare className="w-3.5 h-3.5 text-coral-400 mt-0.5 flex-shrink-0" />
+                              <MessageSquare className="w-3.5 h-3.5 text-muted-fg mt-0.5 flex-shrink-0" />
                               <p className="text-xs font-body text-coral-500 dark:text-coral-400 line-clamp-2">
                                 {req.validatorNotes}
                               </p>
@@ -489,7 +484,7 @@ export default function DashboardPage() {
           {/* Deadlines */}
           <motion.div variants={item}>
             <h2 className="font-heading text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
-              <Calendar className="w-5 h-5 text-peach-400" />
+              <Calendar className="w-5 h-5 text-muted-fg" />
               Upcoming Deadlines
             </h2>
             <Card padding="none" className="divide-y divide-card-border">
@@ -529,7 +524,7 @@ export default function DashboardPage() {
           {/* Activity Feed */}
           <motion.div variants={item}>
             <h2 className="font-heading text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
-              <Star className="w-5 h-5 text-amber-400" />
+              <Star className="w-5 h-5 text-muted-fg" />
               Recent Activity
             </h2>
             <Card padding="none" className="divide-y divide-card-border">
@@ -567,7 +562,7 @@ export default function DashboardPage() {
           {/* Quick Upload CTA */}
           <motion.div variants={item}>
             <Card className="bg-gradient-to-br from-ocean-50 to-peach-50 dark:from-ocean-400/5 dark:to-peach-300/5 border-dashed border-2 border-ocean-200 dark:border-ocean-400/20 text-center">
-              <Upload className="w-8 h-8 text-ocean-400 mx-auto mb-2" />
+              <Upload className="w-8 h-8 text-muted-fg mx-auto mb-2" />
               <p className="font-body text-sm font-medium text-foreground mb-1">
                 Quick Upload
               </p>

@@ -28,10 +28,10 @@ export function useToast() {
 }
 
 const toastIcons: Record<ToastType, React.ReactNode> = {
-  success: <CheckCircle className="w-5 h-5 text-sage-500" />,
-  error: <AlertCircle className="w-5 h-5 text-coral-500" />,
-  warning: <AlertTriangle className="w-5 h-5 text-amber-500" />,
-  info: <Info className="w-5 h-5 text-ocean-400" />,
+  success: <CheckCircle className="w-5 h-5 text-muted-fg" />,
+  error: <AlertCircle className="w-5 h-5 text-muted-fg" />,
+  warning: <AlertTriangle className="w-5 h-5 text-muted-fg" />,
+  info: <Info className="w-5 h-5 text-muted-fg" />,
 };
 
 const toastColors: Record<ToastType, string> = {

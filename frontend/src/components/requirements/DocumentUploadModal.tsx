@@ -163,10 +163,10 @@ export function DocumentUploadModal({
 
   const getFileIcon = (type: string) => {
     if (type.startsWith("image/"))
-      return <ImageIcon className="w-5 h-5 text-peach-400" />;
+      return <ImageIcon className="w-5 h-5 text-muted-fg" />;
     if (type.includes("pdf"))
-      return <FileText className="w-5 h-5 text-coral-400" />;
-    return <File className="w-5 h-5 text-ocean-400" />;
+      return <FileText className="w-5 h-5 text-muted-fg" />;
+    return <File className="w-5 h-5 text-muted-fg" />;
   };
 
   return (
@@ -281,7 +281,7 @@ export function DocumentUploadModal({
                       `}
                       >
                         <Upload
-                          className={`w-6 h-6 transition-colors ${isDragging ? "text-ocean-400" : "text-muted-fg"}`}
+                          className={`w-6 h-6 transition-colors text-muted-fg`}
                         />
                       </div>
                       <p className="font-body text-sm font-medium text-foreground mb-1">

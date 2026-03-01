@@ -161,7 +161,7 @@ export default function StaffDashboardPage() {
               <div className="absolute top-0 right-0 w-16 h-16 bg-ocean-400/10 rounded-bl-3xl" />
               <div className="relative">
                 <div className="flex items-center gap-2 mb-1">
-                  <FileText className="w-4 h-4 text-ocean-400" />
+                  <FileText className="w-4 h-4 text-muted-fg" />
                   <p className="text-xs font-body text-muted-fg">
                     Total Applications
                   </p>
@@ -175,7 +175,7 @@ export default function StaffDashboardPage() {
               <div className="absolute top-0 right-0 w-16 h-16 bg-amber-400/10 rounded-bl-3xl" />
               <div className="relative">
                 <div className="flex items-center gap-2 mb-1">
-                  <Clock className="w-4 h-4 text-amber-400" />
+                  <Clock className="w-4 h-4 text-muted-fg" />
                   <p className="text-xs font-body text-muted-fg">
                     Pending Review
                   </p>
@@ -189,7 +189,7 @@ export default function StaffDashboardPage() {
               <div className="absolute top-0 right-0 w-16 h-16 bg-sage-400/10 rounded-bl-3xl" />
               <div className="relative">
                 <div className="flex items-center gap-2 mb-1">
-                  <CheckCircle2 className="w-4 h-4 text-sage-400" />
+                  <CheckCircle2 className="w-4 h-4 text-muted-fg" />
                   <p className="text-xs font-body text-muted-fg">Approved</p>
                 </div>
                 <p className="text-2xl font-heading font-bold text-foreground">
@@ -201,7 +201,7 @@ export default function StaffDashboardPage() {
               <div className="absolute top-0 right-0 w-16 h-16 bg-coral-400/10 rounded-bl-3xl" />
               <div className="relative">
                 <div className="flex items-center gap-2 mb-1">
-                  <XCircle className="w-4 h-4 text-coral-400" />
+                  <XCircle className="w-4 h-4 text-muted-fg" />
                   <p className="text-xs font-body text-muted-fg">Rejected</p>
                 </div>
                 <p className="text-2xl font-heading font-bold text-foreground">

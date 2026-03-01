@@ -508,7 +508,7 @@ function RequirementRow({
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-3 flex items-start gap-2.5 p-3 rounded-xl bg-coral-50 dark:bg-coral-500/10 border border-coral-200 dark:border-coral-500/20"
               >
-                <MessageSquare className="w-4 h-4 text-coral-400 mt-0.5 flex-shrink-0" />
+                <MessageSquare className="w-4 h-4 text-muted-fg mt-0.5 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-body font-semibold text-coral-500 dark:text-coral-400 mb-0.5">
                     Reason for Rejection
@@ -536,7 +536,7 @@ function RequirementRow({
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-3 flex items-center gap-2 p-3 rounded-xl bg-coral-50 dark:bg-coral-500/10 border border-coral-200 dark:border-coral-500/20"
               >
-                <XCircle className="w-4 h-4 text-coral-400 flex-shrink-0" />
+                <XCircle className="w-4 h-4 text-muted-fg flex-shrink-0" />
                 <p className="text-sm font-body text-coral-500 dark:text-coral-400">
                   This document was rejected. Please re-upload a corrected
                   version.
@@ -648,7 +648,7 @@ function RequirementRow({
 
               {req.uploadedFile && (
                 <div className="flex items-center gap-2 text-sm font-body">
-                  <FileText className="w-4 h-4 text-ocean-400" />
+                  <FileText className="w-4 h-4 text-muted-fg" />
                   <span className="text-foreground">{req.uploadedFile}</span>
                   <button className="text-ocean-400 hover:text-ocean-500 text-xs flex items-center gap-0.5">
                     <ExternalLink className="w-3 h-3" /> View
@@ -658,7 +658,7 @@ function RequirementRow({
 
               <div className="pt-2">
                 <p className="text-xs font-body text-muted-fg flex items-center gap-1.5">
-                  <Info className="w-3.5 h-3.5 text-ocean-400" />
+                  <Info className="w-3.5 h-3.5 text-muted-fg" />
                   <strong className="text-foreground">Tip:</strong>{" "}
                   {req.helpTip}
                 </p>

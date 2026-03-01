@@ -192,7 +192,7 @@ function StaffHeader({ onMenuToggle }: { onMenuToggle: () => void }) {
 
         {/* Title */}
         <div className="hidden md:flex flex-1 items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-sage-400" />
+          <ShieldCheck className="w-5 h-5 text-muted-fg" />
           <span className="font-heading text-sm font-semibold text-foreground">
             Staff Validation Panel
           </span>

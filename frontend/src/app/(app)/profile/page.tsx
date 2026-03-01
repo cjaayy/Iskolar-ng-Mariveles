@@ -335,7 +335,7 @@ export default function ProfilePage() {
           {/* Linked Scholarships */}
           <Card>
             <h3 className="font-heading text-base font-semibold text-foreground flex items-center gap-2 mb-4">
-              <Award className="w-5 h-5 text-amber-400" />
+              <Award className="w-5 h-5 text-muted-fg" />
               Linked Scholarships
             </h3>
             <div className="space-y-3">
@@ -369,7 +369,7 @@ export default function ProfilePage() {
           {/* Personal Information */}
           <Card>
             <h3 className="font-heading text-base font-semibold text-foreground flex items-center gap-2 mb-5">
-              <User className="w-5 h-5 text-ocean-400" />
+              <User className="w-5 h-5 text-muted-fg" />
               Personal Information
             </h3>
 
@@ -446,7 +446,7 @@ export default function ProfilePage() {
           {/* Academic Information */}
           <Card>
             <h3 className="font-heading text-base font-semibold text-foreground flex items-center gap-2 mb-5">
-              <GraduationCap className="w-5 h-5 text-peach-400" />
+              <GraduationCap className="w-5 h-5 text-muted-fg" />
               Academic Information
             </h3>
 
@@ -525,7 +525,7 @@ export default function ProfilePage() {
           {/* Notification Settings */}
           <Card>
             <h3 className="font-heading text-base font-semibold text-foreground flex items-center gap-2 mb-5">
-              <Bell className="w-5 h-5 text-amber-400" />
+              <Bell className="w-5 h-5 text-muted-fg" />
               Notification Preferences
             </h3>
 
@@ -535,35 +535,35 @@ export default function ProfilePage() {
                 description="Get notified before document deadlines"
                 checked={notifications.emailDeadlines}
                 onChange={() => handleNotificationChange("emailDeadlines")}
-                icon={<Bell className="w-4 h-4 text-coral-400" />}
+                icon={<Bell className="w-4 h-4 text-muted-fg" />}
               />
               <NotificationToggle
                 label="Application Updates"
                 description="Notifications when documents are reviewed"
                 checked={notifications.emailUpdates}
                 onChange={() => handleNotificationChange("emailUpdates")}
-                icon={<Mail className="w-4 h-4 text-ocean-400" />}
+                icon={<Mail className="w-4 h-4 text-muted-fg" />}
               />
               <NotificationToggle
                 label="SMS Reminders"
                 description="Receive text message alerts for urgent deadlines"
                 checked={notifications.smsReminders}
                 onChange={() => handleNotificationChange("smsReminders")}
-                icon={<Phone className="w-4 h-4 text-sage-400" />}
+                icon={<Phone className="w-4 h-4 text-muted-fg" />}
               />
               <NotificationToggle
                 label="Push Notifications"
                 description="Browser push notifications for real-time updates"
                 checked={notifications.pushNotifications}
                 onChange={() => handleNotificationChange("pushNotifications")}
-                icon={<Bell className="w-4 h-4 text-peach-400" />}
+                icon={<Bell className="w-4 h-4 text-muted-fg" />}
               />
               <NotificationToggle
                 label="Weekly Digest"
                 description="Summary of your scholarship progress every Monday"
                 checked={notifications.weeklyDigest}
                 onChange={() => handleNotificationChange("weeklyDigest")}
-                icon={<Mail className="w-4 h-4 text-amber-400" />}
+                icon={<Mail className="w-4 h-4 text-muted-fg" />}
               />
               <NotificationToggle
                 label="Marketing & Tips"

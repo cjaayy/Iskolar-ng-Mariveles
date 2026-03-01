@@ -381,9 +381,9 @@ export default function StaffApplicationReviewPage() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   {bulkAction === "approved" ? (
-                    <CheckCircle2 className="w-5 h-5 text-sage-500" />
+                    <CheckCircle2 className="w-5 h-5 text-muted-fg" />
                   ) : (
-                    <XCircle className="w-5 h-5 text-coral-500" />
+                    <XCircle className="w-5 h-5 text-muted-fg" />
                   )}
                   <h3 className="font-heading font-semibold text-foreground">
                     {bulkAction === "approved"
@@ -448,20 +448,20 @@ export default function StaffApplicationReviewPage() {
               </div>
               <span className="text-card-border">|</span>
               <div className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-amber-400" />
+                <Clock className="w-3.5 h-3.5 text-muted-fg" />
                 <span className="text-sm font-body text-amber-500">
                   {pendingDocs.length} pending
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-sage-400" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-muted-fg" />
                 <span className="text-sm font-body text-sage-500">
                   {approvedDocs.length} approved
                 </span>
               </div>
               {rejectedDocs.length > 0 && (
                 <div className="flex items-center gap-1.5">
-                  <XCircle className="w-3.5 h-3.5 text-coral-400" />
+                  <XCircle className="w-3.5 h-3.5 text-muted-fg" />
                   <span className="text-sm font-body text-coral-500">
                     {rejectedDocs.length} rejected
                   </span>
@@ -534,17 +534,7 @@ export default function StaffApplicationReviewPage() {
                                     : "bg-muted"
                             }`}
                           >
-                            <FileText
-                              className={`w-4 h-4 ${
-                                isPending
-                                  ? "text-amber-500"
-                                  : req.status === "approved"
-                                    ? "text-sage-500"
-                                    : req.status === "rejected"
-                                      ? "text-coral-500"
-                                      : "text-muted-fg"
-                              }`}
-                            />
+                            <FileText className="w-4 h-4 text-muted-fg" />
                           </div>
                           <div>
                             <h3 className="font-body font-medium text-foreground text-sm">
@@ -699,7 +689,7 @@ export default function StaffApplicationReviewPage() {
               className="w-full flex items-center justify-between mb-3"
             >
               <h3 className="font-heading text-sm font-semibold text-foreground flex items-center gap-2">
-                <User className="w-4 h-4 text-ocean-400" />
+                <User className="w-4 h-4 text-muted-fg" />
                 Applicant Profile
               </h3>
               {showApplicantInfo ? (
@@ -787,7 +777,7 @@ export default function StaffApplicationReviewPage() {
           {/* Scholarship Info */}
           <Card padding="md">
             <h3 className="font-heading text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
-              <GraduationCap className="w-4 h-4 text-sage-400" />
+              <GraduationCap className="w-4 h-4 text-muted-fg" />
               Scholarship Details
             </h3>
             <div className="space-y-2 text-sm font-body">
@@ -825,7 +815,7 @@ export default function StaffApplicationReviewPage() {
           {history.length > 0 && (
             <Card padding="md">
               <h3 className="font-heading text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
-                <MessageSquare className="w-4 h-4 text-ocean-400" />
+                <MessageSquare className="w-4 h-4 text-muted-fg" />
                 Review History
               </h3>
               <div className="space-y-3">
@@ -844,9 +834,9 @@ export default function StaffApplicationReviewPage() {
                       }`}
                     >
                       {h.action === "approved" ? (
-                        <Check className="w-3 h-3 text-sage-500" />
+                        <Check className="w-3 h-3 text-muted-fg" />
                       ) : h.action === "rejected" ? (
-                        <X className="w-3 h-3 text-coral-500" />
+                        <X className="w-3 h-3 text-muted-fg" />
                       ) : (
                         <Clock className="w-3 h-3 text-muted-fg" />
                       )}
@@ -907,9 +897,9 @@ export default function StaffApplicationReviewPage() {
                     {previewDoc.file_url.match(
                       /\.(png|jpg|jpeg|gif|webp)$/i,
                     ) ? (
-                      <ImageIcon className="w-4 h-4 text-ocean-500" />
+                      <ImageIcon className="w-4 h-4 text-muted-fg" />
                     ) : (
-                      <FileText className="w-4 h-4 text-ocean-500" />
+                      <FileText className="w-4 h-4 text-muted-fg" />
                     )}
                   </div>
                   <div className="min-w-0">
