@@ -73,7 +73,9 @@ async function run() {
   // 2. Demo user
   const hash = await bcrypt.hash("Demo@1234", 10);
   await pool.execute(
-    "INSERT IGNORE INTO users (id, email, password_hash, full_name, role) VALUES (2, ?, ?, ?, ?)",
+    `INSERT INTO users (id, email, password_hash, full_name, role)
+     VALUES (2, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), full_name = VALUES(full_name), role = VALUES(role)`,
     ["demo@iskolar.local", hash, "Juan Dela Cruz", "applicant"],
   );
   console.log("✓ Demo user (demo@iskolar.local / Demo@1234)");
@@ -107,7 +109,9 @@ async function run() {
   // 6. Staff / Validator account
   const staffHash = await bcrypt.hash("Staff@1234", 10);
   await pool.execute(
-    "INSERT IGNORE INTO users (id, email, password_hash, full_name, role) VALUES (3, ?, ?, ?, ?)",
+    `INSERT INTO users (id, email, password_hash, full_name, role)
+     VALUES (3, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), full_name = VALUES(full_name), role = VALUES(role)`,
     ["staff@iskolar.local", staffHash, "Staff Validator", "validator"],
   );
   console.log("✓ Staff user (staff@iskolar.local / Staff@1234)");

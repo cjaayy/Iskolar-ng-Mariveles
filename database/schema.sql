@@ -167,13 +167,19 @@ CREATE TABLE IF NOT EXISTS requirement_submissions (
 -- Default admin account  (password: Admin@1234 — change in production!)
 INSERT IGNORE INTO users (id, email, password_hash, full_name, role)
 VALUES (1, 'admin@iskolar.local',
-        '$2b$10$Hd98SNsIXXKZUW0LloOdvem5.efA2UOb5.//jEGRywFnRfFhFxS.C',   -- Admin@1234 (bcrypt 10 rounds)
+        '$2b$10$iXNCksNq2VCEDqXK5QKAyeClxU1UrTNvlOBpVgR5R.E3YnwHImbHC',   -- Admin@1234 (bcrypt 10 rounds)
         'System Administrator', 'admin');
+
+-- Default demo applicant account  (password: Demo@1234)
+INSERT IGNORE INTO users (id, email, password_hash, full_name, role)
+VALUES (2, 'demo@iskolar.local',
+        '$2b$10$eBGjYlPJfVi6CHAOYFZ4XOUpch2/3PhzypmM1LSPUvkiU1iEMa6zy',   -- Demo@1234 (bcrypt 10 rounds)
+        'Juan Dela Cruz', 'applicant');
 
 -- Default validator / staff account  (password: Staff@1234)
 INSERT IGNORE INTO users (id, email, password_hash, full_name, role)
 VALUES (3, 'staff@iskolar.local',
-        '$2b$10$Hd98SNsIXXKZUW0LloOdvem5.efA2UOb5.//jEGRywFnRfFhFxS.C',   -- Staff@1234 (bcrypt 10 rounds — same hash placeholder)
+        '$2b$10$6MQyB60DycqiR2Cs2Fcr1..jQM4AdCcYudNWe2xAQ2qrdm8i9ZO6a',   -- Staff@1234 (bcrypt 10 rounds)
         'Staff Validator', 'validator');
 
 -- Sample scholarship
