@@ -185,57 +185,7 @@ export function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Search */}
-        <div className="hidden md:flex flex-1 max-w-md mx-4">
-          <div className="relative w-full">
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg"
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden="true"
-            >
-              <circle
-                cx="7"
-                cy="7"
-                r="5.5"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              />
-              <path
-                d="M11 11l3.5 3.5"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-            <input
-              type="search"
-              placeholder="Search requirements, documents..."
-              className="w-full bg-muted border-0 rounded-xl pl-10 pr-4 py-2 text-sm font-body text-foreground placeholder:text-muted-fg focus:outline-none focus:ring-2 focus:ring-ocean-400/20 transition-all"
-              aria-label="Search"
-            />
-          </div>
-        </div>
-
-        {/* Right actions */}
-        <div className="flex items-center gap-2">
-          {/* Notifications */}
-          <button
-            className="relative p-2 rounded-xl text-muted-fg hover:bg-muted hover:text-foreground transition-colors"
-            aria-label="View notifications"
-          >
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-coral-400 rounded-full" />
-          </button>
-
-          {/* Avatar */}
-          <div
-            className="w-8 h-8 rounded-full bg-gradient-to-br from-ocean-300 to-peach-300 flex items-center justify-center text-sm font-heading font-bold text-white"
-            title={user?.fullName ?? ""}
-          >
-            {initials}
-          </div>
-        </div>
+        <div className="flex-1" />
       </div>
     </header>
   );
