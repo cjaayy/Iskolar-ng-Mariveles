@@ -104,7 +104,7 @@
   /* Floating label input wrapper */
   .floating-label-wrapper input:focus ~ label,
   .floating-label-wrapper input:not(:placeholder-shown) ~ label {
-    @apply -translate-y-6 scale-90 text-ocean-400;
+    @apply -translate-y-6 scale-90 text-green-600;
   }
 
   /* Floating label background mask – covers the border behind the label text */
@@ -119,11 +119,11 @@
     padding-left: 0.25rem;
     padding-right: 0.25rem;
     border-radius: 0.5rem;
-    border: 2px solid var(--input-border);
+    border: 2px solid #16a34a;
   }
   input:focus ~ .floating-label,
   textarea:focus ~ .floating-label {
-    border-color: var(--accent);
+    border-color: #16a34a;
   }
 
   /* Gradient text */
