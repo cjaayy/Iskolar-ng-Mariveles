@@ -13,11 +13,13 @@ type Theme = "light" | "dark";
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
+  setTheme: (theme: Theme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: "light",
   toggleTheme: () => {},
+  setTheme: () => {},
 });
 
 export function useTheme() {
@@ -49,12 +51,20 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const setThemeExplicit = useCallback((t: Theme) => {
+    setTheme(t);
+    localStorage.setItem("iskolar-theme", t);
+    document.documentElement.classList.toggle("dark", t === "dark");
+  }, []);
+
   if (!mounted) {
     return <>{children}</>;
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider
+      value={{ theme, toggleTheme, setTheme: setThemeExplicit }}
+    >
       {children}
     </ThemeContext.Provider>
   );

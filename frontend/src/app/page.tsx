@@ -7,9 +7,10 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Sun, Moon, Monitor } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -20,6 +21,7 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {},
   );
+  const { theme, setTheme } = useTheme();
 
   const validate = () => {
     const newErrors: typeof errors = {};
@@ -86,6 +88,46 @@ export default function LoginPage() {
 
       {/* Dark overlay for readability */}
       <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
+
+      {/* Theme hover dropdown */}
+      <div className="absolute top-4 right-4 z-10 group">
+        <button
+          className="p-2.5 rounded-xl bg-card-bg/80 backdrop-blur border border-white/20 text-muted-fg hover:text-foreground transition-all hover:scale-105 shadow-soft"
+          aria-label="Theme options"
+        >
+          {theme === "light" ? (
+            <Sun className="w-5 h-5" />
+          ) : (
+            <Moon className="w-5 h-5" />
+          )}
+        </button>
+        <div className="absolute right-0 mt-2 w-36 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 origin-top-right">
+          <div className="bg-card-bg/90 backdrop-blur border border-white/20 rounded-xl shadow-lg py-1 overflow-hidden">
+            <button
+              onClick={() => setTheme("light")}
+              className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm font-body transition-colors hover:bg-green-600/20 ${
+                theme === "light"
+                  ? "text-green-600 font-medium"
+                  : "text-foreground"
+              }`}
+            >
+              <Sun className="w-4 h-4" />
+              Light
+            </button>
+            <button
+              onClick={() => setTheme("dark")}
+              className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm font-body transition-colors hover:bg-green-600/20 ${
+                theme === "dark"
+                  ? "text-green-600 font-medium"
+                  : "text-foreground"
+              }`}
+            >
+              <Moon className="w-4 h-4" />
+              Dark
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Login Card */}
       <motion.div
