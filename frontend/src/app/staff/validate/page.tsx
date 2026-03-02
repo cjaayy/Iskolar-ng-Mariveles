@@ -228,12 +228,11 @@ export default function StaffValidateListPage() {
           <div className="space-y-3">
             {applications.map((app, idx) => {
               const cfg = statusConfig[app.status] ?? statusConfig.submitted;
+              const submittedDocs =
+                app.approved_requirements + app.pending_requirements;
               const docsProgress =
                 app.total_requirements > 0
-                  ? Math.round(
-                      (app.approved_requirements / app.total_requirements) *
-                        100,
-                    )
+                  ? Math.round((submittedDocs / app.total_requirements) * 100)
                   : 0;
 
               return (
@@ -265,7 +264,7 @@ export default function StaffValidateListPage() {
                             />
                           </div>
                           <span className="text-xs font-body text-muted-fg whitespace-nowrap">
-                            {app.approved_requirements}/{app.total_requirements}
+                            {submittedDocs}/{app.total_requirements}
                           </span>
                         </div>
                         {app.pending_requirements > 0 && (
