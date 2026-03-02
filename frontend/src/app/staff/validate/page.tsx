@@ -84,8 +84,6 @@ const fadeUp = {
   },
 };
 
-const ORDINALS = ["", "1st", "2nd", "3rd", "4th", "5th"];
-
 export default function StaffValidateListPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -250,38 +248,6 @@ export default function StaffValidateListPage() {
                       href={`/staff/validate/${app.id}`}
                       className="flex flex-col md:flex-row md:items-center gap-4"
                     >
-                      {/* Applicant Info */}
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-ocean-300 to-peach-300 flex items-center justify-center text-sm font-heading font-bold text-white shrink-0">
-                          {app.applicant_name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .slice(0, 2)}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-body font-medium text-foreground text-sm truncate">
-                            {app.applicant_name}
-                          </p>
-                          <p className="text-xs font-body text-muted-fg truncate">
-                            {app.student_number} &middot;{" "}
-                            {(ORDINALS[app.year_level] ??
-                              `${app.year_level}th`) + " Year"}{" "}
-                            &middot; {app.course}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Scholarship */}
-                      <div className="md:w-40 shrink-0">
-                        <p className="text-sm font-body text-foreground truncate">
-                          {app.scholarship_name}
-                        </p>
-                        <p className="text-xs font-body text-muted-fg">
-                          {app.grantor}
-                        </p>
-                      </div>
-
                       {/* Status */}
                       <div className="md:w-32 shrink-0">
                         <Badge variant={cfg.variant} dot>

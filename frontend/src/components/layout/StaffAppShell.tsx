@@ -9,7 +9,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/components/providers/ThemeProvider";
-import { useStaffSession } from "@/components/providers/StaffSessionProvider";
 import {
   LayoutDashboard,
   ClipboardCheck,
@@ -18,8 +17,6 @@ import {
   Menu,
   X,
   LogOut,
-  ShieldCheck,
-  Bell,
 } from "lucide-react";
 
 /* -- Navigation items for staff -- */
@@ -173,11 +170,6 @@ function StaffSidebar({
 /* ======================== HEADER ======================== */
 
 function StaffHeader({ onMenuToggle }: { onMenuToggle: () => void }) {
-  const { user } = useStaffSession();
-  const initials = user
-    ? `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`
-    : "?";
-
   return (
     <header className="sticky top-0 z-30 bg-card-bg/80 backdrop-blur-md border-b border-card-border px-4 lg:px-8 py-3">
       <div className="flex items-center justify-between">
@@ -190,43 +182,7 @@ function StaffHeader({ onMenuToggle }: { onMenuToggle: () => void }) {
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Title */}
-        <div className="hidden md:flex flex-1 items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-muted-fg" />
-          <span className="font-heading text-sm font-semibold text-foreground">
-            Staff Validation Panel
-          </span>
-        </div>
-
-        {/* Right actions */}
-        <div className="flex items-center gap-2">
-          {/* Notifications */}
-          <button
-            className="relative p-2 rounded-xl text-muted-fg hover:bg-muted hover:text-foreground transition-colors"
-            aria-label="View notifications"
-          >
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-coral-400 rounded-full" />
-          </button>
-
-          {/* Avatar */}
-          <div className="flex items-center gap-2">
-            <div
-              className="w-8 h-8 rounded-full bg-gradient-to-br from-sage-300 to-ocean-300 flex items-center justify-center text-sm font-heading font-bold text-white"
-              title={user?.fullName ?? ""}
-            >
-              {initials}
-            </div>
-            <div className="hidden md:block">
-              <p className="text-sm font-body font-medium text-foreground leading-tight">
-                {user?.fullName ?? "Staff"}
-              </p>
-              <p className="text-[11px] font-body text-muted-fg capitalize">
-                {user?.role ?? "validator"}
-              </p>
-            </div>
-          </div>
-        </div>
+        <div className="flex-1" />
       </div>
     </header>
   );

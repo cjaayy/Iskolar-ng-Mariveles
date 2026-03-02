@@ -15,15 +15,9 @@ import {
   XCircle,
   Clock,
   FileText,
-  User,
-  GraduationCap,
-  DollarSign,
-  Building2,
   MessageSquare,
   ShieldCheck,
   AlertCircle,
-  ChevronDown,
-  ChevronUp,
   Check,
   X,
   Eye,
@@ -101,22 +95,6 @@ const docStatusConfig: Record<
   missing: { label: "Not Submitted", variant: "neutral", icon: AlertCircle },
   in_progress: { label: "In Progress", variant: "info", icon: Clock },
 };
-
-const appStatusConfig: Record<
-  string,
-  {
-    label: string;
-    variant: "success" | "warning" | "error" | "info" | "neutral";
-  }
-> = {
-  submitted: { label: "Submitted", variant: "info" },
-  under_review: { label: "Under Review", variant: "warning" },
-  approved: { label: "Approved", variant: "success" },
-  rejected: { label: "Rejected", variant: "error" },
-  returned: { label: "Returned", variant: "neutral" },
-};
-
-const ORDINALS = ["", "1st", "2nd", "3rd", "4th", "5th"];
 
 /* -- Build a map of requirement key → config -- */
 const reqConfigMap = Object.fromEntries(
@@ -298,8 +276,6 @@ export default function StaffApplicationReviewPage() {
   const approvedDocs = requirements.filter((r) => r.status === "approved");
   const rejectedDocs = requirements.filter((r) => r.status === "rejected");
   const missingDocs = requirements.filter((r) => r.status === "missing");
-  const appStatus =
-    appStatusConfig[application.status] ?? appStatusConfig.submitted;
 
   return (
     <motion.div
@@ -882,24 +858,5 @@ export default function StaffApplicationReviewPage() {
         )}
       </AnimatePresence>
     </motion.div>
-  );
-}
-
-/* -- Helper component -- */
-function InfoRow({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-muted-fg">{icon}</span>
-      <span className="text-muted-fg text-xs w-24 shrink-0">{label}</span>
-      <span className="text-foreground text-xs font-medium">{value}</span>
-    </div>
   );
 }
