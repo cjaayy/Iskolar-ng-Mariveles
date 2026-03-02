@@ -164,9 +164,9 @@ export default function LoginPage() {
                   className={`
                     peer w-full bg-input-bg border-2 rounded-xl pl-10 pr-4 py-3.5 font-body text-foreground
                     transition-all duration-200 placeholder-transparent
-                    focus:outline-none focus:border-ocean-400 focus:ring-2 focus:ring-ocean-400/20
-                    hover:border-ocean-300
-                    ${errors.email ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20" : "border-input-border"}
+                    focus:outline-none focus:border-green-600 focus:ring-2 focus:ring-green-600/20
+                    hover:border-green-400
+                    ${errors.email ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20" : "border-green-600"}
                   `}
                   aria-invalid={!!errors.email}
                   aria-describedby={errors.email ? "email-error" : undefined}
@@ -211,9 +211,9 @@ export default function LoginPage() {
                   className={`
                     peer w-full bg-input-bg border-2 rounded-xl pl-10 pr-12 py-3.5 font-body text-foreground
                     transition-all duration-200 placeholder-transparent
-                    focus:outline-none focus:border-ocean-400 focus:ring-2 focus:ring-ocean-400/20
-                    hover:border-ocean-300
-                    ${errors.password ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20" : "border-input-border"}
+                    focus:outline-none focus:border-green-600 focus:ring-2 focus:ring-green-600/20
+                    hover:border-green-400
+                    ${errors.password ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20" : "border-green-600"}
                   `}
                   aria-invalid={!!errors.password}
                   aria-describedby={
@@ -274,7 +274,7 @@ export default function LoginPage() {
             {/* Submit */}
             <Button
               type="submit"
-              className="w-full bg-green-600 hover:bg-green-700 text-white"
+              className="w-full !bg-green-600 hover:!bg-green-700 text-white"
               size="lg"
               isLoading={isLoading}
             >
