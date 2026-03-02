@@ -7,10 +7,9 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, Sun, Moon } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui";
-import { useTheme } from "@/components/providers/ThemeProvider";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -21,7 +20,6 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {},
   );
-  const { theme, toggleTheme } = useTheme();
 
   const validate = () => {
     const newErrors: typeof errors = {};
@@ -88,19 +86,6 @@ export default function LoginPage() {
 
       {/* Dark overlay for readability */}
       <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
-
-      {/* Theme toggle */}
-      <button
-        onClick={toggleTheme}
-        className="absolute top-4 right-4 z-10 p-2.5 rounded-xl bg-card-bg/80 backdrop-blur border border-card-border text-muted-fg hover:text-foreground transition-all hover:scale-105 shadow-soft"
-        aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-      >
-        {theme === "light" ? (
-          <Moon className="w-5 h-5" />
-        ) : (
-          <Sun className="w-5 h-5" />
-        )}
-      </button>
 
       {/* Login Card */}
       <motion.div
