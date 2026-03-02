@@ -9,14 +9,14 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, Sun, Moon } from "lucide-react";
 import Image from "next/image";
-import { Button, Checkbox } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { useTheme } from "@/components/providers/ThemeProvider";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {},
@@ -256,16 +256,11 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Remember me + Forgot password */}
-            <div className="flex items-center justify-between">
-              <Checkbox
-                checked={rememberMe}
-                onChange={setRememberMe}
-                label="Remember me"
-              />
+            {/* Forgot password */}
+            <div className="flex items-center justify-center">
               <a
                 href="#"
-                className="text-sm font-body text-ocean-400 hover:text-ocean-500 hover:underline transition-colors"
+                className="text-sm font-body text-green-600 hover:text-green-700 hover:underline transition-colors"
               >
                 Forgot password?
               </a>
