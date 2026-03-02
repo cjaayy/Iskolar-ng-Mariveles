@@ -3,6 +3,9 @@
  * Run once to populate demo applicant data:
  *   node scripts/seed-demo.js
  */
+const path = require("path");
+// Resolve modules from frontend/node_modules so the script works from any cwd
+module.paths.unshift(path.join(__dirname, "..", "frontend", "node_modules"));
 const mysql = require("mysql2/promise");
 const bcrypt = require("bcrypt");
 

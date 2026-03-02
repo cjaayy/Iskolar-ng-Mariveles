@@ -20,7 +20,6 @@ import {
   Menu,
   X,
   LogOut,
-  Bell,
 } from "lucide-react";
 
 /* -- Navigation items -- */
@@ -170,9 +169,7 @@ export function Sidebar({
 
 export function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
   const { user } = useSession();
-  const initials = user
-    ? `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`
-    : "?";
+  void user; // available for future use (avatar initials, etc.)
   return (
     <header className="sticky top-0 z-30 bg-card-bg/80 backdrop-blur-md border-b border-card-border px-4 lg:px-8 py-3">
       <div className="flex items-center justify-between">

@@ -182,10 +182,12 @@ export default function ProfilePage() {
     );
   }
 
-  const fullName = user ? `${user.firstName} ${user.lastName}` : "";
-  const initials = user
+  const _fullName = user ? `${user.firstName} ${user.lastName}` : "";
+  const _initials = user
     ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`
     : "";
+  void _fullName;
+  void _initials;
 
   return (
     <motion.div

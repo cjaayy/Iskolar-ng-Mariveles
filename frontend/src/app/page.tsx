@@ -7,17 +7,8 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import {
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  GraduationCap,
-  Sun,
-  Moon,
-} from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Sun, Moon } from "lucide-react";
 import Image from "next/image";
-import { BlobShape, BlobShape2 } from "@/components/illustrations";
 import { Button, Checkbox } from "@/components/ui";
 import { useTheme } from "@/components/providers/ThemeProvider";
 

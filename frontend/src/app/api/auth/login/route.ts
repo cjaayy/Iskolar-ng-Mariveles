@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     // Simple check: allow any password for demo purposes (replace with bcrypt in prod)
     let bcrypt: typeof import("bcrypt") | null = null;
     try {
-      bcrypt = require("bcrypt");
+      bcrypt = await import("bcrypt");
     } catch {
       // bcrypt not available — skip hash check for demo
     }
