@@ -281,8 +281,18 @@ export default function RequirementsPage() {
               }
             />
             <p className="mt-2 text-xs font-body text-muted-fg">
-              {filterCounts.approved} of {filterCounts.all} requirements
-              completed
+              {filterCounts.approved + filterCounts.pending} of{" "}
+              {filterCounts.all} requirements submitted
+              {filterCounts.approved > 0 && (
+                <span className="text-sage-500 ml-1">
+                  ({filterCounts.approved} approved)
+                </span>
+              )}
+              {filterCounts.pending > 0 && (
+                <span className="text-amber-500 ml-1">
+                  ({filterCounts.pending} pending review)
+                </span>
+              )}
             </p>
           </Card>
         </motion.div>
