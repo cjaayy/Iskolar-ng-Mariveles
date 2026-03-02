@@ -143,7 +143,6 @@ export default function StaffApplicationReviewPage() {
   const [requirements, setRequirements] = useState<RequirementSubmission[]>([]);
   const [history, setHistory] = useState<ValidationHistory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showApplicantInfo, setShowApplicantInfo] = useState(true);
   const [actionNotes, setActionNotes] = useState<Record<number, string>>({});
   const [validating, setValidating] = useState<Record<number, boolean>>({});
   const [bulkAction, setBulkAction] = useState<"approved" | "rejected" | null>(
@@ -323,18 +322,9 @@ export default function StaffApplicationReviewPage() {
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="font-heading text-2xl font-bold text-foreground">
-                {application.applicant_name}
-              </h1>
-              <Badge variant={appStatus.variant} dot>
-                {appStatus.label}
-              </Badge>
-            </div>
-            <p className="font-body text-sm text-muted-fg">
-              {application.student_number} &middot;{" "}
-              {application.scholarship_name} ({application.grantor})
-            </p>
+            <h1 className="font-heading text-2xl font-bold text-foreground mb-2">
+              Document Validation
+            </h1>
           </div>
 
           {/* Bulk actions */}
@@ -449,13 +439,13 @@ export default function StaffApplicationReviewPage() {
               <span className="text-card-border">|</span>
               <div className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-muted-fg" />
-                <span className="text-sm font-body text-amber-500">
+                <span className="text-sm font-body text-muted-fg">
                   {pendingDocs.length} pending
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5 text-muted-fg" />
-                <span className="text-sm font-body text-sage-500">
+                <span className="text-sm font-body text-muted-fg">
                   {approvedDocs.length} approved
                 </span>
               </div>
@@ -680,137 +670,8 @@ export default function StaffApplicationReviewPage() {
           )}
         </div>
 
-        {/* ── Right: Applicant Info Sidebar ─────────────────── */}
+        {/* ── Right: Sidebar ─────────────────── */}
         <div className="space-y-4">
-          {/* Applicant Profile Card */}
-          <Card padding="md">
-            <button
-              onClick={() => setShowApplicantInfo(!showApplicantInfo)}
-              className="w-full flex items-center justify-between mb-3"
-            >
-              <h3 className="font-heading text-sm font-semibold text-foreground flex items-center gap-2">
-                <User className="w-4 h-4 text-muted-fg" />
-                Applicant Profile
-              </h3>
-              {showApplicantInfo ? (
-                <ChevronUp className="w-4 h-4 text-muted-fg" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-muted-fg" />
-              )}
-            </button>
-
-            <AnimatePresence>
-              {showApplicantInfo && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="space-y-3 text-sm font-body">
-                    <div className="flex items-center gap-2">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-ocean-300 to-peach-300 flex items-center justify-center text-lg font-heading font-bold text-white">
-                        {application.applicant_name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")
-                          .slice(0, 2)}
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {application.applicant_name}
-                        </p>
-                        <p className="text-xs text-muted-fg">
-                          {application.applicant_email}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 pt-2 border-t border-card-border">
-                      <InfoRow
-                        icon={<GraduationCap className="w-3.5 h-3.5" />}
-                        label="Student #"
-                        value={application.student_number}
-                      />
-                      <InfoRow
-                        icon={<Building2 className="w-3.5 h-3.5" />}
-                        label="Course"
-                        value={`${application.course}`}
-                      />
-                      <InfoRow
-                        icon={<GraduationCap className="w-3.5 h-3.5" />}
-                        label="Year Level"
-                        value={
-                          (ORDINALS[application.year_level] ??
-                            `${application.year_level}th`) + " Year"
-                        }
-                      />
-                      <InfoRow
-                        icon={<GraduationCap className="w-3.5 h-3.5" />}
-                        label="GPA"
-                        value={String(application.gpa)}
-                      />
-                      <InfoRow
-                        icon={<DollarSign className="w-3.5 h-3.5" />}
-                        label="Monthly Income"
-                        value={`₱${Number(application.monthly_income).toLocaleString()}`}
-                      />
-                      <InfoRow
-                        icon={<User className="w-3.5 h-3.5" />}
-                        label="Household Size"
-                        value={String(application.household_size)}
-                      />
-                      {application.contact_number && (
-                        <InfoRow
-                          icon={<User className="w-3.5 h-3.5" />}
-                          label="Contact"
-                          value={application.contact_number}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </Card>
-
-          {/* Scholarship Info */}
-          <Card padding="md">
-            <h3 className="font-heading text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
-              <GraduationCap className="w-4 h-4 text-muted-fg" />
-              Scholarship Details
-            </h3>
-            <div className="space-y-2 text-sm font-body">
-              <InfoRow
-                icon={<GraduationCap className="w-3.5 h-3.5" />}
-                label="Name"
-                value={application.scholarship_name}
-              />
-              <InfoRow
-                icon={<Building2 className="w-3.5 h-3.5" />}
-                label="Grantor"
-                value={application.grantor}
-              />
-              <InfoRow
-                icon={<GraduationCap className="w-3.5 h-3.5" />}
-                label="Min GPA"
-                value={String(application.min_gpa)}
-              />
-              {application.max_monthly_income && (
-                <InfoRow
-                  icon={<DollarSign className="w-3.5 h-3.5" />}
-                  label="Max Income"
-                  value={`₱${Number(application.max_monthly_income).toLocaleString()}`}
-                />
-              )}
-              <InfoRow
-                icon={<User className="w-3.5 h-3.5" />}
-                label="Slots"
-                value={`${application.slots_available}/${application.slots_total} available`}
-              />
-            </div>
-          </Card>
-
           {/* Validation History */}
           {history.length > 0 && (
             <Card padding="md">
