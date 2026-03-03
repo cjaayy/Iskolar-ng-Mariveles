@@ -42,7 +42,7 @@ import { EmptyStateIllustration } from "@/components/illustrations";
 import { DocumentUploadModal } from "@/components/requirements/DocumentUploadModal";
 import {
   useSession,
-  DEMO_APPLICANT_ID,
+  getApplicantId,
 } from "@/components/providers/SessionProvider";
 
 /* -- Types -- */
@@ -138,8 +138,10 @@ export default function RequirementsPage() {
   // Load requirements from API on mount
   const loadRequirements = useCallback(async () => {
     try {
+      const applicantId = getApplicantId();
+      if (!applicantId) return;
       const res = await fetch("/api/me/requirements", {
-        headers: { "x-applicant-id": String(DEMO_APPLICANT_ID) },
+        headers: { "x-applicant-id": String(applicantId) },
       });
       if (res.ok) {
         const data = await res.json();
@@ -451,7 +453,7 @@ export default function RequirementsPage() {
         onClose={() => setUploadModal({ open: false })}
         requirementName={uploadModal.name}
         requirementKey={uploadModal.reqKey}
-        applicantId={DEMO_APPLICANT_ID}
+        applicantId={getApplicantId() ?? undefined}
         onSuccess={loadRequirements}
       />
     </>

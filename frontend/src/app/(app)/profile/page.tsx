@@ -12,7 +12,7 @@ import { Card, Breadcrumb, Skeleton } from "@/components/ui";
 import { useToast } from "@/components/providers/ToastProvider";
 import {
   useSession,
-  DEMO_APPLICANT_ID,
+  getApplicantId,
 } from "@/components/providers/SessionProvider";
 
 /* ─── Sub-tab definitions ─── */
@@ -100,8 +100,10 @@ export default function ProfilePage() {
 
   const loadData = useCallback(async () => {
     try {
+      const applicantId = getApplicantId();
+      if (!applicantId) throw new Error("Not logged in");
       const res = await fetch("/api/me/basic-info", {
-        headers: { "x-applicant-id": String(DEMO_APPLICANT_ID) },
+        headers: { "x-applicant-id": String(applicantId) },
       });
       if (!res.ok) throw new Error("Failed to load");
       const { data: d } = await res.json();

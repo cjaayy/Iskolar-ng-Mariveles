@@ -19,7 +19,7 @@ import {
 import { useToast } from "@/components/providers/ToastProvider";
 import {
   useSession,
-  DEMO_APPLICANT_ID,
+  getApplicantId,
 } from "@/components/providers/SessionProvider";
 
 /* ─── Sub-tab definitions ─── */
@@ -223,8 +223,10 @@ export default function BasicInfoPage() {
   /* ── Load data from API ── */
   const loadData = useCallback(async () => {
     try {
+      const applicantId = getApplicantId();
+      if (!applicantId) throw new Error("Not logged in");
       const res = await fetch("/api/me/basic-info", {
-        headers: { "x-applicant-id": String(DEMO_APPLICANT_ID) },
+        headers: { "x-applicant-id": String(applicantId) },
       });
       if (!res.ok) throw new Error("Failed to load");
       const { data } = await res.json();
@@ -316,7 +318,7 @@ export default function BasicInfoPage() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "x-applicant-id": String(DEMO_APPLICANT_ID),
+          "x-applicant-id": String(getApplicantId()),
         },
         body: JSON.stringify(payload),
       });

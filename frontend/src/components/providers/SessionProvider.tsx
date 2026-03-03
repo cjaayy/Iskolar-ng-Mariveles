@@ -1,8 +1,8 @@
 /**
  * components/providers/SessionProvider.tsx
  *
- * Provides the current (demo) applicant session throughout the app.
- * Replace DEMO_APPLICANT_ID with real session logic when auth is added.
+ * Provides the current applicant session throughout the app.
+ * Reads applicantId from localStorage (set at login).
  */
 "use client";
 
@@ -14,8 +14,14 @@ import React, {
   useCallback,
 } from "react";
 
-// ─── Temporary: hardcoded demo applicant ID until auth is implemented ─────────
-export const DEMO_APPLICANT_ID = 1;
+/** Read the logged-in applicant ID from localStorage */
+export function getApplicantId(): number | null {
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem("applicantId");
+  if (!raw) return null;
+  const n = Number(raw);
+  return Number.isNaN(n) ? null : n;
+}
 
 export interface SessionUser {
   userId: number;
@@ -55,9 +61,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
+    const applicantId = getApplicantId();
+    if (!applicantId) {
+      setLoading(false);
+      return;
+    }
     try {
       const res = await fetch("/api/me", {
-        headers: { "x-applicant-id": String(DEMO_APPLICANT_ID) },
+        headers: { "x-applicant-id": String(applicantId) },
       });
       if (res.ok) {
         const data = await res.json();

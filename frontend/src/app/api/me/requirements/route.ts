@@ -53,7 +53,26 @@ export async function GET(req: NextRequest) {
     );
 
     if (!application) {
-      return NextResponse.json({ application: null, requirements: [] });
+      // No application yet — still show the requirement checklist (all "missing")
+      const requirements = REQUIREMENT_CONFIGS.map((config, idx) => ({
+        id: idx + 1,
+        key: config.key,
+        name: config.name,
+        description: config.description,
+        group: config.group,
+        helpTip: config.helpTip,
+        sampleUrl: config.sampleUrl ?? null,
+        dueDate: config.dueDate,
+        status: "missing" as const,
+        progress: 0,
+        uploadedFile: null,
+        fileUrl: null,
+        uploadedAt: null,
+        notes: null,
+        validatorNotes: null,
+        validatedAt: null,
+      }));
+      return NextResponse.json({ application: null, requirements });
     }
 
     // All submission statuses for this application
