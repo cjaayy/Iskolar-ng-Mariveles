@@ -50,7 +50,11 @@ export default function LoginPage() {
       if (res.ok) {
         const data = await res.json();
 
-        if (data.role === "validator" || data.role === "admin") {
+        if (data.role === "admin") {
+          // Admin login — store admin ID and redirect to admin dashboard
+          localStorage.setItem("adminId", String(data.userId));
+          window.location.href = "/admin/dashboard";
+        } else if (data.role === "validator") {
           // Staff / validator login — store staff ID and redirect to staff dashboard
           localStorage.setItem("staffId", String(data.userId));
           window.location.href = "/staff/dashboard";

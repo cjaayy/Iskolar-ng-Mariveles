@@ -110,6 +110,19 @@ export interface ValidationChecklist {
   enrollment_verified: boolean;
 }
 
+export interface RegistrationLinkRow {
+  id: number;
+  token: string;
+  label: string | null;
+  max_uses: number;
+  times_used: number;
+  expires_at: Date | null;
+  created_by: number;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
+}
+
 // ─── API request / response shapes ──────────────────────────────────────────
 
 /** POST /api/applications — request body */
