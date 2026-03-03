@@ -12,6 +12,7 @@ import { useTheme } from "@/components/providers/ThemeProvider";
 import {
   LayoutDashboard,
   ClipboardCheck,
+  MapPin,
   Sun,
   Moon,
   Menu,
@@ -26,6 +27,11 @@ const staffNavItems = [
     href: "/staff/validate",
     label: "Validate Documents",
     icon: ClipboardCheck,
+  },
+  {
+    href: "/staff/barangays",
+    label: "Barangay Applicants",
+    icon: MapPin,
   },
 ];
 

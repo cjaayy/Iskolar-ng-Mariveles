@@ -247,6 +247,29 @@ export default function StaffValidateListPage() {
                       href={`/staff/validate/${app.id}`}
                       className="flex flex-col md:flex-row md:items-center gap-4"
                     >
+                      {/* Applicant info */}
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-ocean-300 to-ocean-500 flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-heading font-bold text-sm">
+                            {app.applicant_name
+                              .split(" ")
+                              .slice(0, 2)
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-body font-semibold text-foreground truncate">
+                            {app.applicant_name}
+                          </p>
+                          <p className="text-xs font-body text-muted-fg truncate">
+                            {app.scholarship_name}
+                            {app.course ? ` · ${app.course}` : ""}
+                          </p>
+                        </div>
+                      </div>
+
                       {/* Status */}
                       <div className="md:w-32 shrink-0">
                         <Badge variant={cfg.variant} dot>
