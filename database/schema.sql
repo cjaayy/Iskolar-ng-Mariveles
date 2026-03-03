@@ -33,15 +33,15 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS applicants (
   id                INT UNSIGNED    NOT NULL AUTO_INCREMENT,
   user_id           INT UNSIGNED    NOT NULL,
-  student_number    VARCHAR(30)     NOT NULL UNIQUE,
-  date_of_birth     DATE            NOT NULL,
+  student_number    VARCHAR(30)     NULL UNIQUE,
+  date_of_birth     DATE            NULL,
   contact_number    VARCHAR(20)     NULL,
   address           TEXT            NULL,
   -- Academic info
   gpa               DECIMAL(4,2)    NOT NULL DEFAULT 0.00   COMMENT 'Current GPA out of 4.00',
   year_level        TINYINT         NOT NULL DEFAULT 1,
-  course            VARCHAR(100)    NOT NULL,
-  college           VARCHAR(100)    NOT NULL,
+  course            VARCHAR(100)    NULL DEFAULT NULL,
+  college           VARCHAR(100)    NULL DEFAULT NULL,
   -- Financial info
   monthly_income    DECIMAL(10,2)   NOT NULL DEFAULT 0.00   COMMENT 'Family monthly income (PHP)',
   household_size    TINYINT         NOT NULL DEFAULT 1,

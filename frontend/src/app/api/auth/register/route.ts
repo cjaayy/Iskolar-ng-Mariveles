@@ -2,9 +2,11 @@
  * app/api/auth/register/route.ts
  *
  * POST /api/auth/register — register a new applicant using a pre-registration token.
- * Validates the token, creates a user + applicant record, increments usage counter.
+ * Validates the token, auto-generates a password, creates a user + applicant record,
+ * increments usage counter, and returns the generated credentials.
  */
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { pool } from "@db/connection";
 
 interface TokenRow {
@@ -16,53 +18,36 @@ interface TokenRow {
   is_active: boolean;
 }
 
+/** Generate an 8-character alphanumeric password */
+function generatePassword(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+  const bytes = crypto.randomBytes(8);
+  return Array.from(bytes)
+    .map((b) => chars[b % chars.length])
+    .join("");
+}
+
 export async function POST(req: NextRequest) {
   const conn = await pool.getConnection();
   try {
     const body = await req.json();
-    const {
-      token,
-      email,
-      password,
-      fullName,
-      studentNumber,
-      dateOfBirth,
-      course,
-      college,
-    } = body as {
+    const { token, email, fullName, address } = body as {
       token: string;
       email: string;
-      password: string;
       fullName: string;
-      studentNumber: string;
-      dateOfBirth: string;
-      course: string;
-      college: string;
+      address: string;
     };
 
     // Validate required fields
-    if (
-      !token ||
-      !email ||
-      !password ||
-      !fullName ||
-      !studentNumber ||
-      !dateOfBirth ||
-      !course ||
-      !college
-    ) {
+    if (!token || !email || !fullName || !address) {
       return NextResponse.json(
         { error: "All fields are required" },
         { status: 400 },
       );
     }
 
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: "Password must be at least 6 characters" },
-        { status: 400 },
-      );
-    }
+    // Auto-generate password
+    const plainPassword = generatePassword();
 
     // Start transaction
     await conn.beginTransaction();
@@ -124,29 +109,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if student number already exists
-    const [existingStudentRows] = await conn.execute(
-      {
-        sql: "SELECT id FROM applicants WHERE student_number = ? LIMIT 1",
-        namedPlaceholders: false,
-      } as import("mysql2").QueryOptions,
-      [studentNumber],
-    );
-    const existingStudents =
-      existingStudentRows as import("mysql2").RowDataPacket[];
-    if (existingStudents.length > 0) {
-      await conn.rollback();
-      return NextResponse.json(
-        { error: "An account with this student number already exists" },
-        { status: 409 },
-      );
-    }
-
     // Hash password
-    let hash = password;
+    let hash = plainPassword;
     try {
       const bcrypt = await import("bcrypt");
-      hash = await bcrypt.hash(password, 10);
+      hash = await bcrypt.hash(plainPassword, 10);
     } catch {
       // bcrypt not available — store raw (demo only)
     }
@@ -165,11 +132,11 @@ export async function POST(req: NextRequest) {
     // Create applicant profile
     const [applicantResult] = await conn.execute(
       {
-        sql: `INSERT INTO applicants (user_id, student_number, date_of_birth, course, college)
-       VALUES (?, ?, ?, ?, ?)`,
+        sql: `INSERT INTO applicants (user_id, address)
+       VALUES (?, ?)`,
         namedPlaceholders: false,
       } as import("mysql2").QueryOptions,
-      [userId, studentNumber, dateOfBirth, course, college],
+      [userId, address],
     );
     const applicantId = (applicantResult as import("mysql2").ResultSetHeader)
       .insertId;
@@ -187,9 +154,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {
-        message: "Account created successfully! You can now log in.",
+        message: "Account created successfully!",
         userId,
         applicantId,
+        credentials: {
+          email,
+          password: plainPassword,
+        },
       },
       { status: 201 },
     );

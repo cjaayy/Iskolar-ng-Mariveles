@@ -1,33 +1,54 @@
 /* ================================================================
-   PUBLIC REGISTRATION PAGE
-   Applicants use a pre-registration link to create their account
+   ONLINE REGISTRATION PAGE
+   Applicants register via a pre-registration link shared per barangay.
+   The system auto-generates their account credentials and displays them.
    ================================================================ */
 
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import {
   Mail,
-  Lock,
-  Eye,
-  EyeOff,
   User,
-  GraduationCap,
-  Calendar,
-  BookOpen,
-  Building2,
+  MapPin,
   CheckCircle2,
+  Lock,
+  Copy,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui";
+
+/* -- Barangay list for Mariveles, Bataan -- */
+const MARIVELES_BARANGAYS = [
+  "Alas-asin",
+  "Alion",
+  "Balon-Anito",
+  "Baseco Country (Bataan Shipyard)",
+  "Batangas II",
+  "Biaan",
+  "Cabcaben",
+  "Camaya",
+  "Casili (Cataning)",
+  "Ipag",
+  "Lucanin",
+  "Malaya",
+  "Maligaya",
+  "Mt. View",
+  "Poblacion",
+  "San Carlos",
+  "San Isidro",
+  "Sisiman",
+  "Townsite",
+];
 
 export default function RegisterPage({
   params,
 }: {
-  params: Promise<{ token: string }>;
+  params: { token: string };
 }) {
-  const { token } = use(params);
+  const { token } = params;
 
   const [validating, setValidating] = useState(true);
   const [tokenValid, setTokenValid] = useState(false);
@@ -35,19 +56,21 @@ export default function RegisterPage({
   const [linkLabel, setLinkLabel] = useState("");
 
   // Form fields
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [studentNumber, setStudentNumber] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
-  const [course, setCourse] = useState("");
-  const [college, setCollege] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [barangay, setBarangay] = useState("");
+  const [street, setStreet] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
+
+  // Credentials returned after registration
+  const [credentials, setCredentials] = useState<{
+    email: string;
+    password: string;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Validate token on mount
   useEffect(() => {
@@ -80,16 +103,7 @@ export default function RegisterPage({
     if (!email.trim()) newErrors.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(email))
       newErrors.email = "Invalid email format";
-    if (!password) newErrors.password = "Password is required";
-    else if (password.length < 6)
-      newErrors.password = "Password must be at least 6 characters";
-    if (password !== confirmPassword)
-      newErrors.confirmPassword = "Passwords do not match";
-    if (!studentNumber.trim())
-      newErrors.studentNumber = "Student number is required";
-    if (!dateOfBirth) newErrors.dateOfBirth = "Date of birth is required";
-    if (!course.trim()) newErrors.course = "Course is required";
-    if (!college.trim()) newErrors.college = "College is required";
+    if (!barangay) newErrors.barangay = "Please select your barangay";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -99,6 +113,11 @@ export default function RegisterPage({
     if (!validate()) return;
     setIsLoading(true);
 
+    // Build full address
+    const address = street.trim()
+      ? `${street.trim()}, ${barangay}, Mariveles, Bataan`
+      : `${barangay}, Mariveles, Bataan`;
+
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
@@ -106,26 +125,35 @@ export default function RegisterPage({
         body: JSON.stringify({
           token,
           email,
-          password,
           fullName,
-          studentNumber,
-          dateOfBirth,
-          course,
-          college,
+          address,
         }),
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (res.ok) {
+        setCredentials({
+          email: data.credentials?.email || email,
+          password: data.credentials?.password || "",
+        });
         setSuccess(true);
       } else {
-        const err = await res.json().catch(() => ({}));
-        setErrors({ submit: err.error || "Registration failed" });
+        setErrors({ submit: data.error || "Registration failed" });
         setIsLoading(false);
       }
     } catch {
       setErrors({ submit: "An error occurred. Please try again." });
       setIsLoading(false);
     }
+  };
+
+  const copyCredentials = async () => {
+    if (!credentials) return;
+    const text = `Iskolar ng Mariveles - Account Credentials\nEmail: ${credentials.email}\nPassword: ${credentials.password}`;
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   // Token validation loading state
@@ -173,28 +201,87 @@ export default function RegisterPage({
     );
   }
 
-  // Success
-  if (success) {
+  // Success — show generated credentials
+  if (success && credentials) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
+        <Image
+          src="/image.png"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+          aria-hidden="true"
+        />
+        <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
+
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center max-w-md"
+          className="relative w-full max-w-md"
         >
-          <div className="w-16 h-16 rounded-full bg-sage-50 dark:bg-sage-400/10 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="w-8 h-8 text-sage-500" />
+          <div className="bg-card-bg/95 backdrop-blur border border-card-border rounded-3xl p-8 md:p-10 shadow-xl text-center">
+            <div className="w-16 h-16 rounded-full bg-sage-50 dark:bg-sage-400/10 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-8 h-8 text-sage-500" />
+            </div>
+            <h1 className="font-heading text-2xl font-bold text-foreground mb-2">
+              Registration Successful!
+            </h1>
+            <p className="font-body text-muted-fg mb-6">
+              Your account has been created. Below are your login credentials.
+              Please save them.
+            </p>
+
+            {/* Credentials card */}
+            <div className="bg-muted rounded-2xl p-5 text-left mb-6 space-y-3">
+              <div>
+                <p className="text-xs font-body text-muted-fg mb-0.5">
+                  Email (Username)
+                </p>
+                <p className="text-sm font-mono font-semibold text-foreground break-all">
+                  {credentials.email}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-body text-muted-fg mb-0.5">
+                  Password
+                </p>
+                <p className="text-sm font-mono font-semibold text-foreground">
+                  {credentials.password}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Button
+                onClick={copyCredentials}
+                variant="outline"
+                className="w-full"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy Credentials
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={() => (window.location.href = "/")}
+                className="w-full"
+              >
+                Go to Login
+              </Button>
+            </div>
+
+            <p className="text-xs font-body text-muted-fg mt-4">
+              You can change your password after logging in.
+            </p>
           </div>
-          <h1 className="font-heading text-2xl font-bold text-foreground mb-2">
-            Account Created!
-          </h1>
-          <p className="font-body text-muted-fg mb-6">
-            Your account has been created successfully. You can now log in with
-            your email and password.
-          </p>
-          <Button onClick={() => (window.location.href = "/")}>
-            Go to Login
-          </Button>
         </motion.div>
       </div>
     );
@@ -219,7 +306,7 @@ export default function RegisterPage({
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative w-full max-w-lg"
+        className="relative w-full max-w-md"
       >
         <div className="bg-card-bg/95 backdrop-blur border border-card-border rounded-3xl p-8 md:p-10 shadow-xl">
           {/* Header */}
@@ -233,7 +320,7 @@ export default function RegisterPage({
               priority
             />
             <h1 className="font-heading text-2xl font-bold text-foreground mb-1">
-              Create Your Account
+              Online Registration
             </h1>
             {linkLabel && (
               <p className="text-sm font-body text-ocean-400">{linkLabel}</p>
@@ -299,185 +386,54 @@ export default function RegisterPage({
               )}
             </div>
 
-            {/* Password row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-body text-muted-fg mb-1">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      setErrors((p) => ({ ...p, password: "" }));
-                    }}
-                    placeholder="Min. 6 characters"
-                    className={`w-full bg-muted border-2 rounded-xl pl-10 pr-10 py-2.5 text-sm font-body text-foreground placeholder:text-muted-fg focus:outline-none focus:ring-2 transition-all ${
-                      errors.password
-                        ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20"
-                        : "border-transparent focus:border-ocean-400 focus:ring-ocean-400/20"
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-fg hover:text-foreground"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="text-xs text-coral-400 mt-1">
-                    {errors.password}
-                  </p>
-                )}
+            {/* Address in Mariveles, Bataan */}
+            <div>
+              <label className="block text-xs font-body text-muted-fg mb-1">
+                Barangay{" "}
+                <span className="text-ocean-400">(Mariveles, Bataan)</span>
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
+                <select
+                  value={barangay}
+                  onChange={(e) => {
+                    setBarangay(e.target.value);
+                    setErrors((p) => ({ ...p, barangay: "" }));
+                  }}
+                  className={`w-full bg-muted border-2 rounded-xl pl-10 pr-4 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-2 transition-all appearance-none ${
+                    errors.barangay
+                      ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20"
+                      : "border-transparent focus:border-ocean-400 focus:ring-ocean-400/20"
+                  } ${!barangay ? "text-muted-fg" : ""}`}
+                >
+                  <option value="">Select your barangay</option>
+                  {MARIVELES_BARANGAYS.map((brgy) => (
+                    <option key={brgy} value={brgy}>
+                      {brgy}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div>
-                <label className="block text-xs font-body text-muted-fg mb-1">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => {
-                      setConfirmPassword(e.target.value);
-                      setErrors((p) => ({ ...p, confirmPassword: "" }));
-                    }}
-                    placeholder="Repeat password"
-                    className={`w-full bg-muted border-2 rounded-xl pl-10 pr-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-fg focus:outline-none focus:ring-2 transition-all ${
-                      errors.confirmPassword
-                        ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20"
-                        : "border-transparent focus:border-ocean-400 focus:ring-ocean-400/20"
-                    }`}
-                  />
-                </div>
-                {errors.confirmPassword && (
-                  <p className="text-xs text-coral-400 mt-1">
-                    {errors.confirmPassword}
-                  </p>
-                )}
-              </div>
+              {errors.barangay && (
+                <p className="text-xs text-coral-400 mt-1">{errors.barangay}</p>
+              )}
             </div>
 
-            {/* Student Number & DOB */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-body text-muted-fg mb-1">
-                  Student Number
-                </label>
-                <div className="relative">
-                  <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
-                  <input
-                    type="text"
-                    value={studentNumber}
-                    onChange={(e) => {
-                      setStudentNumber(e.target.value);
-                      setErrors((p) => ({ ...p, studentNumber: "" }));
-                    }}
-                    placeholder="e.g. 2024-00001"
-                    className={`w-full bg-muted border-2 rounded-xl pl-10 pr-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-fg focus:outline-none focus:ring-2 transition-all ${
-                      errors.studentNumber
-                        ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20"
-                        : "border-transparent focus:border-ocean-400 focus:ring-ocean-400/20"
-                    }`}
-                  />
-                </div>
-                {errors.studentNumber && (
-                  <p className="text-xs text-coral-400 mt-1">
-                    {errors.studentNumber}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block text-xs font-body text-muted-fg mb-1">
-                  Date of Birth
-                </label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
-                  <input
-                    type="date"
-                    value={dateOfBirth}
-                    onChange={(e) => {
-                      setDateOfBirth(e.target.value);
-                      setErrors((p) => ({ ...p, dateOfBirth: "" }));
-                    }}
-                    className={`w-full bg-muted border-2 rounded-xl pl-10 pr-4 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-2 transition-all ${
-                      errors.dateOfBirth
-                        ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20"
-                        : "border-transparent focus:border-ocean-400 focus:ring-ocean-400/20"
-                    }`}
-                  />
-                </div>
-                {errors.dateOfBirth && (
-                  <p className="text-xs text-coral-400 mt-1">
-                    {errors.dateOfBirth}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Course & College */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-body text-muted-fg mb-1">
-                  Course / Program
-                </label>
-                <div className="relative">
-                  <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
-                  <input
-                    type="text"
-                    value={course}
-                    onChange={(e) => {
-                      setCourse(e.target.value);
-                      setErrors((p) => ({ ...p, course: "" }));
-                    }}
-                    placeholder="e.g. BS Computer Science"
-                    className={`w-full bg-muted border-2 rounded-xl pl-10 pr-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-fg focus:outline-none focus:ring-2 transition-all ${
-                      errors.course
-                        ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20"
-                        : "border-transparent focus:border-ocean-400 focus:ring-ocean-400/20"
-                    }`}
-                  />
-                </div>
-                {errors.course && (
-                  <p className="text-xs text-coral-400 mt-1">{errors.course}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-xs font-body text-muted-fg mb-1">
-                  College / School
-                </label>
-                <div className="relative">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
-                  <input
-                    type="text"
-                    value={college}
-                    onChange={(e) => {
-                      setCollege(e.target.value);
-                      setErrors((p) => ({ ...p, college: "" }));
-                    }}
-                    placeholder="e.g. College of Engineering"
-                    className={`w-full bg-muted border-2 rounded-xl pl-10 pr-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-fg focus:outline-none focus:ring-2 transition-all ${
-                      errors.college
-                        ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20"
-                        : "border-transparent focus:border-ocean-400 focus:ring-ocean-400/20"
-                    }`}
-                  />
-                </div>
-                {errors.college && (
-                  <p className="text-xs text-coral-400 mt-1">
-                    {errors.college}
-                  </p>
-                )}
+            {/* Street / Purok (optional) */}
+            <div>
+              <label className="block text-xs font-body text-muted-fg mb-1">
+                Street / Purok / Sitio{" "}
+                <span className="text-muted-fg/60">(optional)</span>
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
+                <input
+                  type="text"
+                  value={street}
+                  onChange={(e) => setStreet(e.target.value)}
+                  placeholder="e.g. Purok 3, Sampaguita St."
+                  className="w-full bg-muted border-2 border-transparent rounded-xl pl-10 pr-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-fg focus:outline-none focus:ring-2 focus:border-ocean-400 focus:ring-ocean-400/20 transition-all"
+                />
               </div>
             </div>
 
@@ -497,15 +453,8 @@ export default function RegisterPage({
               isLoading={isLoading}
               className="w-full"
             >
-              Create Account
+              Register
             </Button>
-
-            <p className="text-center text-xs font-body text-muted-fg">
-              Already have an account?{" "}
-              <a href="/" className="text-ocean-400 hover:underline">
-                Log in here
-              </a>
-            </p>
           </form>
         </div>
       </motion.div>
