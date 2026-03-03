@@ -79,6 +79,36 @@ export async function POST(req: NextRequest) {
         { user_id: user.id },
       );
       response.applicantId = applicant?.id ?? null;
+
+      // Check barangay access — applicants can only login when their barangay is open
+      if (applicant) {
+        const [applicantInfo] = await query<{ address: string | null }>(
+          "SELECT address FROM applicants WHERE id = :id LIMIT 1",
+          { id: applicant.id },
+        );
+        const address = applicantInfo?.address || "";
+        // Extract barangay from address (format: "Brgy, Mariveles, Bataan" or "Street, Brgy, Mariveles, Bataan")
+        const parts = address.split(",").map((p: string) => p.trim());
+        const marivIdx = parts.findIndex((p: string) =>
+          p.toLowerCase().includes("mariveles"),
+        );
+        const brgy = marivIdx > 0 ? parts[marivIdx - 1] : parts[0] || "";
+
+        if (brgy) {
+          const [access] = await query<{ is_open: boolean }>(
+            "SELECT is_open FROM barangay_access WHERE barangay = :barangay LIMIT 1",
+            { barangay: brgy },
+          );
+          if (access && !access.is_open) {
+            return NextResponse.json(
+              {
+                error: `Access for Barangay ${brgy} is currently closed. Please wait for your scheduled date.`,
+              },
+              { status: 403 },
+            );
+          }
+        }
+      }
     }
 
     return NextResponse.json(response);

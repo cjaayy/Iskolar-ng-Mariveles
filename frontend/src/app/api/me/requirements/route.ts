@@ -143,6 +143,33 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    // Check barangay access before allowing submission
+    const [applicantInfo] = await query<{ address: string | null }>(
+      "SELECT address FROM applicants WHERE id = :id LIMIT 1",
+      { id: applicantId },
+    );
+    const address = applicantInfo?.address || "";
+    const parts = address.split(",").map((p: string) => p.trim());
+    const marivIdx = parts.findIndex((p: string) =>
+      p.toLowerCase().includes("mariveles"),
+    );
+    const brgy = marivIdx > 0 ? parts[marivIdx - 1] : parts[0] || "";
+
+    if (brgy) {
+      const [access] = await query<{ is_open: boolean }>(
+        "SELECT is_open FROM barangay_access WHERE barangay = :barangay LIMIT 1",
+        { barangay: brgy },
+      );
+      if (access && !access.is_open) {
+        return NextResponse.json(
+          {
+            error: `Submissions for Barangay ${brgy} are currently closed. Please wait for your scheduled date.`,
+          },
+          { status: 403 },
+        );
+      }
+    }
+
     // Get the applicant's latest application
     const [application] = await query<{ id: number }>(
       `SELECT id FROM applications

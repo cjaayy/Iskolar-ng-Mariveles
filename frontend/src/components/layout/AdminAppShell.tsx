@@ -14,6 +14,9 @@ import {
   Users,
   ShieldCheck,
   LinkIcon,
+  MapPin,
+  UserCheck,
+  FileText,
   Sun,
   Moon,
   Menu,
@@ -27,6 +30,13 @@ const adminNavItems = [
   { href: "/admin/applicants", label: "Applicants", icon: Users },
   { href: "/admin/validators", label: "Validators", icon: ShieldCheck },
   { href: "/admin/invites", label: "Registration Links", icon: LinkIcon },
+  { href: "/admin/barangay-access", label: "Barangay Access", icon: MapPin },
+  { href: "/admin/registered", label: "Registered", icon: UserCheck },
+  {
+    href: "/admin/barangay-requirements",
+    label: "Brgy. Requirements",
+    icon: FileText,
+  },
 ];
 
 /* ======================== SIDEBAR ======================== */
