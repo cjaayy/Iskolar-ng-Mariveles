@@ -33,14 +33,17 @@ const dashboardItem = {
   icon: LayoutDashboard,
 };
 
-const adminToolItems = [
+const applicantItems = [
   { href: "/admin/registered", label: "List of Applicants", icon: Users },
-  { href: "/admin/validators", label: "List of Validators", icon: ShieldCheck },
   {
     href: "/admin/validate",
     label: "Validate Requirements",
     icon: ClipboardCheck,
   },
+];
+
+const adminToolItems = [
+  { href: "/admin/validators", label: "List of Validators", icon: ShieldCheck },
   { href: "/admin/invites", label: "Registration Links", icon: LinkIcon },
   { href: "/admin/barangay-access", label: "Barangay Access", icon: MapPin },
 ];
@@ -57,10 +60,14 @@ function AdminSidebar({
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
 
-  // Auto-expand dropdown if any child route is active
+  // Auto-expand dropdowns if any child route is active
+  const isApplicantActive = applicantItems.some(
+    (item) => pathname === item.href || pathname.startsWith(item.href + "/"),
+  );
   const isToolActive = adminToolItems.some(
     (item) => pathname === item.href || pathname.startsWith(item.href + "/"),
   );
+  const [applicantsOpen, setApplicantsOpen] = useState(isApplicantActive);
   const [toolsOpen, setToolsOpen] = useState(isToolActive);
 
   const isDashboardActive =
@@ -152,6 +159,79 @@ function AdminSidebar({
               </Link>
             </li>
 
+            {/* Applicants dropdown */}
+            <li>
+              <button
+                onClick={() => setApplicantsOpen((prev) => !prev)}
+                className={`
+                  flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-body font-medium
+                  transition-all duration-200 group
+                  ${
+                    isApplicantActive && !applicantsOpen
+                      ? "bg-ocean-50 dark:bg-ocean-400/10 text-ocean-400"
+                      : "text-muted-fg hover:bg-muted hover:text-foreground"
+                  }
+                `}
+              >
+                <Users
+                  className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+                    isApplicantActive ? "text-ocean-400" : ""
+                  }`}
+                />
+                Applicants
+                <ChevronDown
+                  className={`w-4 h-4 ml-auto transition-transform duration-200 ${
+                    applicantsOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              <div
+                className={`overflow-hidden transition-all duration-200 ease-out ${
+                  applicantsOpen
+                    ? "max-h-96 opacity-100 mt-1"
+                    : "max-h-0 opacity-0"
+                }`}
+              >
+                <ul className="ml-4 pl-4 border-l border-card-border space-y-0.5">
+                  {applicantItems.map((item) => {
+                    const isActive =
+                      pathname === item.href ||
+                      pathname.startsWith(item.href + "/");
+                    const Icon = item.icon;
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          onClick={onClose}
+                          className={`
+                            flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-body font-medium
+                            transition-all duration-200 group
+                            ${
+                              isActive
+                                ? "bg-ocean-50 dark:bg-ocean-400/10 text-ocean-400"
+                                : "text-muted-fg hover:bg-muted hover:text-foreground"
+                            }
+                          `}
+                          aria-current={isActive ? "page" : undefined}
+                        >
+                          <Icon
+                            className={`w-4 h-4 transition-transform group-hover:scale-110 ${
+                              isActive ? "text-ocean-400" : ""
+                            }`}
+                          />
+                          {item.label}
+                          {isActive && (
+                            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-ocean-400" />
+                          )}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </li>
+
             {/* Admin Tools dropdown */}
             <li>
               <button
@@ -179,7 +259,6 @@ function AdminSidebar({
                 />
               </button>
 
-              {/* Dropdown children */}
               <div
                 className={`overflow-hidden transition-all duration-200 ease-out ${
                   toolsOpen ? "max-h-96 opacity-100 mt-1" : "max-h-0 opacity-0"
