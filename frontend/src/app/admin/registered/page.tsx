@@ -9,7 +9,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
 import {
   MapPin,
   Users,
@@ -23,7 +22,6 @@ import {
   Mail,
   Phone,
   Home,
-  Eye,
   Loader2,
   X,
   Filter,
@@ -579,7 +577,7 @@ export default function RegisteredApplicantsPage() {
               </div>
 
               {/* Modal footer */}
-              <div className="px-5 py-4 border-t border-card-border flex items-center justify-between gap-3">
+              <div className="px-5 py-4 border-t border-card-border flex items-center justify-end gap-3">
                 <div className="text-xs font-body text-muted-fg">
                   {modalApplicant.pending_requirements > 0 && (
                     <span className="text-amber-500 font-medium">
@@ -600,16 +598,6 @@ export default function RegisteredApplicantsPage() {
                       </span>
                     )}
                 </div>
-                <Link
-                  href={`/admin/registered/${modalApplicant.application_id}`}
-                >
-                  <Button
-                    leftIcon={<Eye className="w-4 h-4" />}
-                    className="bg-ocean-400 hover:bg-ocean-500 text-white"
-                  >
-                    View Details
-                  </Button>
-                </Link>
               </div>
             </motion.div>
           </motion.div>

@@ -24,13 +24,6 @@ import {
   Download,
   ExternalLink,
   Image as ImageIcon,
-  User,
-  GraduationCap,
-  Mail,
-  Phone,
-  MapPin,
-  DollarSign,
-  BookOpen,
 } from "lucide-react";
 import { Card, Badge, Button, Skeleton } from "@/components/ui";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
@@ -122,11 +115,6 @@ const docStatusConfig: Record<
 const reqConfigMap = Object.fromEntries(
   REQUIREMENT_CONFIGS.map((c) => [c.key, c]),
 );
-
-const ORDINALS = ["", "1st", "2nd", "3rd", "4th", "5th"];
-function toOrdinal(n: number) {
-  return (ORDINALS[n] ?? `${n}th`) + " Year";
-}
 
 /* -- Animations -- */
 const fadeUp = {
@@ -462,153 +450,6 @@ export default function AdminRegisteredDetailPage() {
 
         {/* ── Right: Sidebar ─────────────────── */}
         <div className="space-y-4">
-          {/* Applicant Info */}
-          <Card padding="md">
-            <h3 className="font-heading text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
-              <User className="w-4 h-4 text-muted-fg" />
-              Applicant Information
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <p className="text-xs font-body text-muted-fg mb-0.5">
-                  Full Name
-                </p>
-                <p className="text-sm font-body font-medium text-foreground">
-                  {application.applicant_name}
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="text-xs font-body text-muted-fg mb-0.5 flex items-center gap-1">
-                    <GraduationCap className="w-3 h-3" />
-                    Student No.
-                  </p>
-                  <p className="text-sm font-body text-foreground">
-                    {application.student_number}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-body text-muted-fg mb-0.5 flex items-center gap-1">
-                    <BookOpen className="w-3 h-3" />
-                    Year Level
-                  </p>
-                  <p className="text-sm font-body text-foreground">
-                    {toOrdinal(application.year_level)}
-                  </p>
-                </div>
-              </div>
-              <div>
-                <p className="text-xs font-body text-muted-fg mb-0.5">
-                  Course / College
-                </p>
-                <p className="text-sm font-body text-foreground">
-                  {application.course}
-                  {application.college ? ` — ${application.college}` : ""}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-body text-muted-fg mb-0.5 flex items-center gap-1">
-                  <Mail className="w-3 h-3" />
-                  Email
-                </p>
-                <p className="text-sm font-body text-foreground">
-                  {application.applicant_email}
-                </p>
-              </div>
-              {application.contact_number && (
-                <div>
-                  <p className="text-xs font-body text-muted-fg mb-0.5 flex items-center gap-1">
-                    <Phone className="w-3 h-3" />
-                    Contact
-                  </p>
-                  <p className="text-sm font-body text-foreground">
-                    {application.contact_number}
-                  </p>
-                </div>
-              )}
-              {application.address && (
-                <div>
-                  <p className="text-xs font-body text-muted-fg mb-0.5 flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    Address
-                  </p>
-                  <p className="text-sm font-body text-foreground">
-                    {application.address}
-                  </p>
-                </div>
-              )}
-              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-card-border">
-                <div>
-                  <p className="text-xs font-body text-muted-fg mb-0.5">GPA</p>
-                  <p className="text-sm font-body font-semibold text-ocean-400">
-                    {Number(application.gpa).toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-body text-muted-fg mb-0.5 flex items-center gap-1">
-                    <DollarSign className="w-3 h-3" />
-                    Income
-                  </p>
-                  <p className="text-sm font-body text-foreground">
-                    ₱{Number(application.monthly_income).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-              {application.submitted_at && (
-                <div className="pt-2 border-t border-card-border">
-                  <p className="text-xs font-body text-muted-fg mb-0.5">
-                    Submitted
-                  </p>
-                  <p className="text-sm font-body text-foreground">
-                    {new Date(application.submitted_at).toLocaleDateString()}
-                  </p>
-                </div>
-              )}
-            </div>
-          </Card>
-
-          {/* Scholarship Info */}
-          <Card padding="md">
-            <h3 className="font-heading text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
-              <GraduationCap className="w-4 h-4 text-muted-fg" />
-              Scholarship Details
-            </h3>
-            <div className="space-y-2">
-              <div>
-                <p className="text-xs font-body text-muted-fg mb-0.5">Name</p>
-                <p className="text-sm font-body font-medium text-foreground">
-                  {application.scholarship_name}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-body text-muted-fg mb-0.5">
-                  Grantor
-                </p>
-                <p className="text-sm font-body text-foreground">
-                  {application.grantor}
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="text-xs font-body text-muted-fg mb-0.5">
-                    Min GPA
-                  </p>
-                  <p className="text-sm font-body text-foreground">
-                    {Number(application.min_gpa).toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-body text-muted-fg mb-0.5">
-                    Slots
-                  </p>
-                  <p className="text-sm font-body text-foreground">
-                    {application.slots_available}/{application.slots_total}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
-
           {/* Validation History */}
           {history.length > 0 && (
             <Card padding="md">
