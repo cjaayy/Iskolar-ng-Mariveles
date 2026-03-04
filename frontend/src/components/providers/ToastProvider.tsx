@@ -61,7 +61,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {children}
       {/* Toast Container */}
       <div
-        className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 w-[90%] max-w-sm"
+        className="fixed top-16 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 max-w-xs"
         aria-live="polite"
         aria-label="Notifications"
       >
@@ -69,15 +69,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={toast.id}
             className={`
-              animate-toast-in border-l-4 rounded-lg p-4 shadow-soft
-              flex items-start gap-3 bg-card-bg
+              animate-toast-in border-l-4 rounded-lg px-3 py-2 shadow-soft
+              flex items-center gap-2 bg-card-bg
               ${toastColors[toast.type]}
             `}
             role="alert"
           >
-            <span className="flex-shrink-0 mt-0.5">
-              {toastIcons[toast.type]}
-            </span>
+            <span className="flex-shrink-0">{toastIcons[toast.type]}</span>
             <p className="text-sm font-body text-foreground flex-1">
               {toast.message}
             </p>
