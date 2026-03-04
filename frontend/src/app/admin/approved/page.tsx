@@ -54,35 +54,44 @@ function extractBarangay(address: string | null): string {
   return parts[0] || "—";
 }
 
-/* ── Helper: Generate CSV content ────────────────────────── */
-function generateCSV(applicants: ApprovedApplicant[]): string {
-  const headers = [
-    "No.",
-    "Full Name",
-    "Email",
-    "Student Number",
-    "Course",
-    "College",
-    "Year Level",
-    "Barangay",
-    "Contact Number",
-    "Date Submitted",
-  ];
+/* ── Helper: Generate Excel content (HTML table format) ───── */
+function generateExcel(applicants: ApprovedApplicant[]): string {
+  const headers = ["No.", "Full Name", "Email", "Barangay", "Contact Number"];
 
-  const rows = applicants.map((a, i) => [
-    i + 1,
-    `"${a.applicant_name}"`,
-    `"${a.email}"`,
-    a.student_number || "—",
-    `"${a.course || "—"}"`,
-    `"${a.college || "—"}"`,
-    a.year_level || "—",
-    `"${extractBarangay(a.address)}"`,
-    a.contact_number || "—",
-    a.submitted_at ? new Date(a.submitted_at).toLocaleDateString() : "—",
-  ]);
+  const tableRows = applicants
+    .map(
+      (a, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>${a.applicant_name}</td>
+      <td>${a.email}</td>
+      <td>${extractBarangay(a.address)}</td>
+      <td>${a.contact_number || "—"}</td>
+    </tr>`,
+    )
+    .join("");
 
-  return [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+  return `
+    <html xmlns:x="urn:schemas-microsoft-com:office:excel">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        table { border-collapse: collapse; width: 100%; }
+        th { background: #1a7a5e; color: white; padding: 8px; border: 1px solid #ccc; text-align: left; }
+        td { padding: 8px; border: 1px solid #ccc; }
+        tr:nth-child(even) { background: #f9fafb; }
+      </style>
+    </head>
+    <body>
+      <table>
+        <thead>
+          <tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr>
+        </thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </body>
+    </html>
+  `;
 }
 
 /* ── Helper: Generate and download PDF via browser print ─── */
@@ -97,10 +106,7 @@ function downloadPDF(applicants: ApprovedApplicant[]) {
       <td style="border:1px solid #ccc;padding:6px 10px;text-align:center">${i + 1}</td>
       <td style="border:1px solid #ccc;padding:6px 10px">${a.applicant_name}</td>
       <td style="border:1px solid #ccc;padding:6px 10px">${a.email}</td>
-      <td style="border:1px solid #ccc;padding:6px 10px;text-align:center">${a.student_number || "—"}</td>
-      <td style="border:1px solid #ccc;padding:6px 10px">${a.course || "—"}</td>
-      <td style="border:1px solid #ccc;padding:6px 10px">${a.college || "—"}</td>
-      <td style="border:1px solid #ccc;padding:6px 10px;text-align:center">${a.year_level || "—"}</td>
+
       <td style="border:1px solid #ccc;padding:6px 10px">${extractBarangay(a.address)}</td>
       <td style="border:1px solid #ccc;padding:6px 10px">${a.contact_number || "—"}</td>
     </tr>`,
@@ -133,10 +139,6 @@ function downloadPDF(applicants: ApprovedApplicant[]) {
             <th>No.</th>
             <th>Full Name</th>
             <th>Email</th>
-            <th>Student No.</th>
-            <th>Course</th>
-            <th>College</th>
-            <th>Year</th>
             <th>Barangay</th>
             <th>Contact</th>
           </tr>
@@ -206,12 +208,14 @@ export default function ApprovedApplicantsPage() {
       addToast("No data to download", "warning");
       return;
     }
-    const csv = generateCSV(applicants);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const html = generateExcel(applicants);
+    const blob = new Blob([html], {
+      type: "application/vnd.ms-excel;charset=utf-8;",
+    });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `Approved_Applicants_${new Date().toISOString().split("T")[0]}.csv`;
+    link.download = `Approved_Applicants_${new Date().toISOString().split("T")[0]}.xls`;
     link.click();
     URL.revokeObjectURL(url);
     setShowDropdown(false);
@@ -332,7 +336,7 @@ export default function ApprovedApplicantsPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
           <input
             type="text"
-            placeholder="Search by name, email, or student number…"
+            placeholder="Search by name or email…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-input-bg border-2 border-input-border rounded-xl text-sm font-body text-foreground
