@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 import {
   Card,
   Button,
@@ -329,12 +329,36 @@ export default function BasicInfoPage() {
       }
 
       addToast("Basic information saved successfully!", "success");
+      return true;
     } catch (err: unknown) {
       addToast(err instanceof Error ? err.message : "Failed to save", "error");
+      return false;
     } finally {
       setSaving(false);
     }
   };
+
+  /* ── Save and go to next tab ── */
+  const handleSaveAndNext = async () => {
+    const success = await handleSave();
+    if (success) {
+      const currentIndex = SUB_TABS.indexOf(activeTab);
+      if (currentIndex < SUB_TABS.length - 1) {
+        setActiveTab(SUB_TABS[currentIndex + 1]);
+      }
+    }
+  };
+
+  /* ── Go to previous tab ── */
+  const handlePrevious = () => {
+    const currentIndex = SUB_TABS.indexOf(activeTab);
+    if (currentIndex > 0) {
+      setActiveTab(SUB_TABS[currentIndex - 1]);
+    }
+  };
+
+  const isFirstTab = activeTab === SUB_TABS[0];
+  const isLastTab = activeTab === SUB_TABS[SUB_TABS.length - 1];
 
   /* ── Loading state ── */
   if (sessionLoading || loadingData) {
@@ -418,15 +442,26 @@ export default function BasicInfoPage() {
           )}
           {activeTab === "Others" && <OthersTab form={form} update={update} />}
 
-          {/* Save button */}
-          <div className="flex justify-end mt-8 pt-4 border-t border-card-border">
+          {/* Navigation buttons */}
+          <div className="flex justify-between mt-8 pt-4 border-t border-card-border">
+            <div>
+              {!isFirstTab && (
+                <Button
+                  variant="success"
+                  onClick={handlePrevious}
+                  leftIcon={<ChevronLeft className="w-4 h-4" />}
+                >
+                  Previous
+                </Button>
+              )}
+            </div>
             <Button
-              variant="primary"
-              onClick={handleSave}
+              variant="success"
+              onClick={isLastTab ? handleSave : handleSaveAndNext}
               isLoading={saving}
               rightIcon={<ChevronRight className="w-4 h-4" />}
             >
-              {saving ? "Saving…" : "Save"}
+              {saving ? "Saving…" : isLastTab ? "Save" : "Save & Next"}
             </Button>
           </div>
         </Card>

@@ -5,7 +5,13 @@ import { Spinner } from "./Spinner";
 
 /* ======================== BUTTON ======================== */
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "outline";
+type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "danger"
+  | "outline"
+  | "success";
 type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -27,6 +33,8 @@ const buttonVariants: Record<ButtonVariant, string> = {
     "bg-coral-400 text-white hover:bg-coral-500 active:bg-coral-500 shadow-soft",
   outline:
     "bg-transparent border-2 border-ocean-400 text-ocean-400 hover:bg-ocean-50 dark:hover:bg-ocean-400/10 active:bg-ocean-100",
+  success:
+    "bg-green-500 text-white hover:bg-green-600 active:bg-green-700 shadow-soft hover:shadow-glow focus-visible:ring-2 focus-visible:ring-green-300",
 };
 
 const buttonSizes: Record<ButtonSize, string> = {
