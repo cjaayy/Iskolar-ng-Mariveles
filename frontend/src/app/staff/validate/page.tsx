@@ -21,6 +21,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { Card, Badge, Skeleton, Button } from "@/components/ui";
+import { useStaffSession } from "@/components/providers/StaffSessionProvider";
 
 /* -- Types -- */
 interface Application {
@@ -94,6 +95,9 @@ export default function StaffValidateListPage() {
   const staffId =
     typeof window !== "undefined" ? localStorage.getItem("staffId") : null;
 
+  const { user } = useStaffSession();
+  const assignedBarangay = user?.assignedBarangay ?? null;
+
   const fetchData = useCallback(async () => {
     if (!staffId) return;
     try {
@@ -136,10 +140,12 @@ export default function StaffValidateListPage() {
       >
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground">
-            Document Validation
+            Review Applications
           </h1>
           <p className="font-body text-muted-fg text-sm mt-0.5">
-            Review and validate submitted scholarship documents
+            {assignedBarangay
+              ? `Review and validate documents for Barangay ${assignedBarangay}`
+              : "Review and validate submitted scholarship documents"}
           </p>
         </div>
         <Button

@@ -11,6 +11,7 @@ interface StaffUserRow {
   email: string;
   full_name: string;
   role: string;
+  assigned_barangay: string | null;
 }
 
 export async function GET(req: NextRequest) {
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const [user] = await query<StaffUserRow>(
-      `SELECT id, email, full_name, role
+      `SELECT id, email, full_name, role, assigned_barangay
        FROM users
        WHERE id = :id AND role IN ('validator', 'admin') AND is_active = 1
        LIMIT 1`,
@@ -45,6 +46,7 @@ export async function GET(req: NextRequest) {
         firstName: nameParts[0] ?? "",
         lastName: nameParts.slice(1).join(" "),
         role: user.role,
+        assignedBarangay: user.assigned_barangay ?? null,
       },
     });
   } catch (err) {

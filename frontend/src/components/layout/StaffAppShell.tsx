@@ -25,12 +25,12 @@ const staffNavItems = [
   { href: "/staff/dashboard", label: "Dashboard", icon: LayoutDashboard },
   {
     href: "/staff/validate",
-    label: "Validate Documents",
+    label: "Validate Requirements",
     icon: ClipboardCheck,
   },
   {
     href: "/staff/barangays",
-    label: "Barangay Applicants",
+    label: "List of Applicants",
     icon: MapPin,
   },
 ];

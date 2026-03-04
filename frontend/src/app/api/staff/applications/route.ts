@@ -39,6 +39,13 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // Look up this validator's assigned barangay
+    const [validator] = await query<{ assigned_barangay: string | null }>(
+      `SELECT assigned_barangay FROM users WHERE id = :id AND role = 'validator' LIMIT 1`,
+      { id: Number(validatorId) },
+    );
+    const assignedBarangay = validator?.assigned_barangay ?? null;
+
     const { searchParams } = req.nextUrl;
     const status = searchParams.get("status") || undefined;
     const search = searchParams.get("search") || undefined;
@@ -54,6 +61,12 @@ export async function GET(req: NextRequest) {
 
     // Only show submitted+ applications (not drafts)
     conditions.push("a.status != 'draft'");
+
+    // Filter by assigned barangay if validator has one
+    if (assignedBarangay) {
+      conditions.push("ap.barangay = :assignedBarangay");
+      bindValues.assignedBarangay = assignedBarangay;
+    }
 
     if (status && status !== "all") {
       conditions.push("a.status = :status");

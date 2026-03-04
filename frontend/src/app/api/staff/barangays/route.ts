@@ -31,13 +31,24 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // Look up this validator's assigned barangay
+    const [validator] = await query<{ assigned_barangay: string | null }>(
+      `SELECT assigned_barangay FROM users WHERE id = :id AND role = 'validator' LIMIT 1`,
+      { id: Number(validatorId) },
+    );
+    const assignedBarangay = validator?.assigned_barangay ?? null;
+
     const { searchParams } = req.nextUrl;
     const barangayFilter = searchParams.get("barangay") || undefined;
 
     const conditions: string[] = ["a.status IN ('submitted','under_review')"];
     const bindValues: Record<string, unknown> = {};
 
-    if (barangayFilter) {
+    // If validator has an assigned barangay, only show applicants from that barangay
+    if (assignedBarangay) {
+      conditions.push("ap.barangay = :assignedBarangay");
+      bindValues.assignedBarangay = assignedBarangay;
+    } else if (barangayFilter) {
       conditions.push("ap.address LIKE :brgySearch");
       bindValues.brgySearch = `%${barangayFilter}%`;
     }

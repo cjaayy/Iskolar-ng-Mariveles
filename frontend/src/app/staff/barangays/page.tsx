@@ -22,6 +22,7 @@ import {
   Filter,
 } from "lucide-react";
 import { Card, Badge, Skeleton, Button } from "@/components/ui";
+import { useStaffSession } from "@/components/providers/StaffSessionProvider";
 
 const MARIVELES_BARANGAYS = [
   "Alas-asin",
@@ -91,6 +92,9 @@ export default function StaffBarangaysPage() {
   const staffId =
     typeof window !== "undefined" ? localStorage.getItem("staffId") : null;
 
+  const { user } = useStaffSession();
+  const assignedBarangay = user?.assignedBarangay ?? null;
+
   const load = useCallback(async () => {
     if (!staffId) return;
     setLoading(true);
@@ -131,12 +135,13 @@ export default function StaffBarangaysPage() {
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground flex items-center gap-2">
             <MapPin className="w-7 h-7 text-ocean-400" />
-            Barangay Applicants
+            {assignedBarangay ? `Barangay ${assignedBarangay}` : "My Barangay"}
           </h1>
           <p className="font-body text-sm text-muted-fg mt-1">
-            {total} applicant{total !== 1 ? "s" : ""} needing validation across{" "}
-            {sortedBarangays.length} barangay
-            {sortedBarangays.length !== 1 ? "s" : ""}
+            {total} applicant{total !== 1 ? "s" : ""} needing validation
+            {assignedBarangay
+              ? ` in Barangay ${assignedBarangay}`
+              : ` across ${sortedBarangays.length} barangay${sortedBarangays.length !== 1 ? "s" : ""}`}
           </p>
         </div>
         <Button
@@ -152,27 +157,29 @@ export default function StaffBarangaysPage() {
         </Button>
       </div>
 
-      {/* Filter */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative">
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
-          <select
-            value={filterBarangay}
-            onChange={(e) => setFilterBarangay(e.target.value)}
-            className="bg-card-bg border border-card-border rounded-xl pl-10 pr-8 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-2 focus:ring-ocean-400/20 focus:border-ocean-400 transition-all appearance-none"
-          >
-            <option value="">All Barangays</option>
-            {MARIVELES_BARANGAYS.map((b) => (
-              <option key={b} value={b}>
-                {b}
-              </option>
-            ))}
-          </select>
+      {/* Filter — only show if no assigned barangay (admin viewing) */}
+      {!assignedBarangay && (
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
+            <select
+              value={filterBarangay}
+              onChange={(e) => setFilterBarangay(e.target.value)}
+              className="bg-card-bg border border-card-border rounded-xl pl-10 pr-8 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-2 focus:ring-ocean-400/20 focus:border-ocean-400 transition-all appearance-none"
+            >
+              <option value="">All Barangays</option>
+              {MARIVELES_BARANGAYS.map((b) => (
+                <option key={b} value={b}>
+                  {b}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Summary chips */}
-      {!filterBarangay && summary.length > 0 && (
+      {/* Summary chips — only show when no assigned barangay */}
+      {!assignedBarangay && !filterBarangay && summary.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {summary.map((s) => (
             <button

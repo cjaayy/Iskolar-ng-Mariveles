@@ -21,6 +21,7 @@ export interface StaffUser {
   firstName: string;
   lastName: string;
   role: string;
+  assignedBarangay: string | null;
 }
 
 interface StaffSessionContextValue {
