@@ -24,6 +24,7 @@ import {
   LogOut,
   ChevronDown,
   Settings2,
+  CheckCircle2,
 } from "lucide-react";
 
 /* -- Navigation items for admin -- */
@@ -39,6 +40,11 @@ const applicantItems = [
     href: "/admin/validate",
     label: "Validate Requirements",
     icon: ClipboardCheck,
+  },
+  {
+    href: "/admin/approved",
+    label: "Approved Applicants",
+    icon: CheckCircle2,
   },
 ];
 
