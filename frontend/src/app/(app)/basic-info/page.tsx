@@ -68,13 +68,12 @@ interface BasicInfoForm {
   primary_school: string;
   primary_address: string;
   primary_year_graduated: string;
-  secondary_school: string;
-  secondary_address: string;
-  secondary_year_graduated: string;
-  tertiary_school: string;
-  tertiary_address: string;
-  tertiary_year_graduated: string;
-  tertiary_program: string;
+  jhs_school: string;
+  jhs_address: string;
+  jhs_year_graduated: string;
+  shs_school: string;
+  shs_address: string;
+  shs_year_graduated: string;
   /* others */
   skills: string;
   hobbies: string;
@@ -115,13 +114,12 @@ const emptyForm: BasicInfoForm = {
   primary_school: "",
   primary_address: "",
   primary_year_graduated: "",
-  secondary_school: "",
-  secondary_address: "",
-  secondary_year_graduated: "",
-  tertiary_school: "",
-  tertiary_address: "",
-  tertiary_year_graduated: "",
-  tertiary_program: "",
+  jhs_school: "",
+  jhs_address: "",
+  jhs_year_graduated: "",
+  shs_school: "",
+  shs_address: "",
+  shs_year_graduated: "",
   skills: "",
   hobbies: "",
   organizations: "",
@@ -253,19 +251,18 @@ export default function BasicInfoPage() {
           data.primary_year_graduated != null
             ? String(data.primary_year_graduated)
             : "",
-        secondary_school: data.secondary_school ?? "",
-        secondary_address: data.secondary_address ?? "",
-        secondary_year_graduated:
-          data.secondary_year_graduated != null
-            ? String(data.secondary_year_graduated)
+        jhs_school: data.jhs_school ?? data.secondary_school ?? "",
+        jhs_address: data.jhs_address ?? data.secondary_address ?? "",
+        jhs_year_graduated:
+          data.jhs_year_graduated != null
+            ? String(data.jhs_year_graduated)
             : "",
-        tertiary_school: data.tertiary_school ?? "",
-        tertiary_address: data.tertiary_address ?? "",
-        tertiary_year_graduated:
-          data.tertiary_year_graduated != null
-            ? String(data.tertiary_year_graduated)
+        shs_school: data.shs_school ?? "",
+        shs_address: data.shs_address ?? "",
+        shs_year_graduated:
+          data.shs_year_graduated != null
+            ? String(data.shs_year_graduated)
             : "",
-        tertiary_program: data.tertiary_program ?? "",
         skills: data.skills ?? "",
         hobbies: data.hobbies ?? "",
         organizations: data.organizations ?? "",
@@ -732,64 +729,58 @@ function EducationTab({ form, update }: TabProps) {
         </div>
       </div>
 
-      {/* Secondary */}
+      {/* Secondary — JHS */}
       <div>
         <h3 className="font-heading text-base font-semibold text-foreground mb-4">
-          Secondary
+          Junior High School (JHS)
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Input
             label="Name of School"
-            placeholder="Enter Secondary School Name"
-            value={form.secondary_school}
-            onChange={(e) => update("secondary_school", e.target.value)}
+            placeholder="Enter JHS School Name"
+            value={form.jhs_school}
+            onChange={(e) => update("jhs_school", e.target.value)}
           />
           <Input
             label="Address"
             placeholder="Enter School Address"
-            value={form.secondary_address}
-            onChange={(e) => update("secondary_address", e.target.value)}
+            value={form.jhs_address}
+            onChange={(e) => update("jhs_address", e.target.value)}
+          />
+          <Input
+            label="Year Graduated"
+            placeholder="e.g. 2020"
+            type="number"
+            value={form.jhs_year_graduated}
+            onChange={(e) => update("jhs_year_graduated", e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Secondary — SHS */}
+      <div>
+        <h3 className="font-heading text-base font-semibold text-foreground mb-4">
+          Senior High School (SHS)
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Input
+            label="Name of School"
+            placeholder="Enter SHS School Name"
+            value={form.shs_school}
+            onChange={(e) => update("shs_school", e.target.value)}
+          />
+          <Input
+            label="Address"
+            placeholder="Enter School Address"
+            value={form.shs_address}
+            onChange={(e) => update("shs_address", e.target.value)}
           />
           <Input
             label="Year Graduated"
             placeholder="e.g. 2022"
             type="number"
-            value={form.secondary_year_graduated}
-            onChange={(e) => update("secondary_year_graduated", e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Tertiary (Post-Secondary) */}
-      <div>
-        <h3 className="font-heading text-base font-semibold text-foreground mb-4">
-          Tertiary (Post-Secondary)
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            label="Name of School"
-            placeholder="Enter Tertiary School Name"
-            value={form.tertiary_school}
-            onChange={(e) => update("tertiary_school", e.target.value)}
-          />
-          <Input
-            label="Program"
-            placeholder="Enter Program / Course"
-            value={form.tertiary_program}
-            onChange={(e) => update("tertiary_program", e.target.value)}
-          />
-          <Input
-            label="Address"
-            placeholder="Enter School Address"
-            value={form.tertiary_address}
-            onChange={(e) => update("tertiary_address", e.target.value)}
-          />
-          <Input
-            label="Year Graduated"
-            placeholder="e.g. 2026"
-            type="number"
-            value={form.tertiary_year_graduated}
-            onChange={(e) => update("tertiary_year_graduated", e.target.value)}
+            value={form.shs_year_graduated}
+            onChange={(e) => update("shs_year_graduated", e.target.value)}
           />
         </div>
       </div>
