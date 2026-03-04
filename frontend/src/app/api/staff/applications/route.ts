@@ -64,8 +64,8 @@ export async function GET(req: NextRequest) {
 
     // Filter by assigned barangay if validator has one
     if (assignedBarangay) {
-      conditions.push("ap.barangay = :assignedBarangay");
-      bindValues.assignedBarangay = assignedBarangay;
+      conditions.push("ap.address LIKE :assignedBarangay");
+      bindValues.assignedBarangay = `%${assignedBarangay}%`;
     }
 
     if (status && status !== "all") {

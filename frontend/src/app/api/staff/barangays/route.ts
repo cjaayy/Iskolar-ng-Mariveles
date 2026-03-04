@@ -46,8 +46,8 @@ export async function GET(req: NextRequest) {
 
     // If validator has an assigned barangay, only show applicants from that barangay
     if (assignedBarangay) {
-      conditions.push("ap.barangay = :assignedBarangay");
-      bindValues.assignedBarangay = assignedBarangay;
+      conditions.push("ap.address LIKE :assignedBarangay");
+      bindValues.assignedBarangay = `%${assignedBarangay}%`;
     } else if (barangayFilter) {
       conditions.push("ap.address LIKE :brgySearch");
       bindValues.brgySearch = `%${barangayFilter}%`;
