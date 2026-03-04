@@ -368,12 +368,6 @@ export default function ApprovedApplicantsPage() {
                   <th className="text-left px-4 py-3 text-muted-fg font-medium hidden sm:table-cell">
                     Email
                   </th>
-                  <th className="text-left px-4 py-3 text-muted-fg font-medium hidden md:table-cell">
-                    Student No.
-                  </th>
-                  <th className="text-left px-4 py-3 text-muted-fg font-medium hidden lg:table-cell">
-                    Course
-                  </th>
                   <th className="text-left px-4 py-3 text-muted-fg font-medium hidden lg:table-cell">
                     Barangay
                   </th>
@@ -397,12 +391,6 @@ export default function ApprovedApplicantsPage() {
                     </td>
                     <td className="px-4 py-3 text-muted-fg hidden sm:table-cell">
                       {a.email}
-                    </td>
-                    <td className="px-4 py-3 text-muted-fg hidden md:table-cell">
-                      {a.student_number || "—"}
-                    </td>
-                    <td className="px-4 py-3 text-muted-fg hidden lg:table-cell">
-                      {a.course || "—"}
                     </td>
                     <td className="px-4 py-3 text-muted-fg hidden lg:table-cell">
                       {extractBarangay(a.address)}
