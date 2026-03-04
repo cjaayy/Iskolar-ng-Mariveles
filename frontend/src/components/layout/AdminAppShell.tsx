@@ -26,7 +26,7 @@ import {
 /* -- Navigation items for admin -- */
 const adminNavItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/registered", label: "Registered Applicants", icon: Users },
+  { href: "/admin/registered", label: "List of Applicants", icon: Users },
   { href: "/admin/validators", label: "Validators", icon: ShieldCheck },
   { href: "/admin/invites", label: "Registration Links", icon: LinkIcon },
   { href: "/admin/barangay-access", label: "Barangay Access", icon: MapPin },

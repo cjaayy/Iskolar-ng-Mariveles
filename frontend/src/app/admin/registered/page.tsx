@@ -257,7 +257,7 @@ export default function RegisteredApplicantsPage() {
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground flex items-center gap-2">
             <Users className="w-7 h-7 text-ocean-400" />
-            Registered Applicants
+            List of Applicants
           </h1>
           <p className="font-body text-sm text-muted-fg mt-1">
             {allApplicants.length} applicant

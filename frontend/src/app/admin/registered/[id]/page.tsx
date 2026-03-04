@@ -215,7 +215,7 @@ export default function AdminRegisteredDetailPage() {
               variant="outline"
               leftIcon={<ArrowLeft className="w-4 h-4" />}
             >
-              Back to Registered Applicants
+              Back to List of Applicants
             </Button>
           </Link>
         </div>
@@ -243,7 +243,7 @@ export default function AdminRegisteredDetailPage() {
           className="inline-flex items-center gap-1 text-sm font-body text-muted-fg hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Registered Applicants
+          Back to List of Applicants
         </Link>
       </div>
 
