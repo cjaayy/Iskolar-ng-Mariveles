@@ -5,7 +5,8 @@
 
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { ErrorIllustration } from "@/components/illustrations";
 
 export default function Error({
@@ -15,9 +16,27 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const pathname = usePathname();
+  const [dashboardHref, setDashboardHref] = useState("/dashboard");
+
   useEffect(() => {
     console.error("Application error:", error);
   }, [error]);
+
+  useEffect(() => {
+    // Determine the correct dashboard based on the current path or stored session
+    if (pathname.startsWith("/admin")) {
+      setDashboardHref("/admin/dashboard");
+    } else if (pathname.startsWith("/staff")) {
+      setDashboardHref("/staff/dashboard");
+    } else if (typeof window !== "undefined") {
+      if (localStorage.getItem("adminId")) {
+        setDashboardHref("/admin/dashboard");
+      } else if (localStorage.getItem("staffId")) {
+        setDashboardHref("/staff/dashboard");
+      }
+    }
+  }, [pathname]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -49,7 +68,7 @@ export default function Error({
             Try Again
           </button>
           <a
-            href="/dashboard"
+            href={dashboardHref}
             className="
               inline-flex items-center justify-center px-6 py-3 rounded-xl
               bg-transparent text-ocean-400 font-body font-medium text-sm
