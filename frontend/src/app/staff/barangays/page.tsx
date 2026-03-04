@@ -1,51 +1,35 @@
 /* ================================================================
-   STAFF — BARANGAY APPLICANTS
-   List of barangays with applicants needing validation
+   STAFF — LIST OF APPLICANTS
+   Simple name list for the validator's assigned barangay
+   with search bar and popup modal for applicant details
    ================================================================ */
 
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import {
   MapPin,
   Users,
   RefreshCw,
-  ChevronDown,
-  ChevronUp,
   CheckCircle2,
   Clock,
   AlertCircle,
   XCircle,
-  ArrowRight,
-  Filter,
+  Search,
+  User,
+  Mail,
+  Phone,
+  Home,
+  ShieldCheck,
+  Loader2,
+  X,
 } from "lucide-react";
 import { Card, Badge, Skeleton, Button } from "@/components/ui";
 import { useStaffSession } from "@/components/providers/StaffSessionProvider";
 
-const MARIVELES_BARANGAYS = [
-  "Alas-asin",
-  "Alion",
-  "Balon-Anito",
-  "Baseco Country (Bataan Shipyard)",
-  "Batangas II",
-  "Biaan",
-  "Cabcaben",
-  "Camaya",
-  "Casili (Cataning)",
-  "Ipag",
-  "Lucanin",
-  "Malaya",
-  "Maligaya",
-  "Mt. View",
-  "Poblacion",
-  "San Carlos",
-  "San Isidro",
-  "Sisiman",
-  "Townsite",
-];
-
+/* ── Types ─────────────────────────────────────────────── */
 interface ApplicantRow {
   application_id: number;
   applicant_id: number;
@@ -61,13 +45,23 @@ interface ApplicantRow {
   rejected_requirements: number;
 }
 
-interface BarangaySummary {
-  barangay: string;
-  totalApplicants: number;
-  pendingValidation: number;
+interface ApplicationDetail {
+  id: number;
+  applicant_id: number;
+  status: string;
+  submitted_at: string | null;
+  applicant_name: string;
+  applicant_email: string;
+  contact_number: string | null;
+  address: string | null;
 }
 
-/* -- Animations -- */
+interface RequirementSummary {
+  requirement_key: string;
+  status: string;
+}
+
+/* ── Animations ────────────────────────────────────────── */
 const stagger = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.04 } },
@@ -81,13 +75,44 @@ const fadeUp = {
   },
 };
 
+/* ── Detail row helper ─────────────────────────────────── */
+function DetailItem({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <Icon className="w-4 h-4 text-muted-fg mt-0.5 shrink-0" />
+      <div className="min-w-0">
+        <p className="text-[11px] font-body text-muted-fg leading-none mb-0.5">
+          {label}
+        </p>
+        <p className="text-sm font-body text-foreground font-medium break-words">
+          {value || "—"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function StaffBarangaysPage() {
-  const [grouped, setGrouped] = useState<Record<string, ApplicantRow[]>>({});
-  const [summary, setSummary] = useState<BarangaySummary[]>([]);
-  const [total, setTotal] = useState(0);
+  const [allApplicants, setAllApplicants] = useState<ApplicantRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterBarangay, setFilterBarangay] = useState("");
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [search, setSearch] = useState("");
+
+  // Modal state
+  const [modalApplicant, setModalApplicant] = useState<ApplicantRow | null>(
+    null,
+  );
+  const [detailCache, setDetailCache] = useState<
+    Record<number, { app: ApplicationDetail; reqs: RequirementSummary[] }>
+  >({});
+  const [detailLoading, setDetailLoading] = useState<number | null>(null);
 
   const staffId =
     typeof window !== "undefined" ? localStorage.getItem("staffId") : null;
@@ -95,38 +120,92 @@ export default function StaffBarangaysPage() {
   const { user } = useStaffSession();
   const assignedBarangay = user?.assignedBarangay ?? null;
 
+  /* ── Load list ───────────────────────────────────────── */
   const load = useCallback(async () => {
     if (!staffId) return;
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (filterBarangay) params.set("barangay", filterBarangay);
-
-      const res = await fetch(`/api/staff/barangays?${params.toString()}`, {
+      const res = await fetch("/api/staff/barangays", {
         headers: { "x-validator-id": staffId },
       });
       if (res.ok) {
         const data = await res.json();
-        setGrouped(data.grouped || {});
-        setSummary(data.summary || []);
-        setTotal(data.total || 0);
+        const grouped: Record<string, ApplicantRow[]> = data.grouped || {};
+        const flat: ApplicantRow[] = Object.values(grouped).flat();
+        setAllApplicants(flat);
       }
     } catch (e) {
       console.error("[StaffBarangays] Failed to load", e);
     } finally {
       setLoading(false);
     }
-  }, [staffId, filterBarangay]);
+  }, [staffId]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const toggleExpand = (brgy: string) => {
-    setExpanded((prev) => ({ ...prev, [brgy]: !prev[brgy] }));
+  /* ── Fetch detail for a single applicant ─────────────── */
+  const fetchDetail = useCallback(
+    async (applicationId: number) => {
+      if (!staffId || detailCache[applicationId]) return;
+      setDetailLoading(applicationId);
+      try {
+        const res = await fetch(`/api/staff/applications/${applicationId}`, {
+          headers: { "x-validator-id": staffId },
+        });
+        if (res.ok) {
+          const json = await res.json();
+          setDetailCache((prev) => ({
+            ...prev,
+            [applicationId]: {
+              app: json.data as ApplicationDetail,
+              reqs: (json.requirements ?? []).map(
+                (r: { requirement_key: string; status: string }) => ({
+                  requirement_key: r.requirement_key,
+                  status: r.status,
+                }),
+              ),
+            },
+          }));
+        }
+      } catch (e) {
+        console.error("Failed to fetch detail", e);
+      } finally {
+        setDetailLoading(null);
+      }
+    },
+    [staffId, detailCache],
+  );
+
+  /* ── Open modal ──────────────────────────────────────── */
+  const openModal = (applicant: ApplicantRow) => {
+    setModalApplicant(applicant);
+    fetchDetail(applicant.application_id);
   };
 
-  const sortedBarangays = Object.keys(grouped).sort();
+  /* ── Search filter ───────────────────────────────────── */
+  const filtered = useMemo(() => {
+    if (!search.trim()) return allApplicants;
+    const q = search.toLowerCase();
+    return allApplicants.filter(
+      (a) =>
+        a.applicant_name.toLowerCase().includes(q) ||
+        a.email.toLowerCase().includes(q),
+    );
+  }, [allApplicants, search]);
+
+  const pendingCount = filtered.filter(
+    (a) => a.pending_requirements > 0 || a.submitted_requirements === 0,
+  ).length;
+
+  // Modal detail data
+  const detail = modalApplicant
+    ? detailCache[modalApplicant.application_id]
+    : null;
+  const isLoadingDetail = modalApplicant
+    ? detailLoading === modalApplicant.application_id
+    : false;
 
   return (
     <div className="space-y-6">
@@ -134,14 +213,23 @@ export default function StaffBarangaysPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground flex items-center gap-2">
-            <MapPin className="w-7 h-7 text-ocean-400" />
-            {assignedBarangay ? `Barangay ${assignedBarangay}` : "My Barangay"}
+            <Users className="w-7 h-7 text-ocean-400" />
+            List of Applicants
           </h1>
-          <p className="font-body text-sm text-muted-fg mt-1">
-            {total} applicant{total !== 1 ? "s" : ""} needing validation
-            {assignedBarangay
-              ? ` in Barangay ${assignedBarangay}`
-              : ` across ${sortedBarangays.length} barangay${sortedBarangays.length !== 1 ? "s" : ""}`}
+          <p className="font-body text-sm text-muted-fg mt-1 flex items-center gap-1.5">
+            {assignedBarangay && (
+              <>
+                <MapPin className="w-3.5 h-3.5" />
+                Barangay {assignedBarangay} &middot;{" "}
+              </>
+            )}
+            {allApplicants.length} applicant
+            {allApplicants.length !== 1 ? "s" : ""}
+            {pendingCount > 0 && (
+              <span className="text-amber-500 font-medium">
+                &middot; {pendingCount} pending
+              </span>
+            )}
           </p>
         </div>
         <Button
@@ -157,64 +245,45 @@ export default function StaffBarangaysPage() {
         </Button>
       </div>
 
-      {/* Filter — only show if no assigned barangay (admin viewing) */}
-      {!assignedBarangay && (
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
-            <select
-              value={filterBarangay}
-              onChange={(e) => setFilterBarangay(e.target.value)}
-              className="bg-card-bg border border-card-border rounded-xl pl-10 pr-8 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-2 focus:ring-ocean-400/20 focus:border-ocean-400 transition-all appearance-none"
-            >
-              <option value="">All Barangays</option>
-              {MARIVELES_BARANGAYS.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
-          </div>
+      {/* Search bar */}
+      <Card padding="md">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search applicant by name or email..."
+            className="w-full bg-muted border-0 rounded-xl pl-10 pr-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-fg focus:outline-none focus:ring-2 focus:ring-ocean-400/20 transition-all"
+          />
         </div>
-      )}
+      </Card>
 
-      {/* Summary chips — only show when no assigned barangay */}
-      {!assignedBarangay && !filterBarangay && summary.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {summary.map((s) => (
-            <button
-              key={s.barangay}
-              onClick={() => setFilterBarangay(s.barangay)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-ocean-50 dark:bg-ocean-400/10 text-ocean-500 dark:text-ocean-400 text-xs font-body font-medium hover:bg-ocean-100 dark:hover:bg-ocean-400/20 transition-colors"
-            >
-              <MapPin className="w-3 h-3" />
-              {s.barangay}
-              <span className="font-bold">{s.totalApplicants}</span>
-              {s.pendingValidation > 0 && (
-                <span className="text-amber-500 font-bold">
-                  ({s.pendingValidation} pending)
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Barangay groups */}
+      {/* Applicant list */}
       {loading ? (
-        <div className="space-y-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-xl" />
+        <div className="space-y-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} padding="md">
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-10 h-10 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-28" />
+                </div>
+              </div>
+            </Card>
           ))}
         </div>
-      ) : sortedBarangays.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <Card className="p-10 text-center">
           <Users className="w-12 h-12 text-muted-fg/30 mx-auto mb-3" />
           <p className="font-heading text-lg font-semibold text-foreground mb-1">
-            No Applicants to Validate
+            {search ? "No Results" : "No Applicants"}
           </p>
           <p className="font-body text-sm text-muted-fg">
-            There are no submitted applications needing validation at this time.
+            {search
+              ? "No applicants match your search."
+              : "There are no submitted applications needing validation at this time."}
           </p>
         </Card>
       ) : (
@@ -222,165 +291,255 @@ export default function StaffBarangaysPage() {
           variants={stagger}
           initial="hidden"
           animate="show"
-          className="space-y-3"
+          className="space-y-2"
         >
-          {sortedBarangays.map((brgy) => {
-            const applicants = grouped[brgy];
-            const isExpanded = expanded[brgy] ?? true; // default expanded
-            const pendingCount = applicants.filter(
-              (a) =>
-                a.pending_requirements > 0 || a.submitted_requirements === 0,
-            ).length;
+          {filtered.map((a, idx) => {
+            const docsSubmitted = a.submitted_requirements;
+            const docsTotal = a.total_requirements;
+            const progress =
+              docsTotal > 0
+                ? Math.round((a.approved_requirements / docsTotal) * 100)
+                : 0;
 
             return (
-              <motion.div key={brgy} variants={fadeUp}>
-                <Card className="overflow-hidden">
-                  {/* Barangay header bar */}
-                  <button
-                    onClick={() => toggleExpand(brgy)}
-                    className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-ocean-50 dark:bg-ocean-400/10 flex items-center justify-center">
-                        <MapPin className="w-5 h-5 text-ocean-400" />
-                      </div>
-                      <div className="text-left">
-                        <p className="font-body font-semibold text-sm text-foreground">
-                          {brgy}
-                        </p>
-                        <div className="flex items-center gap-3 mt-0.5">
-                          <span className="text-xs text-muted-fg font-body">
-                            {applicants.length} applicant
-                            {applicants.length !== 1 ? "s" : ""}
+              <motion.div key={a.application_id} variants={fadeUp}>
+                <button
+                  onClick={() => openModal(a)}
+                  className="w-full text-left"
+                >
+                  <Card hover padding="md">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      {/* Avatar + name */}
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-ocean-300 to-ocean-500 flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-heading font-bold text-xs">
+                            {a.applicant_name
+                              .split(" ")
+                              .slice(0, 2)
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase()}
                           </span>
-                          {pendingCount > 0 && (
-                            <span className="text-xs text-amber-500 font-body font-medium">
-                              {pendingCount} need{pendingCount !== 1 ? "" : "s"}{" "}
-                              validation
-                            </span>
-                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-body font-semibold text-foreground truncate">
+                            {idx + 1}. {a.applicant_name}
+                          </p>
+                          <p className="text-xs text-muted-fg font-body truncate">
+                            {a.email}
+                          </p>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={pendingCount > 0 ? "warning" : "success"}>
-                        {pendingCount > 0
-                          ? `${pendingCount} pending`
-                          : "All reviewed"}
-                      </Badge>
-                      {isExpanded ? (
-                        <ChevronUp className="w-4 h-4 text-muted-fg" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-muted-fg" />
-                      )}
-                    </div>
-                  </button>
 
-                  {/* Expanded applicant list */}
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="border-t border-card-border divide-y divide-card-border">
-                          {applicants.map((a) => {
-                            const docsSubmitted = a.submitted_requirements;
-                            const docsTotal = a.total_requirements;
-                            const progress =
-                              docsTotal > 0
-                                ? Math.round(
-                                    (a.approved_requirements / docsTotal) * 100,
-                                  )
-                                : 0;
-
-                            return (
-                              <Link
-                                key={a.application_id}
-                                href={`/staff/validate/${a.application_id}`}
-                                className="px-5 py-3 flex flex-col sm:flex-row sm:items-center gap-3 hover:bg-muted/30 transition-colors group"
-                              >
-                                {/* Avatar + info */}
-                                <div className="flex items-center gap-3 flex-1 min-w-0">
-                                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-ocean-300 to-ocean-500 flex items-center justify-center flex-shrink-0">
-                                    <span className="text-white font-heading font-bold text-xs">
-                                      {a.applicant_name
-                                        .split(" ")
-                                        .slice(0, 2)
-                                        .map((n) => n[0])
-                                        .join("")
-                                        .toUpperCase()}
-                                    </span>
-                                  </div>
-                                  <div className="min-w-0">
-                                    <p className="text-sm font-body font-medium text-foreground truncate group-hover:text-ocean-400 transition-colors">
-                                      {a.applicant_name}
-                                    </p>
-                                    <p className="text-xs text-muted-fg font-body truncate">
-                                      {a.email}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                {/* Requirement stats */}
-                                <div className="flex items-center gap-3 text-xs font-body">
-                                  {/* Progress bar */}
-                                  <div className="flex items-center gap-2 w-28">
-                                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                                      <div
-                                        className="h-full bg-sage-400 rounded-full transition-all"
-                                        style={{ width: `${progress}%` }}
-                                      />
-                                    </div>
-                                    <span className="text-muted-fg whitespace-nowrap">
-                                      {docsSubmitted}/{docsTotal}
-                                    </span>
-                                  </div>
-
-                                  {/* Status badges */}
-                                  {a.approved_requirements > 0 && (
-                                    <span className="inline-flex items-center gap-1 text-sage-500">
-                                      <CheckCircle2 className="w-3.5 h-3.5" />
-                                      {a.approved_requirements}
-                                    </span>
-                                  )}
-                                  {a.pending_requirements > 0 && (
-                                    <span className="inline-flex items-center gap-1 text-amber-500">
-                                      <Clock className="w-3.5 h-3.5" />
-                                      {a.pending_requirements}
-                                    </span>
-                                  )}
-                                  {a.rejected_requirements > 0 && (
-                                    <span className="inline-flex items-center gap-1 text-coral-400">
-                                      <XCircle className="w-3.5 h-3.5" />
-                                      {a.rejected_requirements}
-                                    </span>
-                                  )}
-                                  {docsSubmitted === 0 && (
-                                    <span className="inline-flex items-center gap-1 text-muted-fg">
-                                      <AlertCircle className="w-3.5 h-3.5" />
-                                      No docs
-                                    </span>
-                                  )}
-
-                                  <ArrowRight className="w-4 h-4 text-muted-fg group-hover:text-ocean-400 transition-colors hidden sm:block" />
-                                </div>
-                              </Link>
-                            );
-                          })}
+                      {/* Requirement stats */}
+                      <div className="flex items-center gap-3 text-xs font-body flex-shrink-0">
+                        <div className="flex items-center gap-2 w-24">
+                          <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-sage-400 rounded-full transition-all"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <span className="text-muted-fg whitespace-nowrap">
+                            {docsSubmitted}/{docsTotal}
+                          </span>
                         </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </Card>
+                        {a.approved_requirements > 0 && (
+                          <span className="inline-flex items-center gap-1 text-sage-500">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            {a.approved_requirements}
+                          </span>
+                        )}
+                        {a.pending_requirements > 0 && (
+                          <span className="inline-flex items-center gap-1 text-amber-500">
+                            <Clock className="w-3.5 h-3.5" />
+                            {a.pending_requirements}
+                          </span>
+                        )}
+                        {a.rejected_requirements > 0 && (
+                          <span className="inline-flex items-center gap-1 text-coral-400">
+                            <XCircle className="w-3.5 h-3.5" />
+                            {a.rejected_requirements}
+                          </span>
+                        )}
+                        {docsSubmitted === 0 && (
+                          <span className="inline-flex items-center gap-1 text-muted-fg">
+                            <AlertCircle className="w-3.5 h-3.5" />
+                            No docs
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                </button>
               </motion.div>
             );
           })}
         </motion.div>
       )}
+
+      {/* ── Applicant Detail Modal ─────────────────────────── */}
+      <AnimatePresence>
+        {modalApplicant && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={(e) =>
+              e.target === e.currentTarget && setModalApplicant(null)
+            }
+            role="dialog"
+            aria-modal="true"
+            aria-label="Applicant details"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="bg-card-bg border border-card-border rounded-2xl shadow-soft-lg w-full max-w-md overflow-hidden"
+            >
+              {/* Modal header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-card-border">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-ocean-300 to-ocean-500 flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-heading font-bold text-sm">
+                      {modalApplicant.applicant_name
+                        .split(" ")
+                        .slice(0, 2)
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="font-heading text-base font-bold text-foreground truncate">
+                      {modalApplicant.applicant_name}
+                    </h2>
+                    <p className="text-xs font-body text-muted-fg">
+                      Applicant Details
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setModalApplicant(null)}
+                  className="p-2 rounded-lg text-muted-fg hover:bg-muted hover:text-foreground transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal body */}
+              <div className="px-5 py-4 space-y-4">
+                {isLoadingDetail && !detail ? (
+                  <div className="flex items-center justify-center py-10 gap-2 text-sm text-muted-fg font-body">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Loading details…
+                  </div>
+                ) : detail ? (
+                  <>
+                    {/* Personal info */}
+                    <div className="space-y-3">
+                      <DetailItem
+                        icon={User}
+                        label="Full Name"
+                        value={detail.app.applicant_name}
+                      />
+                      <DetailItem
+                        icon={Mail}
+                        label="Email"
+                        value={detail.app.applicant_email}
+                      />
+                      <DetailItem
+                        icon={Phone}
+                        label="Contact Number"
+                        value={detail.app.contact_number || "Not provided"}
+                      />
+                      <DetailItem
+                        icon={Home}
+                        label="Address"
+                        value={detail.app.address || "Not provided"}
+                      />
+                    </div>
+
+                    {/* Requirement status badges */}
+                    <div>
+                      <h3 className="text-xs font-heading font-semibold text-muted-fg uppercase tracking-wider mb-2">
+                        Requirements Status
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {detail.reqs.map((r) => {
+                          const variant =
+                            r.status === "approved"
+                              ? "success"
+                              : r.status === "rejected"
+                                ? "error"
+                                : r.status === "pending"
+                                  ? "warning"
+                                  : "neutral";
+                          return (
+                            <Badge
+                              key={r.requirement_key}
+                              variant={variant}
+                              dot
+                            >
+                              {r.requirement_key
+                                .replace(/_/g, " ")
+                                .replace(/\b\w/g, (c) => c.toUpperCase())}{" "}
+                              — {r.status}
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="py-8 text-center">
+                    <AlertCircle className="w-8 h-8 text-muted-fg/30 mx-auto mb-2" />
+                    <p className="text-sm font-body text-muted-fg">
+                      Could not load applicant details.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal footer */}
+              <div className="px-5 py-4 border-t border-card-border flex items-center justify-between gap-3">
+                <div className="text-xs font-body text-muted-fg">
+                  {modalApplicant.pending_requirements > 0 && (
+                    <span className="text-amber-500 font-medium">
+                      {modalApplicant.pending_requirements} requirement
+                      {modalApplicant.pending_requirements !== 1
+                        ? "s"
+                        : ""}{" "}
+                      pending
+                    </span>
+                  )}
+                  {modalApplicant.pending_requirements === 0 &&
+                    modalApplicant.approved_requirements ===
+                      modalApplicant.total_requirements &&
+                    modalApplicant.total_requirements > 0 && (
+                      <span className="text-sage-500 font-medium flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        All approved
+                      </span>
+                    )}
+                </div>
+                <Link href={`/staff/validate/${modalApplicant.application_id}`}>
+                  <Button
+                    leftIcon={<ShieldCheck className="w-4 h-4" />}
+                    className="bg-ocean-400 hover:bg-ocean-500 text-white"
+                  >
+                    Validate Requirements
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
