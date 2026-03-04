@@ -329,6 +329,7 @@ export default function BasicInfoPage() {
       const currentIndex = SUB_TABS.indexOf(activeTab);
       if (currentIndex < SUB_TABS.length - 1) {
         setActiveTab(SUB_TABS[currentIndex + 1]);
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     }
   };
@@ -338,6 +339,7 @@ export default function BasicInfoPage() {
     const currentIndex = SUB_TABS.indexOf(activeTab);
     if (currentIndex > 0) {
       setActiveTab(SUB_TABS[currentIndex - 1]);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
