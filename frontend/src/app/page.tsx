@@ -141,31 +141,30 @@ export default function LoginPage() {
         className="relative w-full max-w-md"
       >
         <div className="bg-transparent border border-white/20 rounded-3xl p-8 md:p-10">
-          {/* Header with mascot */}
+          {/* Logo + Header */}
           <div className="text-center mb-8">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.5, type: "spring" }}
-              className="inline-block"
+              className="flex justify-center mb-4"
             >
               <Image
                 src="/mariveles-seal.png"
                 alt="Bayan ng Mariveles seal"
                 width={100}
                 height={100}
-                className="mx-auto mb-4 animate-float"
+                className="animate-float"
                 priority
               />
             </motion.div>
-
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <h1 className="font-heading text-2xl md:text-3xl font-bold text-white mb-1">
-                Iskolar ng Mariveles
+              <h1 className="font-heading text-2xl md:text-3xl font-bold text-white uppercase whitespace-nowrap">
+                Iskolar Ng Mariveles
               </h1>
             </motion.div>
           </div>

@@ -19,7 +19,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Iskolar ng Mariveles — Scholarship Requirements System",
+  title: "Iskolar Ng Mariveles",
   description:
     "Track your scholarship requirements, upload documents, and stay on top of deadlines.",
   icons: {
