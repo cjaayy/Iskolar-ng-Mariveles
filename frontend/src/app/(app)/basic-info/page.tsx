@@ -5,7 +5,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import {
@@ -204,6 +204,12 @@ export default function BasicInfoPage() {
   const [form, setForm] = useState<BasicInfoForm>(emptyForm);
   const [loadingData, setLoadingData] = useState(true);
   const [saving, setSaving] = useState(false);
+  const topRef = useRef<HTMLDivElement>(null);
+
+  /* ── Scroll to top of form ── */
+  const scrollToTop = () => {
+    topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   /* ── Load data from API ── */
   const loadData = useCallback(async () => {
@@ -329,7 +335,7 @@ export default function BasicInfoPage() {
       const currentIndex = SUB_TABS.indexOf(activeTab);
       if (currentIndex < SUB_TABS.length - 1) {
         setActiveTab(SUB_TABS[currentIndex + 1]);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        setTimeout(scrollToTop, 50);
       }
     }
   };
@@ -339,7 +345,7 @@ export default function BasicInfoPage() {
     const currentIndex = SUB_TABS.indexOf(activeTab);
     if (currentIndex > 0) {
       setActiveTab(SUB_TABS[currentIndex - 1]);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(scrollToTop, 50);
     }
   };
 
@@ -359,6 +365,7 @@ export default function BasicInfoPage() {
 
   return (
     <motion.div
+      ref={topRef}
       className="max-w-5xl mx-auto space-y-6 px-4 py-8"
       initial="hidden"
       animate="show"
