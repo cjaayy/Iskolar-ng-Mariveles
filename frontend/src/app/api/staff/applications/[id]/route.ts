@@ -24,7 +24,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "Invalid id" }, { status: 400 });
     }
 
-    // Application + applicant + scholarship details
+    // Application + applicant + scholarship details + full basic info
     const [application] = await query(
       `
       SELECT
@@ -40,6 +40,43 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
         ap.household_size,
         ap.contact_number,
         ap.address,
+        ap.date_of_birth,
+        ap.gender,
+        ap.blood_type,
+        ap.civil_status,
+        ap.maiden_name,
+        ap.spouse_name,
+        ap.spouse_occupation,
+        ap.religion,
+        ap.height_cm,
+        ap.weight_kg,
+        ap.birthplace,
+        ap.house_street,
+        ap.town,
+        ap.barangay,
+        ap.father_name,
+        ap.father_occupation,
+        ap.father_contact,
+        ap.mother_name,
+        ap.mother_occupation,
+        ap.mother_contact,
+        ap.guardian_name,
+        ap.guardian_relation,
+        ap.guardian_contact,
+        ap.primary_school,
+        ap.primary_address,
+        ap.primary_year_graduated,
+        ap.secondary_school,
+        ap.secondary_address,
+        ap.secondary_year_graduated,
+        ap.tertiary_school,
+        ap.tertiary_address,
+        ap.tertiary_year_graduated,
+        ap.tertiary_program,
+        ap.skills,
+        ap.hobbies,
+        ap.organizations,
+        ap.awards,
         s.name            AS scholarship_name,
         s.grantor,
         s.min_gpa,

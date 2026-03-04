@@ -25,6 +25,9 @@ import {
   Loader2,
   X,
   Filter,
+  Heart,
+  GraduationCap,
+  Trophy,
 } from "lucide-react";
 import { Card, Badge, Skeleton, Button } from "@/components/ui";
 
@@ -76,6 +79,52 @@ interface ApplicationDetail {
   applicant_email: string;
   contact_number: string | null;
   address: string | null;
+  /* basic info – personal */
+  date_of_birth: string | null;
+  gender: string | null;
+  blood_type: string | null;
+  civil_status: string | null;
+  maiden_name: string | null;
+  spouse_name: string | null;
+  spouse_occupation: string | null;
+  religion: string | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+  birthplace: string | null;
+  house_street: string | null;
+  town: string | null;
+  barangay: string | null;
+  /* basic info – parents */
+  father_name: string | null;
+  father_occupation: string | null;
+  father_contact: string | null;
+  mother_name: string | null;
+  mother_occupation: string | null;
+  mother_contact: string | null;
+  guardian_name: string | null;
+  guardian_relation: string | null;
+  guardian_contact: string | null;
+  /* basic info – education */
+  course: string | null;
+  college: string | null;
+  year_level: number | null;
+  student_number: string | null;
+  gpa: number | null;
+  primary_school: string | null;
+  primary_address: string | null;
+  primary_year_graduated: string | null;
+  secondary_school: string | null;
+  secondary_address: string | null;
+  secondary_year_graduated: string | null;
+  tertiary_school: string | null;
+  tertiary_address: string | null;
+  tertiary_year_graduated: string | null;
+  tertiary_program: string | null;
+  /* basic info – others */
+  skills: string | null;
+  hobbies: string | null;
+  organizations: string | null;
+  awards: string | null;
 }
 
 interface RequirementSummary {
@@ -143,6 +192,9 @@ export default function RegisteredApplicantsPage() {
   const [modalApplicant, setModalApplicant] = useState<ApplicantRow | null>(
     null,
   );
+  const [activeInfoTab, setActiveInfoTab] = useState<
+    "personal" | "parents" | "education" | "others"
+  >("personal");
   const [detailCache, setDetailCache] = useState<
     Record<number, { app: ApplicationDetail; reqs: RequirementSummary[] }>
   >({});
@@ -469,10 +521,10 @@ export default function RegisteredApplicantsPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="bg-card-bg border border-card-border rounded-2xl shadow-soft-lg w-full max-w-md overflow-hidden"
+              className="bg-card-bg border border-card-border rounded-2xl shadow-soft-lg w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden"
             >
               {/* Modal header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-card-border">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-card-border shrink-0">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-11 h-11 rounded-full bg-gradient-to-br from-ocean-300 to-ocean-500 flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-heading font-bold text-sm">
@@ -503,7 +555,7 @@ export default function RegisteredApplicantsPage() {
               </div>
 
               {/* Modal body */}
-              <div className="px-5 py-4 space-y-4">
+              <div className="px-5 py-4 space-y-5 overflow-y-auto">
                 {isLoadingDetail && !detail ? (
                   <div className="flex items-center justify-center py-10 gap-2 text-sm text-muted-fg font-body">
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -511,8 +563,8 @@ export default function RegisteredApplicantsPage() {
                   </div>
                 ) : detail ? (
                   <>
-                    {/* Personal info */}
-                    <div className="space-y-3">
+                    {/* Contact summary */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <DetailItem
                         icon={User}
                         label="Full Name"
@@ -533,6 +585,282 @@ export default function RegisteredApplicantsPage() {
                         label="Address"
                         value={detail.app.address || "Not provided"}
                       />
+                    </div>
+
+                    {/* Basic Information tabs */}
+                    <div>
+                      <h3 className="text-xs font-heading font-semibold text-muted-fg uppercase tracking-wider mb-3">
+                        Basic Information
+                      </h3>
+                      <div className="flex gap-1 border-b border-card-border mb-4">
+                        {[
+                          {
+                            key: "personal" as const,
+                            label: "Personal",
+                            icon: User,
+                          },
+                          {
+                            key: "parents" as const,
+                            label: "Parents",
+                            icon: Heart,
+                          },
+                          {
+                            key: "education" as const,
+                            label: "Education",
+                            icon: GraduationCap,
+                          },
+                          {
+                            key: "others" as const,
+                            label: "Others",
+                            icon: Trophy,
+                          },
+                        ].map((tab) => (
+                          <button
+                            key={tab.key}
+                            onClick={() => setActiveInfoTab(tab.key)}
+                            className={`
+                              px-3 py-2 text-xs font-body font-medium transition-colors relative flex items-center gap-1.5
+                              ${
+                                activeInfoTab === tab.key
+                                  ? "text-foreground"
+                                  : "text-ocean-400 hover:text-ocean-500"
+                              }
+                            `}
+                          >
+                            <tab.icon className="w-3.5 h-3.5" />
+                            {tab.label}
+                            {activeInfoTab === tab.key && (
+                              <motion.div
+                                layoutId="modal-info-tab-underline"
+                                className="absolute bottom-0 left-0 right-0 h-0.5 bg-ocean-400"
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 400,
+                                  damping: 30,
+                                }}
+                              />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+
+                      {activeInfoTab === "personal" && (
+                        <div className="space-y-4">
+                          <ModalSectionTitle>Basic Details</ModalSectionTitle>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3">
+                            <ModalInfoRow
+                              label="Birthdate"
+                              value={formatDateStr(detail.app.date_of_birth)}
+                            />
+                            <ModalInfoRow
+                              label="Gender"
+                              value={detail.app.gender}
+                            />
+                            <ModalInfoRow
+                              label="Blood Type"
+                              value={detail.app.blood_type}
+                            />
+                            <ModalInfoRow
+                              label="Civil Status"
+                              value={detail.app.civil_status}
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3">
+                            <ModalInfoRow
+                              label="Maiden Name"
+                              value={detail.app.maiden_name}
+                            />
+                            <ModalInfoRow
+                              label="Spouse Name"
+                              value={detail.app.spouse_name}
+                            />
+                            <ModalInfoRow
+                              label="Spouse Occupation"
+                              value={detail.app.spouse_occupation}
+                            />
+                            <ModalInfoRow
+                              label="Religion"
+                              value={detail.app.religion}
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3">
+                            <ModalInfoRow
+                              label="Height"
+                              value={
+                                detail.app.height_cm != null
+                                  ? `${detail.app.height_cm} cm`
+                                  : null
+                              }
+                            />
+                            <ModalInfoRow
+                              label="Weight"
+                              value={
+                                detail.app.weight_kg != null
+                                  ? `${detail.app.weight_kg} kg`
+                                  : null
+                              }
+                            />
+                            <ModalInfoRow
+                              label="Birthplace"
+                              value={detail.app.birthplace}
+                            />
+                            <ModalInfoRow
+                              label="Contact Number"
+                              value={detail.app.contact_number}
+                            />
+                          </div>
+                          <ModalSectionTitle>Address</ModalSectionTitle>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-3">
+                            <ModalInfoRow
+                              label="House/Unit/Street"
+                              value={detail.app.house_street}
+                            />
+                            <ModalInfoRow
+                              label="Town"
+                              value={detail.app.town}
+                            />
+                            <ModalInfoRow
+                              label="Barangay"
+                              value={detail.app.barangay}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {activeInfoTab === "parents" && (
+                        <div className="space-y-4">
+                          <ModalSectionTitle>
+                            Father&rsquo;s Information
+                          </ModalSectionTitle>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-3">
+                            <ModalInfoRow
+                              label="Full Name"
+                              value={detail.app.father_name}
+                            />
+                            <ModalInfoRow
+                              label="Occupation"
+                              value={detail.app.father_occupation}
+                            />
+                            <ModalInfoRow
+                              label="Contact Number"
+                              value={detail.app.father_contact}
+                            />
+                          </div>
+                          <ModalSectionTitle>
+                            Mother&rsquo;s Information
+                          </ModalSectionTitle>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-3">
+                            <ModalInfoRow
+                              label="Full Name"
+                              value={detail.app.mother_name}
+                            />
+                            <ModalInfoRow
+                              label="Occupation"
+                              value={detail.app.mother_occupation}
+                            />
+                            <ModalInfoRow
+                              label="Contact Number"
+                              value={detail.app.mother_contact}
+                            />
+                          </div>
+                          <ModalSectionTitle>
+                            Guardian&rsquo;s Information
+                          </ModalSectionTitle>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-3">
+                            <ModalInfoRow
+                              label="Full Name"
+                              value={detail.app.guardian_name}
+                            />
+                            <ModalInfoRow
+                              label="Relationship"
+                              value={detail.app.guardian_relation}
+                            />
+                            <ModalInfoRow
+                              label="Contact Number"
+                              value={detail.app.guardian_contact}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {activeInfoTab === "education" && (
+                        <div className="space-y-4">
+                          <ModalSectionTitle>Primary</ModalSectionTitle>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-3">
+                            <ModalInfoRow
+                              label="School Name"
+                              value={detail.app.primary_school}
+                            />
+                            <ModalInfoRow
+                              label="Address"
+                              value={detail.app.primary_address}
+                            />
+                            <ModalInfoRow
+                              label="Year Graduated"
+                              value={detail.app.primary_year_graduated}
+                            />
+                          </div>
+                          <ModalSectionTitle>Secondary</ModalSectionTitle>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-3">
+                            <ModalInfoRow
+                              label="School Name"
+                              value={detail.app.secondary_school}
+                            />
+                            <ModalInfoRow
+                              label="Address"
+                              value={detail.app.secondary_address}
+                            />
+                            <ModalInfoRow
+                              label="Year Graduated"
+                              value={detail.app.secondary_year_graduated}
+                            />
+                          </div>
+                          <ModalSectionTitle>
+                            Tertiary (Post-Secondary)
+                          </ModalSectionTitle>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                            <ModalInfoRow
+                              label="School Name"
+                              value={detail.app.tertiary_school}
+                            />
+                            <ModalInfoRow
+                              label="Program"
+                              value={detail.app.tertiary_program}
+                            />
+                            <ModalInfoRow
+                              label="Address"
+                              value={detail.app.tertiary_address}
+                            />
+                            <ModalInfoRow
+                              label="Year Graduated"
+                              value={detail.app.tertiary_year_graduated}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {activeInfoTab === "others" && (
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                            <ModalInfoBlock
+                              label="Skills"
+                              value={detail.app.skills}
+                            />
+                            <ModalInfoBlock
+                              label="Hobbies"
+                              value={detail.app.hobbies}
+                            />
+                            <ModalInfoBlock
+                              label="Organizations"
+                              value={detail.app.organizations}
+                            />
+                            <ModalInfoBlock
+                              label="Awards & Achievements"
+                              value={detail.app.awards}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Requirement status badges */}
@@ -577,7 +905,7 @@ export default function RegisteredApplicantsPage() {
               </div>
 
               {/* Modal footer */}
-              <div className="px-5 py-4 border-t border-card-border flex items-center justify-end gap-3">
+              <div className="px-5 py-4 border-t border-card-border flex items-center justify-end gap-3 shrink-0">
                 <div className="text-xs font-body text-muted-fg">
                   {modalApplicant.pending_requirements > 0 && (
                     <span className="text-amber-500 font-medium">
@@ -603,6 +931,61 @@ export default function RegisteredApplicantsPage() {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+/* ======================== MODAL HELPER COMPONENTS ======================== */
+
+function formatDateStr(d: string | null | undefined): string {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function ModalSectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h4 className="font-heading text-sm font-semibold text-foreground border-b border-card-border pb-1.5">
+      {children}
+    </h4>
+  );
+}
+
+function ModalInfoRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | null | undefined;
+}) {
+  return (
+    <div>
+      <p className="text-[11px] font-body text-muted-fg">{label}</p>
+      <p className="text-sm font-body font-medium text-foreground mt-0.5">
+        {value || "—"}
+      </p>
+    </div>
+  );
+}
+
+function ModalInfoBlock({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | null | undefined;
+}) {
+  return (
+    <div>
+      <p className="text-[11px] font-body text-muted-fg mb-1">{label}</p>
+      <div className="bg-muted rounded-xl px-3 py-2.5 min-h-[50px]">
+        <p className="text-sm font-body text-foreground whitespace-pre-wrap">
+          {value || "—"}
+        </p>
+      </div>
     </div>
   );
 }
