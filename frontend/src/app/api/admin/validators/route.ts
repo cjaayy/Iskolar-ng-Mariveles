@@ -1,8 +1,10 @@
 /**
  * app/api/admin/validators/route.ts
  *
- * GET  /api/admin/validators — list all validator accounts.
- * POST /api/admin/validators — create a new validator account.
+ * GET    /api/admin/validators          — list all validator accounts.
+ * POST   /api/admin/validators          — create a new validator account.
+ * PATCH  /api/admin/validators          — toggle active / assign barangay.
+ * DELETE /api/admin/validators?id=<id>  — permanently delete a validator.
  * Admin only.
  */
 import { NextRequest, NextResponse } from "next/server";
@@ -13,6 +15,7 @@ interface ValidatorListRow {
   email: string;
   full_name: string;
   is_active: boolean;
+  assigned_barangay: string | null;
   created_at: string;
   total_validations: number;
 }
@@ -25,6 +28,7 @@ async function verifyAdmin(adminId: string): Promise<boolean> {
   return !!user;
 }
 
+/* ─── GET ─── list validators ─── */
 export async function GET(req: NextRequest) {
   const adminId = req.headers.get("x-admin-id");
   if (!adminId) {
@@ -56,6 +60,7 @@ export async function GET(req: NextRequest) {
         u.email,
         u.full_name,
         u.is_active,
+        u.assigned_barangay,
         u.created_at,
         (SELECT COUNT(*) FROM validations v WHERE v.validator_id = u.id) AS total_validations
       FROM users u
@@ -75,6 +80,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/* ─── POST ─── create validator ─── */
 export async function POST(req: NextRequest) {
   const adminId = req.headers.get("x-admin-id");
   if (!adminId) {
@@ -86,15 +92,23 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { email, fullName, password } = body as {
+    const { email, fullName, password, assignedBarangay } = body as {
       email?: string;
       fullName?: string;
       password?: string;
+      assignedBarangay?: string;
     };
 
     if (!email || !fullName || !password) {
       return NextResponse.json(
         { error: "Email, full name, and password are required" },
+        { status: 400 },
+      );
+    }
+
+    if (!assignedBarangay) {
+      return NextResponse.json(
+        { error: "Assigned barangay is required" },
         { status: 400 },
       );
     }
@@ -111,6 +125,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Check if another validator is already assigned to this barangay
+    const [barangayTaken] = await query<{ id: number; full_name: string }>(
+      `SELECT id, full_name FROM users
+       WHERE role = 'validator' AND assigned_barangay = :barangay AND is_active = 1
+       LIMIT 1`,
+      { barangay: assignedBarangay },
+    );
+    if (barangayTaken) {
+      return NextResponse.json(
+        {
+          error: `Barangay ${assignedBarangay} is already assigned to ${barangayTaken.full_name}`,
+        },
+        { status: 409 },
+      );
+    }
+
     // Hash password
     let hash = password;
     try {
@@ -121,9 +151,14 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await execute(
-      `INSERT INTO users (email, password_hash, full_name, role)
-       VALUES (:email, :password_hash, :full_name, 'validator')`,
-      { email, password_hash: hash, full_name: fullName },
+      `INSERT INTO users (email, password_hash, full_name, role, assigned_barangay)
+       VALUES (:email, :password_hash, :full_name, 'validator', :assigned_barangay)`,
+      {
+        email,
+        password_hash: hash,
+        full_name: fullName,
+        assigned_barangay: assignedBarangay,
+      },
     );
 
     return NextResponse.json(
@@ -134,6 +169,139 @@ export async function POST(req: NextRequest) {
     console.error("[POST /api/admin/validators]", err);
     return NextResponse.json(
       { error: "Failed to create validator" },
+      { status: 500 },
+    );
+  }
+}
+
+/* ─── PATCH ─── toggle active / update barangay ─── */
+export async function PATCH(req: NextRequest) {
+  const adminId = req.headers.get("x-admin-id");
+  if (!adminId) {
+    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+  }
+  if (!(await verifyAdmin(adminId))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  try {
+    const body = await req.json();
+    const { id, action, assignedBarangay } = body as {
+      id?: number;
+      action?: "activate" | "deactivate" | "assign_barangay";
+      assignedBarangay?: string;
+    };
+
+    if (!id || !action) {
+      return NextResponse.json(
+        { error: "id and action are required" },
+        { status: 400 },
+      );
+    }
+
+    // Verify target is a validator
+    const [target] = await query<{ role: string }>(
+      "SELECT role FROM users WHERE id = :id AND role = 'validator' LIMIT 1",
+      { id },
+    );
+    if (!target) {
+      return NextResponse.json(
+        { error: "Validator not found" },
+        { status: 404 },
+      );
+    }
+
+    if (action === "activate") {
+      await execute("UPDATE users SET is_active = 1 WHERE id = :id", { id });
+      return NextResponse.json({ message: "Validator activated" });
+    }
+
+    if (action === "deactivate") {
+      await execute("UPDATE users SET is_active = 0 WHERE id = :id", { id });
+      return NextResponse.json({ message: "Validator deactivated" });
+    }
+
+    if (action === "assign_barangay") {
+      if (!assignedBarangay) {
+        return NextResponse.json(
+          { error: "assignedBarangay is required" },
+          { status: 400 },
+        );
+      }
+      // Check if another active validator is already assigned to this barangay
+      const [taken] = await query<{ id: number; full_name: string }>(
+        `SELECT id, full_name FROM users
+         WHERE role = 'validator' AND assigned_barangay = :barangay AND is_active = 1 AND id != :validatorId
+         LIMIT 1`,
+        { barangay: assignedBarangay, validatorId: id },
+      );
+      if (taken) {
+        return NextResponse.json(
+          {
+            error: `Barangay ${assignedBarangay} is already assigned to ${taken.full_name}`,
+          },
+          { status: 409 },
+        );
+      }
+      await execute(
+        "UPDATE users SET assigned_barangay = :barangay WHERE id = :id",
+        { barangay: assignedBarangay, id },
+      );
+      return NextResponse.json({ message: "Barangay assigned" });
+    }
+
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  } catch (err) {
+    console.error("[PATCH /api/admin/validators]", err);
+    return NextResponse.json(
+      { error: "Failed to update validator" },
+      { status: 500 },
+    );
+  }
+}
+
+/* ─── DELETE ─── remove validator ─── */
+export async function DELETE(req: NextRequest) {
+  const adminId = req.headers.get("x-admin-id");
+  if (!adminId) {
+    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+  }
+  if (!(await verifyAdmin(adminId))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  try {
+    const { searchParams } = req.nextUrl;
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Validator id is required" },
+        { status: 400 },
+      );
+    }
+
+    // Verify target is a validator (prevent deleting admins)
+    const [target] = await query<{ role: string }>(
+      "SELECT role FROM users WHERE id = :id AND role = 'validator' LIMIT 1",
+      { id: Number(id) },
+    );
+    if (!target) {
+      return NextResponse.json(
+        { error: "Validator not found" },
+        { status: 404 },
+      );
+    }
+
+    await execute("DELETE FROM users WHERE id = :id AND role = 'validator'", {
+      id: Number(id),
+    });
+
+    return NextResponse.json({ message: "Validator deleted successfully" });
+  } catch (err) {
+    console.error("[DELETE /api/admin/validators]", err);
+    return NextResponse.json(
+      { error: "Failed to delete validator" },
       { status: 500 },
     );
   }
