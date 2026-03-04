@@ -43,7 +43,7 @@ const applicantItems = [
 ];
 
 const adminToolItems = [
-  { href: "/admin/validators", label: "List of Validators", icon: ShieldCheck },
+  { href: "/admin/validators", label: "Manage Validators", icon: ShieldCheck },
   { href: "/admin/invites", label: "Registration Links", icon: LinkIcon },
   { href: "/admin/barangay-access", label: "Barangay Access", icon: MapPin },
 ];
