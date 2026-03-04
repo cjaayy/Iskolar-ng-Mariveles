@@ -127,6 +127,13 @@ export async function GET(req: NextRequest) {
     );
 
     // Count total
+    const countBindValues: Record<string, unknown> = {};
+    if (assignedBarangay) {
+      countBindValues.assignedBarangay = `%${assignedBarangay}%`;
+    }
+    if (bindValues.status) countBindValues.status = bindValues.status;
+    if (bindValues.search) countBindValues.search = bindValues.search;
+
     const [{ total }] = await query<{ total: number }>(
       `
       SELECT COUNT(*) AS total
@@ -135,19 +142,25 @@ export async function GET(req: NextRequest) {
       JOIN users         u ON u.id  = ap.user_id
       ${whereClause}
       `,
-      status || search
-        ? { status: bindValues.status, search: bindValues.search }
-        : {},
+      countBindValues,
     );
 
-    // Status summary counts
+    // Status summary counts (filtered by barangay if assigned)
+    const summaryConditions: string[] = ["a.status != 'draft'"];
+    const summaryBindValues: Record<string, unknown> = {};
+    if (assignedBarangay) {
+      summaryConditions.push("ap.address LIKE :assignedBarangay");
+      summaryBindValues.assignedBarangay = `%${assignedBarangay}%`;
+    }
     const statusCounts = await query<{ status: string; count: number }>(
       `
       SELECT a.status, COUNT(*) AS count
       FROM applications a
-      WHERE a.status != 'draft'
+      JOIN applicants ap ON ap.id = a.applicant_id
+      WHERE ${summaryConditions.join(" AND ")}
       GROUP BY a.status
       `,
+      summaryBindValues,
     );
     const summary = Object.fromEntries(
       statusCounts.map((r) => [r.status, Number(r.count)]),

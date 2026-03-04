@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     const barangayFilter = searchParams.get("barangay") || undefined;
 
-    const conditions: string[] = ["a.status IN ('submitted','under_review')"];
+    const conditions: string[] = ["a.status != 'draft'"];
     const bindValues: Record<string, unknown> = {};
 
     // If validator has an assigned barangay, only show applicants from that barangay

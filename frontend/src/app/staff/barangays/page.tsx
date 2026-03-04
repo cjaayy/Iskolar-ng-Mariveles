@@ -309,18 +309,8 @@ export default function StaffBarangaysPage() {
                 >
                   <Card hover padding="md">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                      {/* Avatar + name */}
+                      {/* Name */}
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-ocean-300 to-ocean-500 flex items-center justify-center flex-shrink-0">
-                          <span className="text-white font-heading font-bold text-xs">
-                            {a.applicant_name
-                              .split(" ")
-                              .slice(0, 2)
-                              .map((n) => n[0])
-                              .join("")
-                              .toUpperCase()}
-                          </span>
-                        </div>
                         <div className="min-w-0">
                           <p className="text-sm font-body font-semibold text-foreground truncate">
                             {idx + 1}. {a.applicant_name}
