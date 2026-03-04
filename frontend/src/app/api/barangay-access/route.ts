@@ -13,11 +13,41 @@ export async function GET(req: NextRequest) {
 
     if (barangay) {
       // Check specific barangay
-      const [row] = await query<{ is_open: boolean }>(
-        "SELECT is_open FROM barangay_access WHERE barangay = :barangay LIMIT 1",
+      const [row] = await query<{
+        is_open: boolean;
+        submission_open_date: string | null;
+        submission_close_date: string | null;
+      }>(
+        "SELECT is_open, submission_open_date, submission_close_date FROM barangay_access WHERE barangay = :barangay LIMIT 1",
         { barangay },
       );
-      return NextResponse.json({ barangay, isOpen: row?.is_open ?? false });
+
+      const isOpen = !!row?.is_open;
+      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      const openDate = row?.submission_open_date ?? null;
+      const closeDate = row?.submission_close_date ?? null;
+
+      // Determine if submissions are allowed:
+      // - If open with NO dates set → stays open until manually closed (no expiry)
+      // - If open with dates set → only open within the date window
+      // - If closed with dates set → auto-open if today is within the window
+      // - If closed with no dates → closed
+      let submissionOpen = isOpen;
+
+      if (openDate || closeDate) {
+        // Dates are set — use the date window to determine access
+        const afterOpen = !openDate || today >= openDate;
+        const beforeClose = !closeDate || today <= closeDate;
+        submissionOpen = afterOpen && beforeClose;
+      }
+
+      return NextResponse.json({
+        barangay,
+        isOpen,
+        submissionOpen,
+        submissionOpenDate: openDate,
+        submissionCloseDate: closeDate,
+      });
     }
 
     // Return all open barangays

@@ -175,17 +175,49 @@ export async function POST(req: NextRequest) {
     const brgy = marivIdx > 0 ? parts[marivIdx - 1] : parts[0] || "";
 
     if (brgy) {
-      const [access] = await query<{ is_open: boolean }>(
-        "SELECT is_open FROM barangay_access WHERE barangay = :barangay LIMIT 1",
+      const [access] = await query<{
+        is_open: boolean;
+        submission_open_date: string | null;
+        submission_close_date: string | null;
+      }>(
+        "SELECT is_open, submission_open_date, submission_close_date FROM barangay_access WHERE barangay = :barangay LIMIT 1",
         { barangay: brgy },
       );
-      if (access && !access.is_open) {
-        return NextResponse.json(
-          {
-            error: `Submissions for Barangay ${brgy} are currently closed. Please wait for your scheduled date.`,
-          },
-          { status: 403 },
-        );
+
+      if (access) {
+        const isOpen = !!access.is_open;
+        const openDate = access.submission_open_date;
+        const closeDate = access.submission_close_date;
+        const today = new Date().toISOString().slice(0, 10);
+
+        if (openDate || closeDate) {
+          // Dates are set — use date window regardless of is_open toggle
+          if (openDate && today < openDate) {
+            return NextResponse.json(
+              {
+                error: `Submissions for Barangay ${brgy} will open on ${openDate}. Please come back then.`,
+              },
+              { status: 403 },
+            );
+          }
+          if (closeDate && today > closeDate) {
+            return NextResponse.json(
+              {
+                error: `The submission window for Barangay ${brgy} closed on ${closeDate}.`,
+              },
+              { status: 403 },
+            );
+          }
+        } else if (!isOpen) {
+          // No dates set and manually closed
+          return NextResponse.json(
+            {
+              error: `Submissions for Barangay ${brgy} are currently closed. Please wait for your scheduled date.`,
+            },
+            { status: 403 },
+          );
+        }
+        // If open with no dates → allowed (no expiry)
       }
     }
 
