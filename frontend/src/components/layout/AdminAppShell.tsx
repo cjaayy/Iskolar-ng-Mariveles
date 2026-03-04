@@ -16,6 +16,7 @@ import {
   LinkIcon,
   MapPin,
   FileText,
+  ClipboardCheck,
   Sun,
   Moon,
   Menu,
@@ -35,13 +36,13 @@ const dashboardItem = {
 const adminToolItems = [
   { href: "/admin/registered", label: "List of Applicants", icon: Users },
   { href: "/admin/validators", label: "List of Validators", icon: ShieldCheck },
+  {
+    href: "/admin/validate",
+    label: "Validate Requirements",
+    icon: ClipboardCheck,
+  },
   { href: "/admin/invites", label: "Registration Links", icon: LinkIcon },
   { href: "/admin/barangay-access", label: "Barangay Access", icon: MapPin },
-  {
-    href: "/admin/barangay-requirements",
-    label: "Brgy. Requirements",
-    icon: FileText,
-  },
 ];
 
 /* ======================== SIDEBAR ======================== */
