@@ -140,12 +140,12 @@ export default function StaffValidateListPage() {
       >
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground">
-            Review Applications
+            Validate Requirements
           </h1>
           <p className="font-body text-muted-fg text-sm mt-0.5">
             {assignedBarangay
-              ? `Review and validate documents for Barangay ${assignedBarangay}`
-              : "Review and validate submitted scholarship documents"}
+              ? `Validate submitted requirements for Barangay ${assignedBarangay}`
+              : "Validate submitted scholarship requirements"}
           </p>
         </div>
         <Button
