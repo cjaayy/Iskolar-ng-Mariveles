@@ -318,7 +318,7 @@ export default function BasicInfoPage() {
         throw new Error(err.error || "Save failed");
       }
 
-      addToast("Basic information saved successfully!", "success");
+      addToast("Saved", "success");
       return true;
     } catch (err: unknown) {
       addToast(err instanceof Error ? err.message : "Failed to save", "error");
