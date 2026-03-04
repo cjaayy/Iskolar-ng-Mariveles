@@ -21,13 +21,20 @@ import {
   Menu,
   X,
   LogOut,
+  ChevronDown,
+  Settings2,
 } from "lucide-react";
 
 /* -- Navigation items for admin -- */
-const adminNavItems = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+const dashboardItem = {
+  href: "/admin/dashboard",
+  label: "Dashboard",
+  icon: LayoutDashboard,
+};
+
+const adminToolItems = [
   { href: "/admin/registered", label: "List of Applicants", icon: Users },
-  { href: "/admin/validators", label: "Validators", icon: ShieldCheck },
+  { href: "/admin/validators", label: "List of Validators", icon: ShieldCheck },
   { href: "/admin/invites", label: "Registration Links", icon: LinkIcon },
   { href: "/admin/barangay-access", label: "Barangay Access", icon: MapPin },
   {
@@ -48,6 +55,16 @@ function AdminSidebar({
 }) {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
+
+  // Auto-expand dropdown if any child route is active
+  const isToolActive = adminToolItems.some(
+    (item) => pathname === item.href || pathname.startsWith(item.href + "/"),
+  );
+  const [toolsOpen, setToolsOpen] = useState(isToolActive);
+
+  const isDashboardActive =
+    pathname === dashboardItem.href ||
+    pathname.startsWith(dashboardItem.href + "/");
 
   return (
     <>
@@ -106,39 +123,105 @@ function AdminSidebar({
         {/* Nav links */}
         <nav className="flex-1 px-3 py-2">
           <ul className="space-y-1">
-            {adminNavItems.map((item) => {
-              const isActive =
-                pathname === item.href || pathname.startsWith(item.href + "/");
-              const Icon = item.icon;
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={onClose}
-                    className={`
-                      flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-body font-medium
-                      transition-all duration-200 group
-                      ${
-                        isActive
-                          ? "bg-ocean-50 dark:bg-ocean-400/10 text-ocean-400"
-                          : "text-muted-fg hover:bg-muted hover:text-foreground"
-                      }
-                    `}
-                    aria-current={isActive ? "page" : undefined}
-                  >
-                    <Icon
-                      className={`w-5 h-5 transition-transform group-hover:scale-110 ${
-                        isActive ? "text-ocean-400" : ""
-                      }`}
-                    />
-                    {item.label}
-                    {isActive && (
-                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-ocean-400" />
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
+            {/* Dashboard (standalone) */}
+            <li>
+              <Link
+                href={dashboardItem.href}
+                onClick={onClose}
+                className={`
+                  flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-body font-medium
+                  transition-all duration-200 group
+                  ${
+                    isDashboardActive
+                      ? "bg-ocean-50 dark:bg-ocean-400/10 text-ocean-400"
+                      : "text-muted-fg hover:bg-muted hover:text-foreground"
+                  }
+                `}
+                aria-current={isDashboardActive ? "page" : undefined}
+              >
+                <LayoutDashboard
+                  className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+                    isDashboardActive ? "text-ocean-400" : ""
+                  }`}
+                />
+                {dashboardItem.label}
+                {isDashboardActive && (
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-ocean-400" />
+                )}
+              </Link>
+            </li>
+
+            {/* Admin Tools dropdown */}
+            <li>
+              <button
+                onClick={() => setToolsOpen((prev) => !prev)}
+                className={`
+                  flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-body font-medium
+                  transition-all duration-200 group
+                  ${
+                    isToolActive && !toolsOpen
+                      ? "bg-ocean-50 dark:bg-ocean-400/10 text-ocean-400"
+                      : "text-muted-fg hover:bg-muted hover:text-foreground"
+                  }
+                `}
+              >
+                <Settings2
+                  className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+                    isToolActive ? "text-ocean-400" : ""
+                  }`}
+                />
+                Admin Tools
+                <ChevronDown
+                  className={`w-4 h-4 ml-auto transition-transform duration-200 ${
+                    toolsOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {/* Dropdown children */}
+              <div
+                className={`overflow-hidden transition-all duration-200 ease-out ${
+                  toolsOpen ? "max-h-96 opacity-100 mt-1" : "max-h-0 opacity-0"
+                }`}
+              >
+                <ul className="ml-4 pl-4 border-l border-card-border space-y-0.5">
+                  {adminToolItems.map((item) => {
+                    const isActive =
+                      pathname === item.href ||
+                      pathname.startsWith(item.href + "/");
+                    const Icon = item.icon;
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          onClick={onClose}
+                          className={`
+                            flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-body font-medium
+                            transition-all duration-200 group
+                            ${
+                              isActive
+                                ? "bg-ocean-50 dark:bg-ocean-400/10 text-ocean-400"
+                                : "text-muted-fg hover:bg-muted hover:text-foreground"
+                            }
+                          `}
+                          aria-current={isActive ? "page" : undefined}
+                        >
+                          <Icon
+                            className={`w-4 h-4 transition-transform group-hover:scale-110 ${
+                              isActive ? "text-ocean-400" : ""
+                            }`}
+                          />
+                          {item.label}
+                          {isActive && (
+                            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-ocean-400" />
+                          )}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </li>
           </ul>
         </nav>
 
