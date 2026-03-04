@@ -444,6 +444,29 @@ interface TabProps {
 
 /* ── Personal Information ── */
 function PersonalInfoTab({ form, update }: TabProps) {
+  const isSingle = form.civil_status === "Single";
+  const isWidowedSeparatedAnnulled = [
+    "Widowed",
+    "Separated",
+    "Annulled",
+  ].includes(form.civil_status);
+
+  // Hide maiden name & spouse fields when Single; hide occupation of spouse when Widowed/Separated/Annulled
+  const showMaidenName = !isSingle;
+  const showSpouseName = !isSingle;
+  const showSpouseOccupation = !isSingle && !isWidowedSeparatedAnnulled;
+
+  const handleCivilStatusChange = (value: string) => {
+    update("civil_status", value);
+    if (value === "Single") {
+      update("maiden_name", "");
+      update("spouse_name", "");
+      update("spouse_occupation", "");
+    } else if (["Widowed", "Separated", "Annulled"].includes(value)) {
+      update("spouse_occupation", "");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Row 1 */}
@@ -470,30 +493,36 @@ function PersonalInfoTab({ form, update }: TabProps) {
           label="Civil Status"
           options={CIVIL_STATUS_OPTIONS}
           value={form.civil_status}
-          onChange={(e) => update("civil_status", e.target.value)}
+          onChange={(e) => handleCivilStatusChange(e.target.value)}
         />
       </div>
 
       {/* Row 2 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Input
-          label="Maiden Name"
-          placeholder="Enter Maiden Name"
-          value={form.maiden_name}
-          onChange={(e) => update("maiden_name", e.target.value)}
-        />
-        <Input
-          label="Name of Spouse"
-          placeholder="Enter Spouse's Name"
-          value={form.spouse_name}
-          onChange={(e) => update("spouse_name", e.target.value)}
-        />
-        <Input
-          label="Occupation of Spouse"
-          placeholder="Enter Spouse's Occupation"
-          value={form.spouse_occupation}
-          onChange={(e) => update("spouse_occupation", e.target.value)}
-        />
+        {showMaidenName && (
+          <Input
+            label="Maiden Name"
+            placeholder="Enter Maiden Name"
+            value={form.maiden_name}
+            onChange={(e) => update("maiden_name", e.target.value)}
+          />
+        )}
+        {showSpouseName && (
+          <Input
+            label="Name of Spouse"
+            placeholder="Enter Spouse's Name"
+            value={form.spouse_name}
+            onChange={(e) => update("spouse_name", e.target.value)}
+          />
+        )}
+        {showSpouseOccupation && (
+          <Input
+            label="Occupation of Spouse"
+            placeholder="Enter Spouse's Occupation"
+            value={form.spouse_occupation}
+            onChange={(e) => update("spouse_occupation", e.target.value)}
+          />
+        )}
         <Select
           label="Religion"
           options={RELIGION_OPTIONS}
