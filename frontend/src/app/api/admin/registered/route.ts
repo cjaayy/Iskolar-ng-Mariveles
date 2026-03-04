@@ -1,11 +1,13 @@
 /**
  * app/api/admin/registered/route.ts
  *
- * GET /api/admin/registered — list all registered applicant accounts with address info.
+ * GET /api/admin/registered — list all registered applicants with their
+ * application & requirement submission stats across all barangays.
  * Supports ?barangay= filter and ?search= for name/email.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@db/connection";
+import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
 async function verifyAdmin(adminId: string): Promise<boolean> {
   const [user] = await query<{ role: string }>(
@@ -15,14 +17,29 @@ async function verifyAdmin(adminId: string): Promise<boolean> {
   return !!user;
 }
 
-interface RegisteredRow {
-  user_id: number;
-  email: string;
-  full_name: string;
-  is_active: boolean;
+interface ApplicantRow {
+  application_id: number;
   applicant_id: number;
+  applicant_name: string;
+  email: string;
   address: string | null;
-  created_at: string;
+  status: string;
+  submitted_at: string | null;
+  total_requirements: number;
+  submitted_requirements: number;
+  approved_requirements: number;
+  pending_requirements: number;
+  rejected_requirements: number;
+}
+
+function extractBarangay(address: string | null): string {
+  if (!address) return "Unknown";
+  const parts = address.split(",").map((p) => p.trim());
+  const marivIdx = parts.findIndex((p) =>
+    p.toLowerCase().includes("mariveles"),
+  );
+  if (marivIdx > 0) return parts[marivIdx - 1];
+  return parts[0] || "Unknown";
 }
 
 export async function GET(req: NextRequest) {
@@ -36,40 +53,70 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search") || undefined;
     const barangay = searchParams.get("barangay") || undefined;
 
-    const conditions: string[] = [];
+    const conditions: string[] = ["a.status != 'draft'"];
     const bind: Record<string, unknown> = {};
 
     if (search) {
-      conditions.push("(u.full_name LIKE :search OR u.email LIKE :search)");
+      conditions.push(
+        "(u.full_name LIKE :search OR u.email LIKE :search OR ap.student_number LIKE :search)",
+      );
       bind.search = `%${search}%`;
     }
     if (barangay) {
-      conditions.push("a.address LIKE :barangay");
+      conditions.push("ap.address LIKE :barangay");
       bind.barangay = `%${barangay}%`;
     }
 
-    const where =
-      conditions.length > 0 ? `AND ${conditions.join(" AND ")}` : "";
+    const whereClause = `WHERE ${conditions.join(" AND ")}`;
 
-    const rows = await query<RegisteredRow>(
+    const rows = await query<ApplicantRow>(
       `
       SELECT
-        u.id         AS user_id,
+        a.id              AS application_id,
+        ap.id             AS applicant_id,
+        u.full_name       AS applicant_name,
         u.email,
-        u.full_name,
-        u.is_active,
-        a.id         AS applicant_id,
-        a.address,
-        u.created_at
-      FROM users u
-      JOIN applicants a ON a.user_id = u.id
-      WHERE u.role = 'applicant' ${where}
-      ORDER BY u.created_at DESC
+        ap.address,
+        a.status,
+        a.submitted_at,
+        ${REQUIREMENT_CONFIGS.length} AS total_requirements,
+        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id) AS submitted_requirements,
+        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'approved') AS approved_requirements,
+        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'pending') AS pending_requirements,
+        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'rejected') AS rejected_requirements
+      FROM applications a
+      JOIN applicants   ap ON ap.id = a.applicant_id
+      JOIN users         u ON u.id  = ap.user_id
+      ${whereClause}
+      ORDER BY a.updated_at DESC
       `,
       bind,
     );
 
-    return NextResponse.json({ data: rows });
+    // Group by barangay
+    const grouped: Record<string, ApplicantRow[]> = {};
+    for (const row of rows) {
+      const brgy = extractBarangay(row.address);
+      if (!grouped[brgy]) grouped[brgy] = [];
+      grouped[brgy].push(row);
+    }
+
+    // Summary
+    const barangaySummary = Object.entries(grouped)
+      .map(([barangayName, applicants]) => ({
+        barangay: barangayName,
+        totalApplicants: applicants.length,
+        pendingValidation: applicants.filter(
+          (a) => a.pending_requirements > 0 || a.submitted_requirements === 0,
+        ).length,
+      }))
+      .sort((a, b) => a.barangay.localeCompare(b.barangay));
+
+    return NextResponse.json({
+      grouped,
+      summary: barangaySummary,
+      total: rows.length,
+    });
   } catch (err) {
     console.error("[GET /api/admin/registered]", err);
     return NextResponse.json(
