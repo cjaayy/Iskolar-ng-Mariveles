@@ -168,20 +168,7 @@ const RELIGION_OPTIONS = [
   { label: "Others", value: "Others" },
 ];
 
-const TOWN_OPTIONS = [
-  { label: "Mariveles", value: "Mariveles" },
-  { label: "Limay", value: "Limay" },
-  { label: "Orion", value: "Orion" },
-  { label: "Pilar", value: "Pilar" },
-  { label: "Balanga", value: "Balanga" },
-  { label: "Abucay", value: "Abucay" },
-  { label: "Samal", value: "Samal" },
-  { label: "Hermosa", value: "Hermosa" },
-  { label: "Orani", value: "Orani" },
-  { label: "Dinalupihan", value: "Dinalupihan" },
-  { label: "Bagac", value: "Bagac" },
-  { label: "Morong", value: "Morong" },
-];
+const TOWN_OPTIONS = [{ label: "Mariveles", value: "Mariveles" }];
 
 const MARIVELES_BARANGAYS = [
   "Alas-asin",
@@ -401,13 +388,13 @@ export default function BasicInfoPage() {
 
       {/* Sub-tabs */}
       <motion.div variants={fadeUp}>
-        <div className="flex gap-1 border-b border-card-border">
+        <div className="flex gap-1 border-b border-card-border overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {SUB_TABS.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`
-                px-4 py-2.5 text-sm font-body font-medium transition-colors relative
+                px-2.5 sm:px-4 py-2.5 text-xs sm:text-sm font-body font-medium transition-colors relative whitespace-nowrap
                 ${
                   activeTab === tab
                     ? "text-foreground"
@@ -443,13 +430,15 @@ export default function BasicInfoPage() {
           {activeTab === "Others" && <OthersTab form={form} update={update} />}
 
           {/* Navigation buttons */}
-          <div className="flex justify-between mt-8 pt-4 border-t border-card-border">
+          <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 sm:gap-4 mt-8 pt-4 border-t border-card-border">
             <div>
               {!isFirstTab && (
                 <Button
                   variant="success"
+                  size="md"
                   onClick={handlePrevious}
                   leftIcon={<ChevronLeft className="w-4 h-4" />}
+                  className="w-full sm:w-auto"
                 >
                   Previous
                 </Button>
@@ -457,9 +446,11 @@ export default function BasicInfoPage() {
             </div>
             <Button
               variant="success"
+              size="md"
               onClick={isLastTab ? handleSave : handleSaveAndNext}
               isLoading={saving}
               rightIcon={<ChevronRight className="w-4 h-4" />}
+              className="w-full sm:w-auto"
             >
               {saving ? "Saving…" : isLastTab ? "Save" : "Save & Next"}
             </Button>
@@ -569,14 +560,14 @@ function PersonalInfoTab({ form, update }: TabProps) {
       {/* Row 3 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Input
-          label="Height"
+          label="Height (cm)"
           placeholder="In centimeters"
           type="number"
           value={form.height_cm}
           onChange={(e) => update("height_cm", e.target.value)}
         />
         <Input
-          label="Weight"
+          label="Weight (kg)"
           placeholder="In kilograms"
           type="number"
           value={form.weight_kg}
