@@ -36,11 +36,6 @@ interface BasicInfoRow {
   guardian_relation: string | null;
   guardian_contact: string | null;
   /* education */
-  course: string;
-  college: string;
-  year_level: number;
-  student_number: string;
-  gpa: number;
   primary_school: string | null;
   primary_address: string | null;
   primary_year_graduated: number | null;
@@ -76,7 +71,6 @@ export async function GET(req: NextRequest) {
          father_name, father_occupation, father_contact,
          mother_name, mother_occupation, mother_contact,
          guardian_name, guardian_relation, guardian_contact,
-         course, college, year_level, student_number, gpa,
          primary_school, primary_address, primary_year_graduated,
          secondary_school, secondary_address, secondary_year_graduated,
          tertiary_school, tertiary_address, tertiary_year_graduated, tertiary_program,

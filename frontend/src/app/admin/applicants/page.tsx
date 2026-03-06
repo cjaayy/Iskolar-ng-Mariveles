@@ -34,12 +34,6 @@ interface Applicant {
   full_name: string;
   is_active: boolean;
   applicant_id: number;
-  student_number: string;
-  gpa: number;
-  year_level: number;
-  course: string;
-  college: string;
-  monthly_income: number;
   contact_number: string | null;
   created_at: string;
   total_applications: number;
@@ -49,17 +43,12 @@ interface Applicant {
 interface Application {
   id: number;
   applicant_name: string;
-  student_number: string;
-  scholarship_name: string;
-  grantor: string;
+
   status: string;
   submitted_at: string | null;
   total_requirements: number;
   approved_requirements: number;
   pending_requirements: number;
-  course: string;
-  college: string;
-  year_level: number;
   address: string | null;
 }
 
@@ -93,11 +82,6 @@ const filterOptions = [
   { value: "approved", label: "Approved" },
   { value: "rejected", label: "Rejected" },
 ];
-
-const ORDINALS = ["", "1st", "2nd", "3rd", "4th", "5th"];
-function toOrdinal(n: number) {
-  return (ORDINALS[n] ?? `${n}th`) + " Year";
-}
 
 /* -- Animations -- */
 const stagger = {
@@ -369,8 +353,7 @@ export default function AdminApplicantsPage() {
                               {app.applicant_name}
                             </p>
                             <p className="text-xs font-body text-muted-fg truncate">
-                              {app.scholarship_name}
-                              {app.course ? ` · ${app.course}` : ""}
+                              Iskolar ng Mariveles
                             </p>
                             {app.address && (
                               <p className="text-[11px] font-body text-muted-fg truncate">
@@ -455,10 +438,6 @@ export default function AdminApplicantsPage() {
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-body text-muted-fg">
                       <span className="flex items-center gap-1">
-                        <GraduationCap className="w-3.5 h-3.5" />
-                        {a.student_number}
-                      </span>
-                      <span className="flex items-center gap-1">
                         <Mail className="w-3.5 h-3.5" />
                         {a.email}
                       </span>
@@ -468,10 +447,6 @@ export default function AdminApplicantsPage() {
                           {a.contact_number}
                         </span>
                       )}
-                      <span className="flex items-center gap-1">
-                        <BookOpen className="w-3.5 h-3.5" />
-                        {a.course} · {toOrdinal(a.year_level)}
-                      </span>
                     </div>
                   </div>
 
@@ -492,12 +467,6 @@ export default function AdminApplicantsPage() {
                       <p className="text-[10px] font-body text-muted-fg">
                         Approved
                       </p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-lg font-heading font-bold text-ocean-400">
-                        {Number(a.gpa).toFixed(2)}
-                      </p>
-                      <p className="text-[10px] font-body text-muted-fg">GPA</p>
                     </div>
                   </div>
                 </div>

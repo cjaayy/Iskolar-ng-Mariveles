@@ -27,17 +27,11 @@ import { Card, Badge, Skeleton, Button } from "@/components/ui";
 interface Application {
   id: number;
   applicant_name: string;
-  student_number: string;
-  scholarship_name: string;
-  grantor: string;
   status: string;
   submitted_at: string | null;
   total_requirements: number;
   approved_requirements: number;
   pending_requirements: number;
-  course: string;
-  college: string;
-  year_level: number;
   address: string | null;
 }
 
@@ -274,8 +268,7 @@ export default function AdminValidateListPage() {
                             {app.applicant_name}
                           </p>
                           <p className="text-xs font-body text-muted-fg truncate">
-                            {app.scholarship_name}
-                            {app.course ? ` · ${app.course}` : ""}
+                            Iskolar ng Mariveles
                           </p>
                         </div>
                       </div>

@@ -26,10 +26,6 @@ interface ApprovedApplicant {
   applicant_id: number;
   applicant_name: string;
   email: string;
-  student_number: string | null;
-  course: string | null;
-  college: string | null;
-  year_level: number | null;
   address: string | null;
   contact_number: string | null;
   submitted_at: string | null;

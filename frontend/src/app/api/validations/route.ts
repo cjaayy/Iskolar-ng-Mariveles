@@ -93,13 +93,7 @@ export async function PUT(req: NextRequest) {
     // ── Validate checklist when approving ─────────────────────────────────────
     if (action === "approved") {
       const cl = checklist as ValidationChecklist | undefined;
-      if (
-        !cl ||
-        !cl.gpa_met ||
-        !cl.income_met ||
-        !cl.documents_complete ||
-        !cl.enrollment_verified
-      ) {
+      if (!cl || !cl.documents_complete || !cl.enrollment_verified) {
         return NextResponse.json(
           { error: "All checklist items must be true before approving" },
           { status: 422 },
@@ -127,14 +121,6 @@ export async function PUT(req: NextRequest) {
       "UPDATE applications SET status = :status, remarks = :remarks WHERE id = :id",
       { status: nextStatus, remarks: notes ?? null, id: application_id },
     );
-
-    // ── Decrement available slots when approved ───────────────────────────────
-    if (action === "approved") {
-      await execute(
-        "UPDATE scholarships SET slots_available = GREATEST(slots_available - 1, 0) WHERE id = (SELECT scholarship_id FROM applications WHERE id = :id)",
-        { id: application_id },
-      );
-    }
 
     return NextResponse.json({
       message: `Application ${nextStatus} successfully`,

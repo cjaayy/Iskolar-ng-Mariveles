@@ -36,20 +36,13 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "Invalid id" }, { status: 400 });
     }
 
-    // Application + applicant + scholarship details + full basic info
+    // Application + applicant details + full basic info
     const [application] = await query(
       `
       SELECT
         a.*,
         u.full_name       AS applicant_name,
         u.email           AS applicant_email,
-        ap.student_number,
-        ap.gpa,
-        ap.year_level,
-        ap.course,
-        ap.college,
-        ap.monthly_income,
-        ap.household_size,
         ap.contact_number,
         ap.address,
         ap.date_of_birth,
@@ -88,17 +81,10 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
         ap.skills,
         ap.hobbies,
         ap.organizations,
-        ap.awards,
-        s.name            AS scholarship_name,
-        s.grantor,
-        s.min_gpa,
-        s.max_monthly_income,
-        s.slots_available,
-        s.slots_total
+        ap.awards
       FROM applications a
       JOIN applicants   ap ON ap.id = a.applicant_id
       JOIN users         u ON u.id  = ap.user_id
-      JOIN scholarships  s ON s.id  = a.scholarship_id
       WHERE a.id = :id
       LIMIT 1
       `,

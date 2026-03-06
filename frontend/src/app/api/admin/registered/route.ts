@@ -57,9 +57,7 @@ export async function GET(req: NextRequest) {
     const bind: Record<string, unknown> = {};
 
     if (search) {
-      conditions.push(
-        "(u.full_name LIKE :search OR u.email LIKE :search OR ap.student_number LIKE :search)",
-      );
+      conditions.push("(u.full_name LIKE :search OR u.email LIKE :search)");
       bind.search = `%${search}%`;
     }
     if (barangay) {

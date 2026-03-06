@@ -4,7 +4,7 @@
  *
  * @example
  *   import { query, execute, checkEligibility } from '@db';
- *   import type { ApplicantRow, ScholarshipRow }  from '@db';
+ *   import type { ApplicantRow, ApplicationRow }  from '@db';
  */
 
 export * from "./connection";

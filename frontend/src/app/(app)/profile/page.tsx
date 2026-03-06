@@ -53,11 +53,6 @@ interface ProfileData {
   guardian_relation: string;
   guardian_contact: string;
   /* education */
-  course: string;
-  college: string;
-  year_level: string;
-  student_number: string;
-  gpa: string;
   primary_school: string;
   primary_address: string;
   primary_year_graduated: string;
@@ -132,11 +127,6 @@ export default function ProfilePage() {
         guardian_name: d.guardian_name ?? "",
         guardian_relation: d.guardian_relation ?? "",
         guardian_contact: d.guardian_contact ?? "",
-        course: d.course ?? "",
-        college: d.college ?? "",
-        year_level: d.year_level != null ? String(d.year_level) : "",
-        student_number: d.student_number ?? "",
-        gpa: d.gpa != null ? String(d.gpa) : "",
         primary_school: d.primary_school ?? "",
         primary_address: d.primary_address ?? "",
         primary_year_graduated:

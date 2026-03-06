@@ -141,24 +141,14 @@ export async function POST(req: NextRequest) {
     const applicantId = (applicantResult as import("mysql2").ResultSetHeader)
       .insertId;
 
-    // Auto-create an application for the default scholarship
-    const [scholarshipRows] = await conn.execute(
+    // Auto-create an application for the Iskolar ng Mariveles program
+    await conn.execute(
       {
-        sql: `SELECT id FROM scholarships WHERE is_active = 1 ORDER BY id ASC LIMIT 1`,
+        sql: `INSERT INTO applications (applicant_id, status) VALUES (?, 'submitted')`,
         namedPlaceholders: false,
       } as import("mysql2").QueryOptions,
-      [],
+      [applicantId],
     );
-    const scholarships = scholarshipRows as import("mysql2").RowDataPacket[];
-    if (scholarships.length > 0) {
-      await conn.execute(
-        {
-          sql: `INSERT INTO applications (applicant_id, scholarship_id, status) VALUES (?, ?, 'submitted')`,
-          namedPlaceholders: false,
-        } as import("mysql2").QueryOptions,
-        [applicantId, scholarships[0].id],
-      );
-    }
 
     // Increment usage counter
     await conn.execute(

@@ -15,12 +15,6 @@ interface ApplicantListRow {
   full_name: string;
   is_active: boolean;
   applicant_id: number;
-  student_number: string;
-  gpa: number;
-  year_level: number;
-  course: string;
-  college: string;
-  monthly_income: number;
   contact_number: string | null;
   created_at: string;
   total_applications: number;
@@ -30,14 +24,8 @@ interface ApplicantListRow {
 interface ApplicationListRow {
   id: number;
   applicant_name: string;
-  student_number: string;
-  scholarship_name: string;
-  grantor: string;
   status: string;
   submitted_at: string | null;
-  course: string;
-  college: string;
-  year_level: number;
   address: string | null;
   total_requirements: number;
   approved_requirements: number;
@@ -84,9 +72,7 @@ export async function GET(req: NextRequest) {
         bindValues.status = status;
       }
       if (search) {
-        conditions.push(
-          "(u.full_name LIKE :search OR ap.student_number LIKE :search)",
-        );
+        conditions.push("(u.full_name LIKE :search)");
         bindValues.search = `%${search}%`;
       }
 
@@ -99,20 +85,13 @@ export async function GET(req: NextRequest) {
           a.status,
           a.submitted_at,
           u.full_name       AS applicant_name,
-          ap.student_number,
-          ap.course,
-          ap.college,
-          ap.year_level,
           ap.address,
-          s.name            AS scholarship_name,
-          s.grantor,
           ${REQUIREMENT_CONFIGS.length} AS total_requirements,
           (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'approved') AS approved_requirements,
           (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'pending') AS pending_requirements
         FROM applications a
         JOIN applicants   ap ON ap.id = a.applicant_id
         JOIN users         u ON u.id  = ap.user_id
-        JOIN scholarships  s ON s.id  = a.scholarship_id
         ${whereClause}
         ORDER BY
           CASE a.status
@@ -156,9 +135,7 @@ export async function GET(req: NextRequest) {
     const bindValues: Record<string, unknown> = { limit, offset };
 
     if (search) {
-      conditions.push(
-        "(u.full_name LIKE :search OR u.email LIKE :search OR a.student_number LIKE :search)",
-      );
+      conditions.push("(u.full_name LIKE :search OR u.email LIKE :search)");
       bindValues.search = `%${search}%`;
     }
 
@@ -173,12 +150,6 @@ export async function GET(req: NextRequest) {
         u.full_name,
         u.is_active,
         a.id            AS applicant_id,
-        a.student_number,
-        a.gpa,
-        a.year_level,
-        a.course,
-        a.college,
-        a.monthly_income,
         a.contact_number,
         u.created_at,
         (SELECT COUNT(*) FROM applications ap WHERE ap.applicant_id = a.id) AS total_applications,

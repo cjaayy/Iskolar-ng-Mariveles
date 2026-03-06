@@ -105,11 +105,6 @@ interface ApplicationDetail {
   guardian_relation: string | null;
   guardian_contact: string | null;
   /* basic info – education */
-  course: string | null;
-  college: string | null;
-  year_level: number | null;
-  student_number: string | null;
-  gpa: number | null;
   primary_school: string | null;
   primary_address: string | null;
   primary_year_graduated: string | null;

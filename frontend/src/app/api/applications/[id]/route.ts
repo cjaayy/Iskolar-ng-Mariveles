@@ -22,21 +22,10 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       `
       SELECT
         a.*,
-        u.full_name     AS applicant_name,
-        ap.student_number,
-        ap.gpa,
-        ap.year_level,
-        ap.course,
-        ap.college,
-        ap.monthly_income,
-        s.name          AS scholarship_name,
-        s.grantor,
-        s.min_gpa,
-        s.max_monthly_income
+        u.full_name     AS applicant_name
       FROM applications a
       JOIN applicants   ap ON ap.id = a.applicant_id
       JOIN users         u ON u.id  = ap.user_id
-      JOIN scholarships  s ON s.id  = a.scholarship_id
       WHERE a.id = :id
       LIMIT 1
     `,

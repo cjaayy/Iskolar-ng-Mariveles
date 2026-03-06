@@ -11,21 +11,13 @@ import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 interface StaffApplicationRow {
   id: number;
   applicant_id: number;
-  scholarship_id: number;
   status: string;
-  gpa_at_submission: number | null;
   income_at_submission: number | null;
   submitted_at: string | null;
   created_at: string;
   updated_at: string;
   remarks: string | null;
   applicant_name: string;
-  student_number: string;
-  scholarship_name: string;
-  grantor: string;
-  course: string;
-  college: string;
-  year_level: number;
   total_requirements: number;
   approved_requirements: number;
   pending_requirements: number;
@@ -74,9 +66,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (search) {
-      conditions.push(
-        "(u.full_name LIKE :search OR ap.student_number LIKE :search)",
-      );
+      conditions.push("(u.full_name LIKE :search)");
       bindValues.search = `%${search}%`;
     }
 
@@ -88,28 +78,19 @@ export async function GET(req: NextRequest) {
       SELECT
         a.id,
         a.applicant_id,
-        a.scholarship_id,
         a.status,
-        a.gpa_at_submission,
         a.income_at_submission,
         a.submitted_at,
         a.created_at,
         a.updated_at,
         a.remarks,
         u.full_name       AS applicant_name,
-        ap.student_number,
-        ap.course,
-        ap.college,
-        ap.year_level,
-        s.name            AS scholarship_name,
-        s.grantor,
         ${REQUIREMENT_CONFIGS.length} AS total_requirements,
         (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'approved') AS approved_requirements,
         (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'pending') AS pending_requirements
       FROM applications a
       JOIN applicants   ap ON ap.id = a.applicant_id
       JOIN users         u ON u.id  = ap.user_id
-      JOIN scholarships  s ON s.id  = a.scholarship_id
       ${whereClause}
       ORDER BY
         CASE a.status

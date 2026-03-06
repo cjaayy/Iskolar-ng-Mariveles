@@ -11,8 +11,6 @@ import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 interface ApplicationRow {
   id: number;
   status: string;
-  scholarship_name: string;
-  grantor: string;
 }
 
 interface SubmissionRow {
@@ -40,11 +38,8 @@ export async function GET(req: NextRequest) {
       `
       SELECT
         a.id,
-        a.status,
-        s.name  AS scholarship_name,
-        s.grantor
+        a.status
       FROM applications a
-      JOIN scholarships s ON s.id = a.scholarship_id
       WHERE a.applicant_id = :applicant_id
       ORDER BY a.created_at DESC
       LIMIT 1

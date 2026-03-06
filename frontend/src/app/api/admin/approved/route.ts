@@ -22,10 +22,6 @@ interface ApprovedRow {
   applicant_id: number;
   applicant_name: string;
   email: string;
-  student_number: string | null;
-  course: string | null;
-  college: string | null;
-  year_level: number | null;
   address: string | null;
   contact_number: string | null;
   submitted_at: string | null;
@@ -48,9 +44,7 @@ export async function GET(req: NextRequest) {
     const bind: Record<string, unknown> = { totalRequired };
 
     if (search) {
-      conditions.push(
-        "(u.full_name LIKE :search OR u.email LIKE :search OR ap.student_number LIKE :search)",
-      );
+      conditions.push("(u.full_name LIKE :search OR u.email LIKE :search)");
       bind.search = `%${search}%`;
     }
 
@@ -63,10 +57,6 @@ export async function GET(req: NextRequest) {
         ap.id             AS applicant_id,
         u.full_name       AS applicant_name,
         u.email,
-        ap.student_number,
-        ap.course,
-        ap.college,
-        ap.year_level,
         ap.address,
         ap.contact_number,
         a.submitted_at,

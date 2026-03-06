@@ -60,11 +60,6 @@ interface BasicInfoForm {
   guardian_relation: string;
   guardian_contact: string;
   /* education (read-only from session, editable extras) */
-  course: string;
-  college: string;
-  year_level: string;
-  student_number: string;
-  gpa: string;
   primary_school: string;
   primary_address: string;
   primary_year_graduated: string;
@@ -106,11 +101,6 @@ const emptyForm: BasicInfoForm = {
   guardian_name: "",
   guardian_relation: "",
   guardian_contact: "",
-  course: "",
-  college: "",
-  year_level: "",
-  student_number: "",
-  gpa: "",
   primary_school: "",
   primary_address: "",
   primary_year_graduated: "",
@@ -246,11 +236,6 @@ export default function BasicInfoPage() {
         guardian_name: data.guardian_name ?? "",
         guardian_relation: data.guardian_relation ?? "",
         guardian_contact: data.guardian_contact ?? "",
-        course: data.course ?? "",
-        college: data.college ?? "",
-        year_level: data.year_level != null ? String(data.year_level) : "",
-        student_number: data.student_number ?? "",
-        gpa: data.gpa != null ? String(data.gpa) : "",
         primary_school: data.primary_school ?? "",
         primary_address: data.primary_address ?? "",
         primary_year_graduated:
@@ -297,12 +282,6 @@ export default function BasicInfoPage() {
       // Convert numeric strings back to numbers
       if (payload.height_cm) payload.height_cm = Number(payload.height_cm);
       if (payload.weight_kg) payload.weight_kg = Number(payload.weight_kg);
-      // Remove read-only education fields
-      delete payload.course;
-      delete payload.college;
-      delete payload.year_level;
-      delete payload.student_number;
-      delete payload.gpa;
 
       const res = await fetch("/api/me/basic-info", {
         method: "PUT",

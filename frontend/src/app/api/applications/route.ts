@@ -10,8 +10,6 @@ import { checkEligibility } from "@db/eligibility";
 import type {
   ApplicationWithDetails,
   ApplicantRow,
-  ScholarshipRow,
-  CreateApplicationBody,
   GetApplicationsQuery,
 } from "@db/types";
 
@@ -25,9 +23,6 @@ export async function GET(req: NextRequest) {
       status:
         (searchParams.get("status") as GetApplicationsQuery["status"]) ??
         undefined,
-      scholarship_id: searchParams.get("scholarship_id")
-        ? Number(searchParams.get("scholarship_id"))
-        : undefined,
       page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
       limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 20,
     };
@@ -45,10 +40,6 @@ export async function GET(req: NextRequest) {
       conditions.push("a.status = :status");
       bindValues.status = params.status;
     }
-    if (params.scholarship_id) {
-      conditions.push("a.scholarship_id = :scholarship_id");
-      bindValues.scholarship_id = params.scholarship_id;
-    }
 
     const whereClause =
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -58,14 +49,10 @@ export async function GET(req: NextRequest) {
       `
       SELECT
         a.*,
-        u.full_name     AS applicant_name,
-        ap.student_number,
-        s.name          AS scholarship_name,
-        s.grantor
+        u.full_name     AS applicant_name
       FROM applications a
       JOIN applicants   ap ON ap.id   = a.applicant_id
       JOIN users         u ON u.id    = ap.user_id
-      JOIN scholarships  s ON s.id    = a.scholarship_id
       ${whereClause}
       ORDER BY a.updated_at DESC
       LIMIT :limit OFFSET :offset
@@ -83,7 +70,6 @@ export async function GET(req: NextRequest) {
       conditions.length > 0
         ? {
             status: bindValues.status,
-            scholarship_id: bindValues.scholarship_id,
           }
         : {},
     );
@@ -105,22 +91,6 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    // --- Parse & validate request body --------------------------------------
-    let body: CreateApplicationBody;
-    try {
-      body = await req.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-
-    const { scholarship_id } = body;
-    if (!scholarship_id || !Number.isInteger(Number(scholarship_id))) {
-      return NextResponse.json(
-        { error: "scholarship_id is required and must be an integer" },
-        { status: 422 },
-      );
-    }
-
     // --- Resolve applicant from header (simplified — replace with real auth) ----
     const applicantIdHeader = req.headers.get("x-applicant-id");
     if (!applicantIdHeader) {
@@ -128,7 +98,7 @@ export async function POST(req: NextRequest) {
     }
     const applicantId = Number(applicantIdHeader);
 
-    // --- Load applicant & scholarship ----------------------------------------
+    // --- Load applicant -------------------------------------------------------
     const [applicant] = await query<ApplicantRow>(
       "SELECT * FROM applicants WHERE id = :id LIMIT 1",
       { id: applicantId },
@@ -140,19 +110,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const [scholarship] = await query<ScholarshipRow>(
-      "SELECT * FROM scholarships WHERE id = :id AND is_active = 1 LIMIT 1",
-      { id: scholarship_id },
-    );
-    if (!scholarship) {
-      return NextResponse.json(
-        { error: "Scholarship not found or inactive" },
-        { status: 404 },
-      );
-    }
-
     // --- Eligibility check ---------------------------------------------------
-    const eligibility = checkEligibility(applicant, scholarship);
+    const eligibility = checkEligibility(applicant);
     if (!eligibility.eligible) {
       return NextResponse.json(
         { error: "Applicant is not eligible", reasons: eligibility.reasons },
@@ -162,8 +121,8 @@ export async function POST(req: NextRequest) {
 
     // --- Prevent duplicate application ---------------------------------------
     const existing = await query(
-      "SELECT id FROM applications WHERE applicant_id = :applicant_id AND scholarship_id = :scholarship_id LIMIT 1",
-      { applicant_id: applicantId, scholarship_id },
+      "SELECT id FROM applications WHERE applicant_id = :applicant_id LIMIT 1",
+      { applicant_id: applicantId },
     );
     if (existing.length > 0) {
       return NextResponse.json(
@@ -176,15 +135,13 @@ export async function POST(req: NextRequest) {
     const result = await execute(
       `
       INSERT INTO applications
-        (applicant_id, scholarship_id, status, gpa_at_submission, income_at_submission, submitted_at)
+        (applicant_id, status, income_at_submission, submitted_at)
       VALUES
-        (:applicant_id, :scholarship_id, 'submitted', :gpa, :income, NOW())
+        (:applicant_id, 'submitted', :income, NOW())
     `,
       {
         applicant_id: applicantId,
-        scholarship_id,
-        gpa: applicant.gpa,
-        income: applicant.monthly_income,
+        income: 0,
       },
     );
 

@@ -86,20 +86,17 @@ async function run() {
   // 3. Applicant profile
   await pool.execute(`
     INSERT IGNORE INTO applicants
-      (id, user_id, student_number, date_of_birth, contact_number, address,
-       gpa, year_level, course, college, monthly_income, household_size)
-    VALUES (1, 2, '2026-DEMO-001', '2004-06-15', '+63 917 123 4567', NULL,
-            1.82, 3, 'Bachelor of Science in Information Technology',
-            'Mariveles National High School - College Dept.', 15000.00, 4)
+      (id, user_id, date_of_birth, contact_number, address)
+    VALUES (1, 2, '2004-06-15', '+63 917 123 4567', NULL)
   `);
   console.log("✓ Applicant profile inserted (id=1)");
 
-  // 4. Application for CHED scholarship
+  // 4. Application for Iskolar ng Mariveles
   await pool.execute(`
     INSERT IGNORE INTO applications
-      (id, applicant_id, scholarship_id, status,
-       gpa_at_submission, income_at_submission, submitted_at)
-    VALUES (1, 1, 1, 'under_review', 1.82, 15000.00, NOW())
+      (id, applicant_id, status,
+       income_at_submission, submitted_at)
+    VALUES (1, 1, 'under_review', 15000.00, NOW())
   `);
   console.log("✓ Application inserted (id=1, CHED Study Now Pay Later)");
 

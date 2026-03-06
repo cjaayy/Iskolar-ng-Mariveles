@@ -37,27 +37,13 @@ interface ApplicationDetail {
   id: number;
   applicant_id: number;
   status: string;
-  gpa_at_submission: number | null;
   income_at_submission: number | null;
   submitted_at: string | null;
   remarks: string | null;
   applicant_name: string;
   applicant_email: string;
-  student_number: string;
-  gpa: number;
-  year_level: number;
-  course: string;
-  college: string;
-  monthly_income: number;
-  household_size: number;
   contact_number: string | null;
   address: string | null;
-  scholarship_name: string;
-  grantor: string;
-  min_gpa: number;
-  max_monthly_income: number | null;
-  slots_available: number;
-  slots_total: number;
   /* basic info – personal */
   date_of_birth: string | null;
   gender: string | null;

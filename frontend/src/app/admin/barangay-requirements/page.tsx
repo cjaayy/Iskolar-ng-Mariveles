@@ -49,7 +49,6 @@ interface RequirementRow {
   email: string;
   address: string | null;
   application_id: number | null;
-  scholarship_name: string | null;
   app_status: string | null;
   total_requirements: number;
   submitted_requirements: number;
@@ -262,9 +261,9 @@ export default function BarangayRequirementsPage() {
                             </div>
 
                             {/* Scholarship */}
-                            {r.scholarship_name && (
+                            {r.application_id && (
                               <span className="text-xs font-body text-muted-fg hidden md:block">
-                                {r.scholarship_name}
+                                Iskolar ng Mariveles
                               </span>
                             )}
 

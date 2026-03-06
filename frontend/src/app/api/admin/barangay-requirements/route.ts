@@ -22,7 +22,6 @@ interface RequirementRow {
   email: string;
   address: string | null;
   application_id: number | null;
-  scholarship_name: string | null;
   app_status: string | null;
   total_requirements: number;
   submitted_requirements: number;
@@ -59,7 +58,6 @@ export async function GET(req: NextRequest) {
         u.email,
         a.address,
         app.id         AS application_id,
-        s.name         AS scholarship_name,
         app.status     AS app_status,
         COALESCE(rs_total.cnt, 0) AS total_requirements,
         COALESCE(rs_submitted.cnt, 0) AS submitted_requirements,
@@ -68,7 +66,6 @@ export async function GET(req: NextRequest) {
       FROM applicants a
       JOIN users u ON u.id = a.user_id
       LEFT JOIN applications app ON app.applicant_id = a.id
-      LEFT JOIN scholarships s ON s.id = app.scholarship_id
       LEFT JOIN (
         SELECT application_id, COUNT(*) AS cnt
         FROM requirement_submissions

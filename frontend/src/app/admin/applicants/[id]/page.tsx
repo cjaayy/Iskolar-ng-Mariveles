@@ -41,27 +41,13 @@ interface ApplicationDetail {
   id: number;
   applicant_id: number;
   status: string;
-  gpa_at_submission: number | null;
   income_at_submission: number | null;
   submitted_at: string | null;
   remarks: string | null;
   applicant_name: string;
   applicant_email: string;
-  student_number: string;
-  gpa: number;
-  year_level: number;
-  course: string;
-  college: string;
-  monthly_income: number;
-  household_size: number;
   contact_number: string | null;
   address: string | null;
-  scholarship_name: string;
-  grantor: string;
-  min_gpa: number;
-  max_monthly_income: number | null;
-  slots_available: number;
-  slots_total: number;
 }
 
 interface RequirementSubmission {
@@ -123,11 +109,6 @@ const docStatusConfig: Record<
 const reqConfigMap = Object.fromEntries(
   REQUIREMENT_CONFIGS.map((c) => [c.key, c]),
 );
-
-const ORDINALS = ["", "1st", "2nd", "3rd", "4th", "5th"];
-function toOrdinal(n: number) {
-  return (ORDINALS[n] ?? `${n}th`) + " Year";
-}
 
 /* -- Animations -- */
 const fadeUp = {
@@ -261,7 +242,7 @@ export default function AdminApplicationDetailPage() {
               </Badge>
             </div>
             <p className="font-body text-sm text-muted-fg">
-              {application.scholarship_name} &middot; {application.grantor}
+              Iskolar ng Mariveles
             </p>
           </div>
         </div>
@@ -481,41 +462,13 @@ export default function AdminApplicationDetailPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-xs font-body text-muted-fg mb-0.5 flex items-center gap-1">
-                    <GraduationCap className="w-3 h-3" />
-                    Student No.
+                    <Mail className="w-3 h-3" />
+                    Email
                   </p>
                   <p className="text-sm font-body text-foreground">
-                    {application.student_number}
+                    {application.applicant_email}
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs font-body text-muted-fg mb-0.5 flex items-center gap-1">
-                    <BookOpen className="w-3 h-3" />
-                    Year Level
-                  </p>
-                  <p className="text-sm font-body text-foreground">
-                    {toOrdinal(application.year_level)}
-                  </p>
-                </div>
-              </div>
-              <div>
-                <p className="text-xs font-body text-muted-fg mb-0.5">
-                  Course / College
-                </p>
-                <p className="text-sm font-body text-foreground">
-                  {application.course}
-                  {application.college ? ` — ${application.college}` : ""}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-body text-muted-fg mb-0.5 flex items-center gap-1">
-                  <Mail className="w-3 h-3" />
-                  Email
-                </p>
-                <p className="text-sm font-body text-foreground">
-                  {application.applicant_email}
-                </p>
-              </div>
               {application.contact_number && (
                 <div>
                   <p className="text-xs font-body text-muted-fg mb-0.5 flex items-center gap-1">
@@ -538,23 +491,7 @@ export default function AdminApplicationDetailPage() {
                   </p>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-card-border">
-                <div>
-                  <p className="text-xs font-body text-muted-fg mb-0.5">GPA</p>
-                  <p className="text-sm font-body font-semibold text-ocean-400">
-                    {Number(application.gpa).toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-body text-muted-fg mb-0.5 flex items-center gap-1">
-                    <DollarSign className="w-3 h-3" />
-                    Income
-                  </p>
-                  <p className="text-sm font-body text-foreground">
-                    ₱{Number(application.monthly_income).toLocaleString()}
-                  </p>
-                </div>
-              </div>
+
               {application.submitted_at && (
                 <div className="pt-2 border-t border-card-border">
                   <p className="text-xs font-body text-muted-fg mb-0.5">
@@ -565,48 +502,6 @@ export default function AdminApplicationDetailPage() {
                   </p>
                 </div>
               )}
-            </div>
-          </Card>
-
-          {/* Scholarship Info */}
-          <Card padding="md">
-            <h3 className="font-heading text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
-              <GraduationCap className="w-4 h-4 text-muted-fg" />
-              Scholarship Details
-            </h3>
-            <div className="space-y-2">
-              <div>
-                <p className="text-xs font-body text-muted-fg mb-0.5">Name</p>
-                <p className="text-sm font-body font-medium text-foreground">
-                  {application.scholarship_name}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-body text-muted-fg mb-0.5">
-                  Grantor
-                </p>
-                <p className="text-sm font-body text-foreground">
-                  {application.grantor}
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="text-xs font-body text-muted-fg mb-0.5">
-                    Min GPA
-                  </p>
-                  <p className="text-sm font-body text-foreground">
-                    {Number(application.min_gpa).toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-body text-muted-fg mb-0.5">
-                    Slots
-                  </p>
-                  <p className="text-sm font-body text-foreground">
-                    {application.slots_available}/{application.slots_total}
-                  </p>
-                </div>
-              </div>
             </div>
           </Card>
 

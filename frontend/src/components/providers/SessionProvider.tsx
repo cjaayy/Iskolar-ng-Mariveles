@@ -31,14 +31,6 @@ export interface SessionUser {
   firstName: string;
   lastName: string;
   role: string;
-  studentNumber: string;
-  gpa: number;
-  yearLevel: number;
-  yearLevelLabel: string;
-  course: string;
-  college: string;
-  monthlyIncome: number;
-  householdSize: number;
   contactNumber: string | null;
   address: string | null;
   profileCompletion: number;
