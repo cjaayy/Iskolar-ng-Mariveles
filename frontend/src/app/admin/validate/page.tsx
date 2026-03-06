@@ -32,7 +32,7 @@ interface Application {
   total_requirements: number;
   approved_requirements: number;
   pending_requirements: number;
-  address: string | null;
+  barangay: string | null;
 }
 
 /* -- Status config -- */
@@ -76,16 +76,6 @@ const fadeUp = {
     transition: { duration: 0.35, ease: "easeOut" as const },
   },
 };
-
-function extractBarangay(address: string | null): string {
-  if (!address) return "Unknown";
-  const parts = address.split(",").map((p) => p.trim());
-  const marivIdx = parts.findIndex((p) =>
-    p.toLowerCase().includes("mariveles"),
-  );
-  if (marivIdx > 0) return parts[marivIdx - 1];
-  return parts[0] || "Unknown";
-}
 
 export default function AdminValidateListPage() {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -237,7 +227,7 @@ export default function AdminValidateListPage() {
                 app.total_requirements > 0
                   ? Math.round((submittedDocs / app.total_requirements) * 100)
                   : 0;
-              const barangay = extractBarangay(app.address);
+              const barangay = app.barangay || "Unknown";
 
               return (
                 <motion.div

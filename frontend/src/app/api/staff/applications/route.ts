@@ -56,8 +56,8 @@ export async function GET(req: NextRequest) {
 
     // Filter by assigned barangay if validator has one
     if (assignedBarangay) {
-      conditions.push("ap.address LIKE :assignedBarangay");
-      bindValues.assignedBarangay = `%${assignedBarangay}%`;
+      conditions.push("ap.barangay = :assignedBarangay");
+      bindValues.assignedBarangay = assignedBarangay;
     }
 
     if (status && status !== "all") {
@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
     // Count total
     const countBindValues: Record<string, unknown> = {};
     if (assignedBarangay) {
-      countBindValues.assignedBarangay = `%${assignedBarangay}%`;
+      countBindValues.assignedBarangay = assignedBarangay;
     }
     if (bindValues.status) countBindValues.status = bindValues.status;
     if (bindValues.search) countBindValues.search = bindValues.search;
@@ -130,8 +130,8 @@ export async function GET(req: NextRequest) {
     const summaryConditions: string[] = ["a.status != 'draft'"];
     const summaryBindValues: Record<string, unknown> = {};
     if (assignedBarangay) {
-      summaryConditions.push("ap.address LIKE :assignedBarangay");
-      summaryBindValues.assignedBarangay = `%${assignedBarangay}%`;
+      summaryConditions.push("ap.barangay = :assignedBarangay");
+      summaryBindValues.assignedBarangay = assignedBarangay;
     }
     const statusCounts = await query<{ status: string; count: number }>(
       `

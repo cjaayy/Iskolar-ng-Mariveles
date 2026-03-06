@@ -14,7 +14,7 @@ interface ApplicantRow {
   applicant_id: number;
   applicant_name: string;
   email: string;
-  address: string | null;
+  barangay: string | null;
   status: string;
   submitted_at: string | null;
   total_requirements: number;
@@ -46,11 +46,11 @@ export async function GET(req: NextRequest) {
 
     // If validator has an assigned barangay, only show applicants from that barangay
     if (assignedBarangay) {
-      conditions.push("ap.address LIKE :assignedBarangay");
-      bindValues.assignedBarangay = `%${assignedBarangay}%`;
+      conditions.push("ap.barangay = :assignedBarangay");
+      bindValues.assignedBarangay = assignedBarangay;
     } else if (barangayFilter) {
-      conditions.push("ap.address LIKE :brgySearch");
-      bindValues.brgySearch = `%${barangayFilter}%`;
+      conditions.push("ap.barangay = :brgySearch");
+      bindValues.brgySearch = barangayFilter;
     }
 
     const whereClause = `WHERE ${conditions.join(" AND ")}`;
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
         ap.id             AS applicant_id,
         u.full_name       AS applicant_name,
         u.email,
-        ap.address,
+        ap.barangay,
         a.status,
         a.submitted_at,
         ${REQUIREMENT_CONFIGS.length} AS total_requirements,
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
     // Group by barangay
     const grouped: Record<string, ApplicantRow[]> = {};
     for (const row of rows) {
-      const brgy = extractBarangay(row.address);
+      const brgy = row.barangay || "Unknown";
       if (!grouped[brgy]) grouped[brgy] = [];
       grouped[brgy].push(row);
     }
@@ -110,14 +110,4 @@ export async function GET(req: NextRequest) {
       { status: 500 },
     );
   }
-}
-
-function extractBarangay(address: string | null): string {
-  if (!address) return "Unknown";
-  const parts = address.split(",").map((p) => p.trim());
-  const marivIdx = parts.findIndex((p) =>
-    p.toLowerCase().includes("mariveles"),
-  );
-  if (marivIdx > 0) return parts[marivIdx - 1];
-  return parts[0] || "Unknown";
 }

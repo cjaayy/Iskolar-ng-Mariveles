@@ -22,7 +22,7 @@ interface ApprovedRow {
   applicant_id: number;
   applicant_name: string;
   email: string;
-  address: string | null;
+  barangay: string | null;
   contact_number: string | null;
   submitted_at: string | null;
   approved_requirements: number;
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
         ap.id             AS applicant_id,
         u.full_name       AS applicant_name,
         u.email,
-        ap.address,
+        ap.barangay,
         ap.contact_number,
         a.submitted_at,
         (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'approved') AS approved_requirements,

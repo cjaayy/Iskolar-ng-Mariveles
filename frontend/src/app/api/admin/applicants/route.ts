@@ -26,7 +26,7 @@ interface ApplicationListRow {
   applicant_name: string;
   status: string;
   submitted_at: string | null;
-  address: string | null;
+  barangay: string | null;
   total_requirements: number;
   approved_requirements: number;
   pending_requirements: number;
@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
           a.status,
           a.submitted_at,
           u.full_name       AS applicant_name,
-          ap.address,
+          ap.barangay,
           ${REQUIREMENT_CONFIGS.length} AS total_requirements,
           (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'approved') AS approved_requirements,
           (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'pending') AS pending_requirements

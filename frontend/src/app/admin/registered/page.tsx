@@ -60,7 +60,7 @@ interface ApplicantRow {
   applicant_id: number;
   applicant_name: string;
   email: string;
-  address: string | null;
+  barangay: string | null;
   status: string;
   submitted_at: string | null;
   total_requirements: number;
@@ -164,17 +164,6 @@ function DetailItem({
       </div>
     </div>
   );
-}
-
-/* ── Barangay extractor ────────────────────────────────── */
-function extractBarangay(address: string | null): string {
-  if (!address) return "Unknown";
-  const parts = address.split(",").map((p) => p.trim());
-  const marivIdx = parts.findIndex((p) =>
-    p.toLowerCase().includes("mariveles"),
-  );
-  if (marivIdx > 0) return parts[marivIdx - 1];
-  return parts[0] || "Unknown";
 }
 
 export default function RegisteredApplicantsPage() {
@@ -283,7 +272,7 @@ export default function RegisteredApplicantsPage() {
   // Barangay counts for chips
   const barangayCounts: Record<string, number> = {};
   for (const a of allApplicants) {
-    const brgy = extractBarangay(a.address);
+    const brgy = a.barangay || "Unknown";
     barangayCounts[brgy] = (barangayCounts[brgy] || 0) + 1;
   }
 
@@ -436,12 +425,12 @@ export default function RegisteredApplicantsPage() {
                           </p>
                           <div className="flex items-center gap-2 text-xs text-muted-fg font-body">
                             <span className="truncate">{a.email}</span>
-                            {a.address && (
+                            {a.barangay && (
                               <>
                                 <span>&middot;</span>
                                 <span className="inline-flex items-center gap-0.5">
                                   <MapPin className="w-3 h-3" />
-                                  {extractBarangay(a.address)}
+                                  {a.barangay}
                                 </span>
                               </>
                             )}

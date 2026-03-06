@@ -49,7 +49,7 @@ interface Application {
   total_requirements: number;
   approved_requirements: number;
   pending_requirements: number;
-  address: string | null;
+  barangay: string | null;
 }
 
 /* -- View mode -- */
@@ -355,9 +355,9 @@ export default function AdminApplicantsPage() {
                             <p className="text-xs font-body text-muted-fg truncate">
                               Iskolar ng Mariveles
                             </p>
-                            {app.address && (
+                            {app.barangay && (
                               <p className="text-[11px] font-body text-muted-fg truncate">
-                                {app.address}
+                                {app.barangay}
                               </p>
                             )}
                           </div>

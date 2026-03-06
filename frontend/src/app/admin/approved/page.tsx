@@ -26,7 +26,7 @@ interface ApprovedApplicant {
   applicant_id: number;
   applicant_name: string;
   email: string;
-  address: string | null;
+  barangay: string | null;
   contact_number: string | null;
   submitted_at: string | null;
   approved_requirements: number;
@@ -39,16 +39,6 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 };
 
-/* ── Helper: Extract barangay from address ──────────────── */
-function extractBarangay(address: string | null): string {
-  if (!address) return "—";
-  const parts = address.split(",").map((p) => p.trim());
-  const marivIdx = parts.findIndex((p) =>
-    p.toLowerCase().includes("mariveles"),
-  );
-  if (marivIdx > 0) return parts[marivIdx - 1];
-  return parts[0] || "—";
-}
 
 /* ── Helper: Generate Excel content (HTML table format) ───── */
 function generateExcel(applicants: ApprovedApplicant[]): string {
@@ -61,7 +51,7 @@ function generateExcel(applicants: ApprovedApplicant[]): string {
       <td>${i + 1}</td>
       <td>${a.applicant_name}</td>
       <td>${a.email}</td>
-      <td>${extractBarangay(a.address)}</td>
+      <td>${a.barangay || "—"}</td>
       <td>${a.contact_number || "—"}</td>
     </tr>`,
     )
@@ -103,7 +93,7 @@ function downloadPDF(applicants: ApprovedApplicant[]) {
       <td style="border:1px solid #ccc;padding:6px 10px">${a.applicant_name}</td>
       <td style="border:1px solid #ccc;padding:6px 10px">${a.email}</td>
 
-      <td style="border:1px solid #ccc;padding:6px 10px">${extractBarangay(a.address)}</td>
+      <td style="border:1px solid #ccc;padding:6px 10px">${a.barangay || "—"}</td>
       <td style="border:1px solid #ccc;padding:6px 10px">${a.contact_number || "—"}</td>
     </tr>`,
     )
@@ -393,7 +383,7 @@ export default function ApprovedApplicantsPage() {
                       {a.email}
                     </td>
                     <td className="px-4 py-3 text-muted-fg hidden lg:table-cell">
-                      {extractBarangay(a.address)}
+                      {a.barangay || "—"}
                     </td>
                     <td className="px-4 py-3 text-muted-fg hidden md:table-cell">
                       {a.contact_number || "—"}

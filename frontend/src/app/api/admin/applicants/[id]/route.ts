@@ -44,7 +44,8 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
         u.full_name       AS applicant_name,
         u.email           AS applicant_email,
         ap.contact_number,
-        ap.address
+        ap.address,
+        ap.barangay
       FROM applications a
       JOIN applicants   ap ON ap.id = a.applicant_id
       JOIN users         u ON u.id  = ap.user_id

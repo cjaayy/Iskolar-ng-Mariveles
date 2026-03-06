@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
         a.updated_at,
         a.remarks,
         u.full_name       AS applicant_name,
-        ap.address,
+        ap.barangay,
         ${REQUIREMENT_CONFIGS.length} AS total_requirements,
         (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'approved') AS approved_requirements,
         (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'pending') AS pending_requirements

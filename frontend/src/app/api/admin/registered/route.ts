@@ -22,7 +22,7 @@ interface ApplicantRow {
   applicant_id: number;
   applicant_name: string;
   email: string;
-  address: string | null;
+  barangay: string | null;
   status: string;
   submitted_at: string | null;
   total_requirements: number;
@@ -30,16 +30,6 @@ interface ApplicantRow {
   approved_requirements: number;
   pending_requirements: number;
   rejected_requirements: number;
-}
-
-function extractBarangay(address: string | null): string {
-  if (!address) return "Unknown";
-  const parts = address.split(",").map((p) => p.trim());
-  const marivIdx = parts.findIndex((p) =>
-    p.toLowerCase().includes("mariveles"),
-  );
-  if (marivIdx > 0) return parts[marivIdx - 1];
-  return parts[0] || "Unknown";
 }
 
 export async function GET(req: NextRequest) {
@@ -61,8 +51,8 @@ export async function GET(req: NextRequest) {
       bind.search = `%${search}%`;
     }
     if (barangay) {
-      conditions.push("ap.address LIKE :barangay");
-      bind.barangay = `%${barangay}%`;
+      conditions.push("ap.barangay = :barangay");
+      bind.barangay = barangay;
     }
 
     const whereClause = `WHERE ${conditions.join(" AND ")}`;
@@ -74,7 +64,7 @@ export async function GET(req: NextRequest) {
         ap.id             AS applicant_id,
         u.full_name       AS applicant_name,
         u.email,
-        ap.address,
+        ap.barangay,
         a.status,
         a.submitted_at,
         ${REQUIREMENT_CONFIGS.length} AS total_requirements,
@@ -94,7 +84,7 @@ export async function GET(req: NextRequest) {
     // Group by barangay
     const grouped: Record<string, ApplicantRow[]> = {};
     for (const row of rows) {
-      const brgy = extractBarangay(row.address);
+      const brgy = row.barangay || "Unknown";
       if (!grouped[brgy]) grouped[brgy] = [];
       grouped[brgy].push(row);
     }
