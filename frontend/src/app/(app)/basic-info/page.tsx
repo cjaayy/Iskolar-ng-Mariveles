@@ -242,17 +242,17 @@ export default function BasicInfoPage() {
           data.primary_year_graduated != null
             ? String(data.primary_year_graduated)
             : "",
-        jhs_school: data.jhs_school ?? data.secondary_school ?? "",
-        jhs_address: data.jhs_address ?? data.secondary_address ?? "",
+        jhs_school: data.secondary_school ?? "",
+        jhs_address: data.secondary_address ?? "",
         jhs_year_graduated:
-          data.jhs_year_graduated != null
-            ? String(data.jhs_year_graduated)
+          data.secondary_year_graduated != null
+            ? String(data.secondary_year_graduated)
             : "",
-        shs_school: data.shs_school ?? "",
-        shs_address: data.shs_address ?? "",
+        shs_school: data.tertiary_school ?? "",
+        shs_address: data.tertiary_address ?? "",
         shs_year_graduated:
-          data.shs_year_graduated != null
-            ? String(data.shs_year_graduated)
+          data.tertiary_year_graduated != null
+            ? String(data.tertiary_year_graduated)
             : "",
         skills: data.skills ?? "",
         hobbies: data.hobbies ?? "",
@@ -282,6 +282,21 @@ export default function BasicInfoPage() {
       // Convert numeric strings back to numbers
       if (payload.height_cm) payload.height_cm = Number(payload.height_cm);
       if (payload.weight_kg) payload.weight_kg = Number(payload.weight_kg);
+
+      // Map JHS/SHS form fields to database column names
+      payload.secondary_school = payload.jhs_school;
+      payload.secondary_address = payload.jhs_address;
+      payload.secondary_year_graduated = payload.jhs_year_graduated;
+      delete payload.jhs_school;
+      delete payload.jhs_address;
+      delete payload.jhs_year_graduated;
+
+      payload.tertiary_school = payload.shs_school;
+      payload.tertiary_address = payload.shs_address;
+      payload.tertiary_year_graduated = payload.shs_year_graduated;
+      delete payload.shs_school;
+      delete payload.shs_address;
+      delete payload.shs_year_graduated;
 
       const res = await fetch("/api/me/basic-info", {
         method: "PUT",
