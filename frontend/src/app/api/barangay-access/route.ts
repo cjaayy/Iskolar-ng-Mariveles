@@ -7,6 +7,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const barangay = req.nextUrl.searchParams.get("barangay");
