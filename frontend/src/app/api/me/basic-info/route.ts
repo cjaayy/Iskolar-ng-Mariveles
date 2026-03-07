@@ -46,11 +46,6 @@ interface BasicInfoRow {
   tertiary_address: string | null;
   tertiary_year_graduated: number | null;
   tertiary_program: string | null;
-  /* others */
-  skills: string | null;
-  hobbies: string | null;
-  organizations: string | null;
-  awards: string | null;
 }
 
 /* ======================== GET ======================== */
@@ -73,8 +68,7 @@ export async function GET(req: NextRequest) {
          guardian_name, guardian_relation, guardian_contact,
          primary_school, primary_address, primary_year_graduated,
          secondary_school, secondary_address, secondary_year_graduated,
-         tertiary_school, tertiary_address, tertiary_year_graduated, tertiary_program,
-         skills, hobbies, organizations, awards
+         tertiary_school, tertiary_address, tertiary_year_graduated, tertiary_program
        FROM applicants
        WHERE id = :id
        LIMIT 1`,
@@ -136,10 +130,6 @@ const ALLOWED_FIELDS = new Set([
   "tertiary_address",
   "tertiary_year_graduated",
   "tertiary_program",
-  "skills",
-  "hobbies",
-  "organizations",
-  "awards",
 ]);
 
 export async function PUT(req: NextRequest) {

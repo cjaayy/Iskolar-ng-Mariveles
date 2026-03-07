@@ -19,7 +19,7 @@ import {
 const faqs = [
   {
     q: "How do I fill out my Basic Information?",
-    a: "Go to the Basic Information page from the sidebar. It has 4 tabs: Personal Information, Parents, Education, and Others. Fill in each section and click Save.",
+    a: "Go to the Basic Information page from the sidebar. It has 3 tabs: Personal Information, Parents, and Education. Fill in each section and click Save.",
   },
   {
     q: "How do I upload a requirement?",
@@ -31,7 +31,7 @@ const faqs = [
   },
   {
     q: "How do I view my Profile?",
-    a: "Click Profile in the sidebar. It shows a read-only view of all your information organized under Personal Information, Parents, Education, and Others tabs.",
+    a: "Click Profile in the sidebar. It shows a read-only view of all your information organized under Personal Information, Parents, and Education tabs.",
   },
   {
     q: "How do I update my personal information?",

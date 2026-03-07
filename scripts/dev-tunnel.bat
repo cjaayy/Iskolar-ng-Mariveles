@@ -23,7 +23,7 @@ if "!PORT_IN_USE!"=="1" echo Port 3000 has been freed.
 echo.
 
 :: Navigate to frontend directory (uppercase drive letter to avoid webpack warnings)
-cd /d "%~dp0..\frontend"
+cd /d "%~dp0..\frontend"Run the migration (migration-drop-others.sql) against your database to complete the cleanup.
 for %%i in ("%CD%") do set "DRIVE=%%~di"
 set "DRIVE=%DRIVE:c:=C:%"
 cd /d "%DRIVE%%CD:~2%"

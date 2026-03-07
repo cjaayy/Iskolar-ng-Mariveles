@@ -1,6 +1,6 @@
 /* ================================================================
    BASIC INFORMATION PAGE
-   Multi-tab form: Personal Information, Parents, Education, Others
+   Multi-tab form: Personal Information, Parents, Education
    ================================================================ */
 
 "use client";
@@ -23,12 +23,7 @@ import {
 } from "@/components/providers/SessionProvider";
 
 /* ─── Sub-tab definitions ─── */
-const SUB_TABS = [
-  "Personal Information",
-  "Parents",
-  "Education",
-  "Others",
-] as const;
+const SUB_TABS = ["Personal Information", "Parents", "Education"] as const;
 type SubTab = (typeof SUB_TABS)[number];
 
 /* ─── Form data shape (mirrors API response) ─── */
@@ -69,11 +64,6 @@ interface BasicInfoForm {
   shs_school: string;
   shs_address: string;
   shs_year_graduated: string;
-  /* others */
-  skills: string;
-  hobbies: string;
-  organizations: string;
-  awards: string;
 }
 
 const emptyForm: BasicInfoForm = {
@@ -110,10 +100,6 @@ const emptyForm: BasicInfoForm = {
   shs_school: "",
   shs_address: "",
   shs_year_graduated: "",
-  skills: "",
-  hobbies: "",
-  organizations: "",
-  awards: "",
 };
 
 /* ─── Select option data ─── */
@@ -254,10 +240,6 @@ export default function BasicInfoPage() {
           data.tertiary_year_graduated != null
             ? String(data.tertiary_year_graduated)
             : "",
-        skills: data.skills ?? "",
-        hobbies: data.hobbies ?? "",
-        organizations: data.organizations ?? "",
-        awards: data.awards ?? "",
       });
     } catch {
       addToast("Failed to load basic information", "error");
@@ -427,7 +409,6 @@ export default function BasicInfoPage() {
           {activeTab === "Education" && (
             <EducationTab form={form} update={update} />
           )}
-          {activeTab === "Others" && <OthersTab form={form} update={update} />}
 
           {/* Navigation buttons */}
           <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 sm:gap-4 mt-8 pt-4 border-t border-card-border">
@@ -784,72 +765,6 @@ function EducationTab({ form, update }: TabProps) {
             type="number"
             value={form.shs_year_graduated}
             onChange={(e) => update("shs_year_graduated", e.target.value)}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Others ── */
-function OthersTab({ form, update }: TabProps) {
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-body font-medium text-foreground mb-1.5">
-            Skills
-          </label>
-          <textarea
-            className="w-full bg-input-bg border-2 border-input-border rounded-xl px-4 py-3 font-body text-foreground
-              transition-all duration-200 focus:outline-none focus:border-ocean-400 focus:ring-2 focus:ring-ocean-400/20
-              min-h-[100px] resize-y"
-            placeholder="List your skills (e.g. Leadership, Communication, etc.)"
-            value={form.skills}
-            onChange={(e) => update("skills", e.target.value)}
-            rows={3}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-body font-medium text-foreground mb-1.5">
-            Hobbies
-          </label>
-          <textarea
-            className="w-full bg-input-bg border-2 border-input-border rounded-xl px-4 py-3 font-body text-foreground
-              transition-all duration-200 focus:outline-none focus:border-ocean-400 focus:ring-2 focus:ring-ocean-400/20
-              min-h-[100px] resize-y"
-            placeholder="List your hobbies (e.g. Reading, Sports, Music)"
-            value={form.hobbies}
-            onChange={(e) => update("hobbies", e.target.value)}
-            rows={3}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-body font-medium text-foreground mb-1.5">
-            Organizations
-          </label>
-          <textarea
-            className="w-full bg-input-bg border-2 border-input-border rounded-xl px-4 py-3 font-body text-foreground
-              transition-all duration-200 focus:outline-none focus:border-ocean-400 focus:ring-2 focus:ring-ocean-400/20
-              min-h-[100px] resize-y"
-            placeholder="List organizations you're a member of"
-            value={form.organizations}
-            onChange={(e) => update("organizations", e.target.value)}
-            rows={3}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-body font-medium text-foreground mb-1.5">
-            Awards & Achievements
-          </label>
-          <textarea
-            className="w-full bg-input-bg border-2 border-input-border rounded-xl px-4 py-3 font-body text-foreground
-              transition-all duration-200 focus:outline-none focus:border-ocean-400 focus:ring-2 focus:ring-ocean-400/20
-              min-h-[100px] resize-y"
-            placeholder="List any awards or achievements"
-            value={form.awards}
-            onChange={(e) => update("awards", e.target.value)}
-            rows={3}
           />
         </div>
       </div>

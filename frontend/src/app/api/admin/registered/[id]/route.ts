@@ -77,11 +77,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
         ap.tertiary_school,
         ap.tertiary_address,
         ap.tertiary_year_graduated,
-        ap.tertiary_program,
-        ap.skills,
-        ap.hobbies,
-        ap.organizations,
-        ap.awards
+        ap.tertiary_program
       FROM applications a
       JOIN applicants   ap ON ap.id = a.applicant_id
       JOIN users         u ON u.id  = ap.user_id

@@ -1,13 +1,13 @@
 /* ================================================================
    PROFILE SECTION
-   Read-only view of all basic information (Personal, Parents, Education, Others)
+   Read-only view of all basic information (Personal, Parents, Education)
    ================================================================ */
 
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { User, Heart, GraduationCap, Trophy } from "lucide-react";
+import { User, Heart, GraduationCap } from "lucide-react";
 import { Card, Breadcrumb, Skeleton } from "@/components/ui";
 import { useToast } from "@/components/providers/ToastProvider";
 import {
@@ -20,7 +20,6 @@ const SUB_TABS = [
   { key: "personal", label: "Personal Information", icon: User },
   { key: "parents", label: "Parents", icon: Heart },
   { key: "education", label: "Education", icon: GraduationCap },
-  { key: "others", label: "Others", icon: Trophy },
 ] as const;
 type SubTabKey = (typeof SUB_TABS)[number]["key"];
 
@@ -63,11 +62,6 @@ interface ProfileData {
   tertiary_address: string;
   tertiary_year_graduated: string;
   tertiary_program: string;
-  /* others */
-  skills: string;
-  hobbies: string;
-  organizations: string;
-  awards: string;
 }
 
 /* -- Animations -- */
@@ -146,10 +140,6 @@ export default function ProfilePage() {
             ? String(d.tertiary_year_graduated)
             : "",
         tertiary_program: d.tertiary_program ?? "",
-        skills: d.skills ?? "",
-        hobbies: d.hobbies ?? "",
-        organizations: d.organizations ?? "",
-        awards: d.awards ?? "",
       });
     } catch {
       addToast("Failed to load profile data", "error");
@@ -252,7 +242,6 @@ export default function ProfilePage() {
           {activeTab === "personal" && data && <PersonalTab data={data} />}
           {activeTab === "parents" && data && <ParentsTab data={data} />}
           {activeTab === "education" && data && <EducationTab data={data} />}
-          {activeTab === "others" && data && <OthersTab data={data} />}
         </Card>
       </motion.div>
     </motion.div>
@@ -369,20 +358,6 @@ function EducationTab({ data }: { data: ProfileData }) {
   );
 }
 
-/* ── Others ── */
-function OthersTab({ data }: { data: ProfileData }) {
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-        <InfoBlock label="Skills" value={data.skills} />
-        <InfoBlock label="Hobbies" value={data.hobbies} />
-        <InfoBlock label="Organizations" value={data.organizations} />
-        <InfoBlock label="Awards & Achievements" value={data.awards} />
-      </div>
-    </div>
-  );
-}
-
 /* ======================== HELPER COMPONENTS ======================== */
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -400,19 +375,6 @@ function InfoRow({ label, value }: { label: string; value: string }) {
       <p className="text-sm font-body font-medium text-foreground mt-0.5">
         {value || "—"}
       </p>
-    </div>
-  );
-}
-
-function InfoBlock({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs font-body text-muted-fg mb-1">{label}</p>
-      <div className="bg-muted rounded-xl px-4 py-3 min-h-[60px]">
-        <p className="text-sm font-body text-foreground whitespace-pre-wrap">
-          {value || "—"}
-        </p>
-      </div>
     </div>
   );
 }

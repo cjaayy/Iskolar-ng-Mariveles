@@ -27,7 +27,6 @@ import {
   User,
   Heart,
   GraduationCap,
-  Trophy,
 } from "lucide-react";
 import { Card, Badge, Button, Skeleton } from "@/components/ui";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
@@ -80,11 +79,6 @@ interface ApplicationDetail {
   tertiary_address: string | null;
   tertiary_year_graduated: string | null;
   tertiary_program: string | null;
-  /* basic info – others */
-  skills: string | null;
-  hobbies: string | null;
-  organizations: string | null;
-  awards: string | null;
 }
 
 interface RequirementSubmission {
@@ -171,7 +165,7 @@ export default function AdminRegisteredDetailPage() {
     null,
   );
   const [activeInfoTab, setActiveInfoTab] = useState<
-    "personal" | "parents" | "education" | "others"
+    "personal" | "parents" | "education"
   >("personal");
 
   const adminId =
@@ -309,7 +303,6 @@ export default function AdminRegisteredDetailPage() {
                 label: "Education",
                 icon: GraduationCap,
               },
-              { key: "others" as const, label: "Others", icon: Trophy },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -477,23 +470,6 @@ export default function AdminRegisteredDetailPage() {
                 <InfoRow
                   label="Year Graduated"
                   value={application.tertiary_year_graduated}
-                />
-              </div>
-            </div>
-          )}
-
-          {activeInfoTab === "others" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-                <InfoBlock label="Skills" value={application.skills} />
-                <InfoBlock label="Hobbies" value={application.hobbies} />
-                <InfoBlock
-                  label="Organizations"
-                  value={application.organizations}
-                />
-                <InfoBlock
-                  label="Awards & Achievements"
-                  value={application.awards}
                 />
               </div>
             </div>
@@ -903,25 +879,6 @@ function InfoRow({
       <p className="text-sm font-body font-medium text-foreground mt-0.5">
         {value || "—"}
       </p>
-    </div>
-  );
-}
-
-function InfoBlock({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | null | undefined;
-}) {
-  return (
-    <div>
-      <p className="text-xs font-body text-muted-fg mb-1">{label}</p>
-      <div className="bg-muted rounded-xl px-4 py-3 min-h-[60px]">
-        <p className="text-sm font-body text-foreground whitespace-pre-wrap">
-          {value || "—"}
-        </p>
-      </div>
     </div>
   );
 }

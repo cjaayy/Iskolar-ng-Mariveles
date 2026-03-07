@@ -27,7 +27,6 @@ import {
   Filter,
   Heart,
   GraduationCap,
-  Trophy,
 } from "lucide-react";
 import { Card, Badge, Skeleton, Button } from "@/components/ui";
 
@@ -115,11 +114,6 @@ interface ApplicationDetail {
   tertiary_address: string | null;
   tertiary_year_graduated: string | null;
   tertiary_program: string | null;
-  /* basic info – others */
-  skills: string | null;
-  hobbies: string | null;
-  organizations: string | null;
-  awards: string | null;
 }
 
 interface RequirementSummary {
@@ -177,7 +171,7 @@ export default function RegisteredApplicantsPage() {
     null,
   );
   const [activeInfoTab, setActiveInfoTab] = useState<
-    "personal" | "parents" | "education" | "others"
+    "personal" | "parents" | "education"
   >("personal");
   const [detailCache, setDetailCache] = useState<
     Record<number, { app: ApplicationDetail; reqs: RequirementSummary[] }>
@@ -593,11 +587,6 @@ export default function RegisteredApplicantsPage() {
                             label: "Education",
                             icon: GraduationCap,
                           },
-                          {
-                            key: "others" as const,
-                            label: "Others",
-                            icon: Trophy,
-                          },
                         ].map((tab) => (
                           <button
                             key={tab.key}
@@ -822,29 +811,6 @@ export default function RegisteredApplicantsPage() {
                           </div>
                         </div>
                       )}
-
-                      {activeInfoTab === "others" && (
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-                            <ModalInfoBlock
-                              label="Skills"
-                              value={detail.app.skills}
-                            />
-                            <ModalInfoBlock
-                              label="Hobbies"
-                              value={detail.app.hobbies}
-                            />
-                            <ModalInfoBlock
-                              label="Organizations"
-                              value={detail.app.organizations}
-                            />
-                            <ModalInfoBlock
-                              label="Awards & Achievements"
-                              value={detail.app.awards}
-                            />
-                          </div>
-                        </div>
-                      )}
                     </div>
 
                     {/* Requirement status badges */}
@@ -951,25 +917,6 @@ function ModalInfoRow({
       <p className="text-sm font-body font-medium text-foreground mt-0.5">
         {value || "—"}
       </p>
-    </div>
-  );
-}
-
-function ModalInfoBlock({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | null | undefined;
-}) {
-  return (
-    <div>
-      <p className="text-[11px] font-body text-muted-fg mb-1">{label}</p>
-      <div className="bg-muted rounded-xl px-3 py-2.5 min-h-[50px]">
-        <p className="text-sm font-body text-foreground whitespace-pre-wrap">
-          {value || "—"}
-        </p>
-      </div>
     </div>
   );
 }
