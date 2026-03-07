@@ -4,15 +4,7 @@
  * GET /api/staff/me — returns staff/validator profile info.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@db/connection";
-
-interface StaffUserRow {
-  id: number;
-  email: string;
-  full_name: string;
-  role: string;
-  assigned_barangay: string | null;
-}
+import { supabase } from "@db/connection";
 
 export async function GET(req: NextRequest) {
   const validatorId = req.headers.get("x-validator-id");
@@ -21,13 +13,16 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const [user] = await query<StaffUserRow>(
-      `SELECT id, email, full_name, role, assigned_barangay
-       FROM users
-       WHERE id = :id AND role IN ('validator', 'admin') AND is_active = 1
-       LIMIT 1`,
-      { id: Number(validatorId) },
-    );
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("id, email, full_name, role, assigned_barangay")
+      .eq("id", Number(validatorId))
+      .in("role", ["validator", "admin"])
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
 
     if (!user) {
       return NextResponse.json(

@@ -5,97 +5,10 @@
  * PUT  /api/me/basic-info — updates basic-information fields.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query, execute } from "@db/connection";
+import { supabase } from "@db/connection";
 
-/* ---------- Row shape coming from the DB ---------- */
-interface BasicInfoRow {
-  /* personal */
-  date_of_birth: string | null;
-  gender: string | null;
-  blood_type: string | null;
-  civil_status: string | null;
-  maiden_name: string | null;
-  spouse_name: string | null;
-  spouse_occupation: string | null;
-  religion: string | null;
-  height_cm: number | null;
-  weight_kg: number | null;
-  birthplace: string | null;
-  contact_number: string | null;
-  house_street: string | null;
-  town: string | null;
-  barangay: string | null;
-  /* parents */
-  father_name: string | null;
-  father_occupation: string | null;
-  father_contact: string | null;
-  mother_name: string | null;
-  mother_occupation: string | null;
-  mother_contact: string | null;
-  guardian_name: string | null;
-  guardian_relation: string | null;
-  guardian_contact: string | null;
-  /* education */
-  primary_school: string | null;
-  primary_address: string | null;
-  primary_year_graduated: number | null;
-  secondary_school: string | null;
-  secondary_address: string | null;
-  secondary_year_graduated: number | null;
-  tertiary_school: string | null;
-  tertiary_address: string | null;
-  tertiary_year_graduated: number | null;
-  tertiary_program: string | null;
-}
-
-/* ======================== GET ======================== */
-export async function GET(req: NextRequest) {
-  const applicantIdHeader = req.headers.get("x-applicant-id");
-  if (!applicantIdHeader) {
-    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
-  }
-  const applicantId = Number(applicantIdHeader);
-
-  try {
-    const [row] = await query<BasicInfoRow>(
-      `SELECT
-         date_of_birth, gender, blood_type, civil_status,
-         maiden_name, spouse_name, spouse_occupation, religion,
-         height_cm, weight_kg, birthplace, contact_number,
-         house_street, town, barangay,
-         father_name, father_occupation, father_contact,
-         mother_name, mother_occupation, mother_contact,
-         guardian_name, guardian_relation, guardian_contact,
-         primary_school, primary_address, primary_year_graduated,
-         secondary_school, secondary_address, secondary_year_graduated,
-         tertiary_school, tertiary_address, tertiary_year_graduated, tertiary_program
-       FROM applicants
-       WHERE id = :id
-       LIMIT 1`,
-      { id: applicantId },
-    );
-
-    if (!row) {
-      return NextResponse.json(
-        { error: "Applicant not found" },
-        { status: 404 },
-      );
-    }
-
-    return NextResponse.json({ data: row });
-  } catch (err) {
-    console.error("[GET /api/me/basic-info]", err);
-    return NextResponse.json(
-      { error: "Failed to load basic information" },
-      { status: 500 },
-    );
-  }
-}
-
-/* ======================== PUT ======================== */
-
-// All fields that may be updated via this endpoint
-const ALLOWED_FIELDS = new Set([
+/* ---------- Column list for the SELECT query ---------- */
+const BASIC_INFO_COLUMNS = [
   "date_of_birth",
   "gender",
   "blood_type",
@@ -130,7 +43,45 @@ const ALLOWED_FIELDS = new Set([
   "tertiary_address",
   "tertiary_year_graduated",
   "tertiary_program",
-]);
+] as const;
+
+/* ======================== GET ======================== */
+export async function GET(req: NextRequest) {
+  const applicantIdHeader = req.headers.get("x-applicant-id");
+  if (!applicantIdHeader) {
+    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+  }
+  const applicantId = Number(applicantIdHeader);
+
+  try {
+    const { data: row, error } = await supabase
+      .from("applicants")
+      .select(BASIC_INFO_COLUMNS.join(", "))
+      .eq("id", applicantId)
+      .limit(1)
+      .single();
+
+    if (error || !row) {
+      return NextResponse.json(
+        { error: "Applicant not found" },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({ data: row });
+  } catch (err) {
+    console.error("[GET /api/me/basic-info]", err);
+    return NextResponse.json(
+      { error: "Failed to load basic information" },
+      { status: 500 },
+    );
+  }
+}
+
+/* ======================== PUT ======================== */
+
+// All fields that may be updated via this endpoint
+const ALLOWED_FIELDS = new Set(BASIC_INFO_COLUMNS);
 
 export async function PUT(req: NextRequest) {
   const applicantIdHeader = req.headers.get("x-applicant-id");
@@ -147,27 +98,30 @@ export async function PUT(req: NextRequest) {
   }
 
   try {
-    const sets: string[] = [];
-    const params: Record<string, unknown> = { id: applicantId };
+    const updates: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(body)) {
-      if (!ALLOWED_FIELDS.has(key)) continue;
-      sets.push(`${key} = :${key}`);
+      if (!ALLOWED_FIELDS.has(key as (typeof BASIC_INFO_COLUMNS)[number]))
+        continue;
       // Convert empty strings to null
-      params[key] = value === "" ? null : value;
+      updates[key] = value === "" ? null : value;
     }
 
-    if (sets.length === 0) {
+    if (Object.keys(updates).length === 0) {
       return NextResponse.json(
         { error: "No valid fields to update" },
         { status: 400 },
       );
     }
 
-    await execute(
-      `UPDATE applicants SET ${sets.join(", ")} WHERE id = :id`,
-      params,
-    );
+    const { error } = await supabase
+      .from("applicants")
+      .update(updates)
+      .eq("id", applicantId);
+
+    if (error) {
+      throw error;
+    }
 
     return NextResponse.json({ message: "Basic information updated" });
   } catch (err) {

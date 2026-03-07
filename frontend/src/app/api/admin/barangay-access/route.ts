@@ -5,14 +5,18 @@
  * PATCH /api/admin/barangay-access — bulk-update which barangays are open
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query, execute } from "@db/connection";
+import { supabase } from "@db/connection";
 
 async function verifyAdmin(adminId: string): Promise<boolean> {
-  const [user] = await query<{ role: string }>(
-    `SELECT role FROM users WHERE id = :id AND role = 'admin' AND is_active = 1 LIMIT 1`,
-    { id: Number(adminId) },
-  );
-  return !!user;
+  const { data, error } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", Number(adminId))
+    .eq("role", "admin")
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+  return !error && !!data;
 }
 
 export async function GET(req: NextRequest) {
@@ -22,20 +26,18 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const rows = await query<{
-      id: number;
-      barangay: string;
-      is_open: boolean;
-      submission_open_date: Date | null;
-      submission_close_date: Date | null;
-      updated_at: string;
-    }>(
-      "SELECT id, barangay, is_open, submission_open_date, submission_close_date, updated_at FROM barangay_access ORDER BY barangay ASC",
-      {},
-    );
+    const { data: rows, error } = await supabase
+      .from("barangay_access")
+      .select(
+        "id, barangay, is_open, submission_open_date, submission_close_date, updated_at",
+      )
+      .order("barangay", { ascending: true });
 
-    // Normalize dates to YYYY-MM-DD strings (mysql2 returns Date objects)
-    const data = rows.map((r) => ({
+    if (error) throw error;
+
+    // Normalize dates to YYYY-MM-DD strings
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = (rows ?? []).map((r: Record<string, any>) => ({
       ...r,
       is_open: !!r.is_open,
       submission_open_date: r.submission_open_date
@@ -77,38 +79,36 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Close all first
-    await execute(
-      "UPDATE barangay_access SET is_open = 0, updated_by = :adminId",
-      { adminId: Number(adminId) },
-    );
+    const { error: closeAllError } = await supabase
+      .from("barangay_access")
+      .update({ is_open: false, updated_by: Number(adminId) })
+      .neq("id", 0); // match all rows
+
+    if (closeAllError) throw closeAllError;
 
     // Open selected ones
     if (openBarangays.length > 0) {
-      // Use individual updates since named placeholders don't support IN arrays easily
       for (const brgy of openBarangays) {
-        await execute(
-          "UPDATE barangay_access SET is_open = 1, updated_by = :adminId WHERE barangay = :barangay",
-          { adminId: Number(adminId), barangay: brgy },
-        );
+        const { error } = await supabase
+          .from("barangay_access")
+          .update({ is_open: true, updated_by: Number(adminId) })
+          .eq("barangay", brgy);
+        if (error) throw error;
       }
     }
 
     // Update submission date windows per barangay
     if (submissionDates && typeof submissionDates === "object") {
       for (const [brgy, dates] of Object.entries(submissionDates)) {
-        await execute(
-          `UPDATE barangay_access
-             SET submission_open_date  = :openDate,
-                 submission_close_date = :closeDate,
-                 updated_by = :adminId
-           WHERE barangay = :barangay`,
-          {
-            openDate: dates.open || null,
-            closeDate: dates.close || null,
-            adminId: Number(adminId),
-            barangay: brgy,
-          },
-        );
+        const { error } = await supabase
+          .from("barangay_access")
+          .update({
+            submission_open_date: dates.open || null,
+            submission_close_date: dates.close || null,
+            updated_by: Number(adminId),
+          })
+          .eq("barangay", brgy);
+        if (error) throw error;
       }
     }
 

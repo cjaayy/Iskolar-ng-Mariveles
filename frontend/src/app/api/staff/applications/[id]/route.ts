@@ -5,7 +5,7 @@
  * requirement submissions + validation history for the staff review panel.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@db/connection";
+import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
 interface RouteContext {
@@ -24,86 +24,113 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "Invalid id" }, { status: 400 });
     }
 
-    // Application + applicant details + full basic info
-    const [application] = await query(
-      `
-      SELECT
-        a.*,
-        u.full_name       AS applicant_name,
-        u.email           AS applicant_email,
-        ap.contact_number,
-        ap.address,
-        ap.date_of_birth,
-        ap.gender,
-        ap.blood_type,
-        ap.civil_status,
-        ap.maiden_name,
-        ap.spouse_name,
-        ap.spouse_occupation,
-        ap.religion,
-        ap.height_cm,
-        ap.weight_kg,
-        ap.birthplace,
-        ap.house_street,
-        ap.town,
-        ap.barangay,
-        ap.father_name,
-        ap.father_occupation,
-        ap.father_contact,
-        ap.mother_name,
-        ap.mother_occupation,
-        ap.mother_contact,
-        ap.guardian_name,
-        ap.guardian_relation,
-        ap.guardian_contact,
-        ap.primary_school,
-        ap.primary_address,
-        ap.primary_year_graduated,
-        ap.secondary_school,
-        ap.secondary_address,
-        ap.secondary_year_graduated,
-        ap.tertiary_school,
-        ap.tertiary_address,
-        ap.tertiary_year_graduated,
-        ap.tertiary_program
-      FROM applications a
-      JOIN applicants   ap ON ap.id = a.applicant_id
-      JOIN users         u ON u.id  = ap.user_id
-      WHERE a.id = :id
-      LIMIT 1
+    // Application + applicant details + user info via Supabase relations
+    const { data: appRow, error: appError } = await supabase
+      .from("applications")
+      .select(
+        `
+        *,
+        applicants!inner(
+          *,
+          users!inner(full_name, email)
+        )
       `,
-      { id },
-    );
+      )
+      .eq("id", id)
+      .maybeSingle();
 
-    if (!application) {
+    if (appError) throw appError;
+
+    if (!appRow) {
       return NextResponse.json(
         { error: "Application not found" },
         { status: 404 },
       );
     }
 
-    // All requirement submissions for this application
-    const submissions = await query<Record<string, unknown>>(
-      `
-      SELECT
-        rs.*,
-        vu.full_name AS validator_name
-      FROM requirement_submissions rs
-      LEFT JOIN users vu ON vu.id = rs.validated_by
-      WHERE rs.application_id = :application_id
-      ORDER BY rs.requirement_key
+    // Flatten the nested relation into the shape the original SQL returned
+    const applicant = appRow.applicants as Record<string, unknown> & {
+      users: { full_name: string; email: string };
+    };
+    const user = applicant.users;
+
+    const application: Record<string, unknown> = {
+      // application columns
+      id: appRow.id,
+      applicant_id: appRow.applicant_id,
+      status: appRow.status,
+      income_at_submission: appRow.income_at_submission,
+      submitted_at: appRow.submitted_at,
+      created_at: appRow.created_at,
+      updated_at: appRow.updated_at,
+      remarks: appRow.remarks,
+      // user columns
+      applicant_name: user.full_name,
+      applicant_email: user.email,
+      // applicant columns
+      contact_number: applicant.contact_number,
+      address: applicant.address,
+      date_of_birth: applicant.date_of_birth,
+      gender: applicant.gender,
+      blood_type: applicant.blood_type,
+      civil_status: applicant.civil_status,
+      maiden_name: applicant.maiden_name,
+      spouse_name: applicant.spouse_name,
+      spouse_occupation: applicant.spouse_occupation,
+      religion: applicant.religion,
+      height_cm: applicant.height_cm,
+      weight_kg: applicant.weight_kg,
+      birthplace: applicant.birthplace,
+      house_street: applicant.house_street,
+      town: applicant.town,
+      barangay: applicant.barangay,
+      father_name: applicant.father_name,
+      father_occupation: applicant.father_occupation,
+      father_contact: applicant.father_contact,
+      mother_name: applicant.mother_name,
+      mother_occupation: applicant.mother_occupation,
+      mother_contact: applicant.mother_contact,
+      guardian_name: applicant.guardian_name,
+      guardian_relation: applicant.guardian_relation,
+      guardian_contact: applicant.guardian_contact,
+      primary_school: applicant.primary_school,
+      primary_address: applicant.primary_address,
+      primary_year_graduated: applicant.primary_year_graduated,
+      secondary_school: applicant.secondary_school,
+      secondary_address: applicant.secondary_address,
+      secondary_year_graduated: applicant.secondary_year_graduated,
+      tertiary_school: applicant.tertiary_school,
+      tertiary_address: applicant.tertiary_address,
+      tertiary_year_graduated: applicant.tertiary_year_graduated,
+      tertiary_program: applicant.tertiary_program,
+    };
+
+    // All requirement submissions for this application, with validator name
+    const { data: submissions, error: subError } = await supabase
+      .from("requirement_submissions")
+      .select(
+        `
+        *,
+        validator:users!requirement_submissions_validated_by_fkey(full_name)
       `,
-      { application_id: id },
-    );
+      )
+      .eq("application_id", id)
+      .order("requirement_key", { ascending: true });
+
+    if (subError) throw subError;
 
     // Merge ALL requirement configs with actual submissions
     // so staff sees the full picture: submitted, pending, missing
     const subMap = Object.fromEntries(
-      submissions.map((s) => [s.requirement_key, s]),
+      (submissions ?? []).map((s: Record<string, unknown>) => [
+        s.requirement_key,
+        s,
+      ]),
     );
 
     const requirements = REQUIREMENT_CONFIGS.map((config, idx) => {
-      const sub = subMap[config.key] ?? null;
+      const sub = (subMap[config.key] as Record<string, unknown>) ?? null;
+      const validator = sub?.validator as { full_name: string } | null;
       return {
         id: sub ? (sub.id as number) : -(idx + 1), // negative id for unsubmitted
         application_id: id,
@@ -117,25 +144,40 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
         validated_by: (sub?.validated_by as number) ?? null,
         validated_at: (sub?.validated_at as string) ?? null,
         validator_notes: (sub?.validator_notes as string) ?? null,
-        validator_name: (sub?.validator_name as string) ?? null,
+        validator_name: validator?.full_name ?? null,
       };
     });
 
     // Validation history
-    const history = await query(
-      `
-      SELECT
-        v.*,
-        u.full_name AS validator_name
-      FROM validations v
-      JOIN users u ON u.id = v.validator_id
-      WHERE v.application_id = :application_id
-      ORDER BY v.created_at DESC
+    const { data: history, error: histError } = await supabase
+      .from("validations")
+      .select(
+        `
+        *,
+        validator:users!validations_validator_id_fkey(full_name)
       `,
-      { application_id: id },
-    );
+      )
+      .eq("application_id", id)
+      .order("created_at", { ascending: false });
 
-    return NextResponse.json({ data: application, requirements, history });
+    if (histError) throw histError;
+
+    // Flatten validator_name from the joined relation
+    const flatHistory = (history ?? []).map((h: Record<string, unknown>) => {
+      const val = h.validator as { full_name: string } | null;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { validator: _unused, ...rest } = h;
+      return {
+        ...rest,
+        validator_name: val?.full_name ?? null,
+      };
+    });
+
+    return NextResponse.json({
+      data: application,
+      requirements,
+      history: flatHistory,
+    });
   } catch (err) {
     console.error("[GET /api/staff/applications/:id]", err);
     return NextResponse.json(

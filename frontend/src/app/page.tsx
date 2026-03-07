@@ -7,7 +7,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, Sun, Moon, Monitor } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Sun, Moon } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui";
 import { useTheme } from "@/components/providers/ThemeProvider";

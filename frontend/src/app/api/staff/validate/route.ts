@@ -8,7 +8,7 @@
  *   Body: { applicationId, action: 'approved' | 'rejected', notes?: string }
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query, execute } from "@db/connection";
+import { supabase } from "@db/connection";
 
 // ─── PUT: validate a single requirement ──────────────────────────────────────
 
@@ -37,14 +37,13 @@ export async function PUT(req: NextRequest) {
     }
 
     // Check submission exists
-    const [submission] = await query<{
-      id: number;
-      application_id: number;
-      status: string;
-    }>(
-      "SELECT id, application_id, status FROM requirement_submissions WHERE id = :id LIMIT 1",
-      { id: submissionId },
-    );
+    const { data: submission, error: subError } = await supabase
+      .from("requirement_submissions")
+      .select("id, application_id, status")
+      .eq("id", submissionId)
+      .maybeSingle();
+
+    if (subError) throw subError;
 
     if (!submission) {
       return NextResponse.json(
@@ -53,54 +52,18 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Update submission status + record who validated
-    await execute(
-      `UPDATE requirement_submissions
-       SET status = :status,
-           validated_by = :validator_id,
-           validated_at = NOW(),
-           validator_notes = :notes
-       WHERE id = :id`,
+    // Call RPC to validate the single requirement
+    const { error: rpcError } = await supabase.rpc(
+      "validate_single_requirement",
       {
-        status: action,
-        validator_id: Number(validatorId),
-        notes: notes ?? null,
-        id: submissionId,
+        p_submission_id: submissionId,
+        p_validator_id: Number(validatorId),
+        p_action: action,
+        p_notes: notes ?? null,
       },
     );
 
-    // Check if all requirements for this application are now approved
-    const [counts] = await query<{
-      total: number;
-      approved: number;
-      pending: number;
-    }>(
-      `SELECT
-         COUNT(*) AS total,
-         SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) AS approved,
-         SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending
-       FROM requirement_submissions
-       WHERE application_id = :application_id`,
-      { application_id: submission.application_id },
-    );
-
-    // Auto-transition application status if all docs approved
-    if (
-      counts &&
-      Number(counts.total) > 0 &&
-      Number(counts.approved) === Number(counts.total)
-    ) {
-      await execute(
-        "UPDATE applications SET status = 'approved', remarks = 'All documents validated' WHERE id = :id AND status IN ('submitted', 'under_review')",
-        { id: submission.application_id },
-      );
-    } else if (action === "rejected") {
-      // If any document is rejected, move application to under_review if it was submitted
-      await execute(
-        "UPDATE applications SET status = 'under_review' WHERE id = :id AND status = 'submitted'",
-        { id: submission.application_id },
-      );
-    }
+    if (rpcError) throw rpcError;
 
     return NextResponse.json({
       message: `Document ${action} successfully`,
@@ -139,55 +102,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Bulk update all pending submissions for this application
-    const result = await execute(
-      `UPDATE requirement_submissions
-       SET status = :status,
-           validated_by = :validator_id,
-           validated_at = NOW(),
-           validator_notes = :notes
-       WHERE application_id = :application_id
-         AND status = 'pending'`,
+    // Call RPC to bulk validate all pending requirements
+    const { data: rpcResult, error: rpcError } = await supabase.rpc(
+      "bulk_validate_requirements",
       {
-        status: action,
-        validator_id: Number(validatorId),
-        notes: notes ?? null,
-        application_id: applicationId,
+        p_application_id: applicationId,
+        p_validator_id: Number(validatorId),
+        p_action: action,
+        p_notes: notes ?? null,
       },
     );
 
-    // Update application status accordingly
-    const newAppStatus = action === "approved" ? "approved" : "under_review";
-    await execute(
-      "UPDATE applications SET status = :status, remarks = :remarks WHERE id = :id",
-      {
-        status: newAppStatus,
-        remarks:
-          notes ??
-          (action === "approved"
-            ? "All documents approved by staff"
-            : "Documents need revision"),
-        id: applicationId,
-      },
-    );
+    if (rpcError) throw rpcError;
 
-    // Record in validations audit trail
-    await execute(
-      `INSERT INTO validations (application_id, validator_id, action, notes)
-       VALUES (:application_id, :validator_id, :action, :notes)`,
-      {
-        application_id: applicationId,
-        validator_id: Number(validatorId),
-        action,
-        notes: notes ?? null,
-      },
-    );
+    const affected = typeof rpcResult === "number" ? rpcResult : 0;
 
     return NextResponse.json({
-      message: `${result.affectedRows} document(s) ${action} successfully`,
+      message: `${affected} document(s) ${action} successfully`,
       applicationId,
       action,
-      affected: result.affectedRows,
+      affected,
     });
   } catch (err) {
     console.error("[POST /api/staff/validate]", err);

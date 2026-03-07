@@ -6,38 +6,19 @@
  * Admin only.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@db/connection";
+import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
-interface ApplicantListRow {
-  user_id: number;
-  email: string;
-  full_name: string;
-  is_active: boolean;
-  applicant_id: number;
-  contact_number: string | null;
-  created_at: string;
-  total_applications: number;
-  approved_applications: number;
-}
-
-interface ApplicationListRow {
-  id: number;
-  applicant_name: string;
-  status: string;
-  submitted_at: string | null;
-  barangay: string | null;
-  total_requirements: number;
-  approved_requirements: number;
-  pending_requirements: number;
-}
-
 async function verifyAdmin(adminId: string): Promise<boolean> {
-  const [user] = await query<{ role: string }>(
-    `SELECT role FROM users WHERE id = :id AND role = 'admin' AND is_active = 1 LIMIT 1`,
-    { id: Number(adminId) },
-  );
-  return !!user;
+  const { data, error } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", Number(adminId))
+    .eq("role", "admin")
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+  return !error && !!data;
 }
 
 export async function GET(req: NextRequest) {
@@ -64,118 +45,242 @@ export async function GET(req: NextRequest) {
     // ─── Applications view ────────────────────────────────────────────
     if (view === "applications") {
       const status = searchParams.get("status") || undefined;
-      const conditions: string[] = ["a.status != 'draft'"];
-      const bindValues: Record<string, unknown> = { limit, offset };
+
+      // Build the applications query
+      let q = supabase
+        .from("applications")
+        .select(
+          `
+          id,
+          status,
+          submitted_at,
+          updated_at,
+          applicants!inner(
+            id,
+            barangay,
+            users!inner(full_name)
+          )
+        `,
+        )
+        .neq("status", "draft");
 
       if (status && status !== "all") {
-        conditions.push("a.status = :status");
-        bindValues.status = status;
+        q = q.eq("status", status);
       }
       if (search) {
-        conditions.push("(u.full_name LIKE :search)");
-        bindValues.search = `%${search}%`;
+        q = q.ilike("applicants.users.full_name", `%${search}%`);
       }
 
-      const whereClause = `WHERE ${conditions.join(" AND ")}`;
-
-      const rows = await query<ApplicationListRow>(
-        `
-        SELECT
-          a.id,
-          a.status,
-          a.submitted_at,
-          u.full_name       AS applicant_name,
-          ap.barangay,
-          ${REQUIREMENT_CONFIGS.length} AS total_requirements,
-          (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'approved') AS approved_requirements,
-          (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'pending') AS pending_requirements
-        FROM applications a
-        JOIN applicants   ap ON ap.id = a.applicant_id
-        JOIN users         u ON u.id  = ap.user_id
-        ${whereClause}
-        ORDER BY
-          CASE a.status
-            WHEN 'submitted' THEN 1
-            WHEN 'under_review' THEN 2
-            WHEN 'returned' THEN 3
-            WHEN 'approved' THEN 4
-            WHEN 'rejected' THEN 5
-            ELSE 6
-          END,
-          a.updated_at DESC
-        LIMIT :limit OFFSET :offset
+      // Count total
+      let countQ = supabase
+        .from("applications")
+        .select(
+          `
+          id,
+          applicants!inner(
+            id,
+            users!inner(full_name)
+          )
         `,
-        bindValues,
-      );
+          { count: "exact", head: true },
+        )
+        .neq("status", "draft");
 
-      // Count
-      const countBindValues: Record<string, unknown> = {};
-      if (bindValues.status) countBindValues.status = bindValues.status;
-      if (bindValues.search) countBindValues.search = bindValues.search;
+      if (status && status !== "all") {
+        countQ = countQ.eq("status", status);
+      }
+      if (search) {
+        countQ = countQ.ilike("applicants.users.full_name", `%${search}%`);
+      }
 
-      const [{ total }] = await query<{ total: number }>(
-        `
-        SELECT COUNT(*) AS total
-        FROM applications a
-        JOIN applicants   ap ON ap.id = a.applicant_id
-        JOIN users         u ON u.id  = ap.user_id
-        ${whereClause}
-        `,
-        countBindValues,
-      );
+      const { count: total, error: countError } = await countQ;
+      if (countError) throw countError;
+
+      // Fetch paginated data -- manual sorting with status priority
+      const { data: appRows, error: appError } = await q
+        .order("updated_at", { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (appError) throw appError;
+
+      // Get all application IDs for requirement counts
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const appIds = (appRows ?? []).map((r: Record<string, any>) => r.id);
+      let submissions: { application_id: number; status: string }[] = [];
+      if (appIds.length > 0) {
+        const { data: subs, error: subError } = await supabase
+          .from("requirement_submissions")
+          .select("application_id, status")
+          .in("application_id", appIds);
+        if (subError) throw subError;
+        submissions = subs ?? [];
+      }
+
+      // Compute counts per application
+      const countsByApp: Record<
+        number,
+        { approved: number; pending: number }
+      > = {};
+      for (const sub of submissions) {
+        if (!countsByApp[sub.application_id]) {
+          countsByApp[sub.application_id] = { approved: 0, pending: 0 };
+        }
+        if (sub.status === "approved")
+          countsByApp[sub.application_id].approved++;
+        if (sub.status === "pending") countsByApp[sub.application_id].pending++;
+      }
+
+      // Sort by status priority, then updated_at desc
+      const statusOrder: Record<string, number> = {
+        submitted: 1,
+        under_review: 2,
+        returned: 3,
+        approved: 4,
+        rejected: 5,
+      };
+
+      const rows = (appRows ?? [])
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((r: Record<string, any>) => {
+          const applicant = r.applicants as unknown as {
+            barangay: string | null;
+            users: { full_name: string };
+          };
+          const counts = countsByApp[r.id] || { approved: 0, pending: 0 };
+          return {
+            id: r.id,
+            applicant_name: applicant.users.full_name,
+            status: r.status,
+            submitted_at: r.submitted_at,
+            barangay: applicant.barangay,
+            total_requirements: REQUIREMENT_CONFIGS.length,
+            approved_requirements: counts.approved,
+            pending_requirements: counts.pending,
+          };
+        })
+        .sort((a: { status: string }, b: { status: string }) => {
+          const sa = statusOrder[a.status] ?? 6;
+          const sb = statusOrder[b.status] ?? 6;
+          return sa - sb;
+        });
 
       return NextResponse.json({
         data: rows,
-        meta: { total, page, limit, pages: Math.ceil(total / limit) },
+        meta: {
+          total: total ?? 0,
+          page,
+          limit,
+          pages: Math.ceil((total ?? 0) / limit),
+        },
       });
     }
 
     // ─── Default: Applicants (people) view ────────────────────────────
-    const conditions: string[] = [];
-    const bindValues: Record<string, unknown> = { limit, offset };
+    let q = supabase
+      .from("users")
+      .select(
+        `
+        id,
+        email,
+        full_name,
+        is_active,
+        created_at,
+        applicants!inner(
+          id,
+          contact_number
+        )
+      `,
+      )
+      .eq("role", "applicant")
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (search) {
-      conditions.push("(u.full_name LIKE :search OR u.email LIKE :search)");
-      bindValues.search = `%${search}%`;
+      q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
     }
 
-    const whereClause =
-      conditions.length > 0 ? `AND ${conditions.join(" AND ")}` : "";
+    const { data: userRows, error: userError } = await q;
+    if (userError) throw userError;
 
-    const rows = await query<ApplicantListRow>(
-      `
-      SELECT
-        u.id            AS user_id,
-        u.email,
-        u.full_name,
-        u.is_active,
-        a.id            AS applicant_id,
-        a.contact_number,
-        u.created_at,
-        (SELECT COUNT(*) FROM applications ap WHERE ap.applicant_id = a.id) AS total_applications,
-        (SELECT COUNT(*) FROM applications ap WHERE ap.applicant_id = a.id AND ap.status = 'approved') AS approved_applications
-      FROM users u
-      JOIN applicants a ON a.user_id = u.id
-      WHERE u.role = 'applicant' ${whereClause}
-      ORDER BY u.created_at DESC
-      LIMIT :limit OFFSET :offset
-      `,
-      bindValues,
-    );
+    // Count total
+    let countQ = supabase
+      .from("users")
+      .select("id, applicants!inner(id)", { count: "exact", head: true })
+      .eq("role", "applicant");
 
-    const [{ total }] = await query<{ total: number }>(
-      `
-      SELECT COUNT(*) AS total
-      FROM users u
-      JOIN applicants a ON a.user_id = u.id
-      WHERE u.role = 'applicant' ${whereClause}
-      `,
-      search ? { search: bindValues.search } : {},
-    );
+    if (search) {
+      countQ = countQ.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
+    }
+
+    const { count: total, error: countError } = await countQ;
+    if (countError) throw countError;
+
+    // Get applicant IDs to fetch application counts
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const applicantIds = (userRows ?? []).map((u: Record<string, any>) => {
+      const applicant = u.applicants as unknown as { id: number };
+      return applicant.id;
+    });
+
+    let applicationCounts: Record<
+      number,
+      { total: number; approved: number }
+    > = {};
+
+    if (applicantIds.length > 0) {
+      const { data: apps, error: appsError } = await supabase
+        .from("applications")
+        .select("applicant_id, status")
+        .in("applicant_id", applicantIds);
+      if (appsError) throw appsError;
+
+      applicationCounts = (apps ?? []).reduce(
+        (
+          acc: Record<number, { total: number; approved: number }>,
+          row: { applicant_id: number; status: string },
+        ) => {
+          if (!acc[row.applicant_id]) {
+            acc[row.applicant_id] = { total: 0, approved: 0 };
+          }
+          acc[row.applicant_id].total++;
+          if (row.status === "approved") acc[row.applicant_id].approved++;
+          return acc;
+        },
+        {},
+      );
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rows = (userRows ?? []).map((u: Record<string, any>) => {
+      const applicant = u.applicants as unknown as {
+        id: number;
+        contact_number: string | null;
+      };
+      const counts = applicationCounts[applicant.id] || {
+        total: 0,
+        approved: 0,
+      };
+      return {
+        user_id: u.id,
+        email: u.email,
+        full_name: u.full_name,
+        is_active: u.is_active,
+        applicant_id: applicant.id,
+        contact_number: applicant.contact_number,
+        created_at: u.created_at,
+        total_applications: counts.total,
+        approved_applications: counts.approved,
+      };
+    });
 
     return NextResponse.json({
       data: rows,
-      meta: { total, page, limit, pages: Math.ceil(total / limit) },
+      meta: {
+        total: total ?? 0,
+        page,
+        limit,
+        pages: Math.ceil((total ?? 0) / limit),
+      },
     });
   } catch (err) {
     console.error("[GET /api/admin/applicants]", err);

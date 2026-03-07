@@ -5,7 +5,7 @@
  * Returns user profile + role so the client can redirect accordingly.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@db/connection";
+import { supabase } from "@db/connection";
 
 interface UserRow {
   id: number;
@@ -33,12 +33,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Look up user by email
-    const [user] = await query<UserRow>(
-      "SELECT * FROM users WHERE email = :email AND is_active = 1 LIMIT 1",
-      { email },
-    );
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .eq("is_active", true)
+      .limit(1)
+      .single<UserRow>();
 
-    if (!user) {
+    if (userError || !user) {
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 },
@@ -74,18 +77,24 @@ export async function POST(req: NextRequest) {
 
     // If applicant, also return applicant ID
     if (user.role === "applicant") {
-      const [applicant] = await query<ApplicantIdRow>(
-        "SELECT id FROM applicants WHERE user_id = :user_id LIMIT 1",
-        { user_id: user.id },
-      );
+      const { data: applicant } = await supabase
+        .from("applicants")
+        .select("id")
+        .eq("user_id", user.id)
+        .limit(1)
+        .single<ApplicantIdRow>();
+
       response.applicantId = applicant?.id ?? null;
 
       // Check barangay access — applicants can only login when their barangay is open
       if (applicant) {
-        const [applicantInfo] = await query<{ address: string | null }>(
-          "SELECT address FROM applicants WHERE id = :id LIMIT 1",
-          { id: applicant.id },
-        );
+        const { data: applicantInfo } = await supabase
+          .from("applicants")
+          .select("address")
+          .eq("id", applicant.id)
+          .limit(1)
+          .single<{ address: string | null }>();
+
         const address = applicantInfo?.address || "";
         // Extract barangay from address (format: "Brgy, Mariveles, Bataan" or "Street, Brgy, Mariveles, Bataan")
         const parts = address.split(",").map((p: string) => p.trim());
@@ -95,10 +104,13 @@ export async function POST(req: NextRequest) {
         const brgy = marivIdx > 0 ? parts[marivIdx - 1] : parts[0] || "";
 
         if (brgy) {
-          const [access] = await query<{ is_open: boolean }>(
-            "SELECT is_open FROM barangay_access WHERE barangay = :barangay LIMIT 1",
-            { barangay: brgy },
-          );
+          const { data: access } = await supabase
+            .from("barangay_access")
+            .select("is_open")
+            .eq("barangay", brgy)
+            .limit(1)
+            .single<{ is_open: boolean }>();
+
           if (access && !access.is_open) {
             return NextResponse.json(
               {

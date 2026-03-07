@@ -5,25 +5,8 @@
  * POST /api/me/requirements — submits (upserts) a requirement document.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query, execute } from "@db/connection";
+import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
-
-interface ApplicationRow {
-  id: number;
-  status: string;
-}
-
-interface SubmissionRow {
-  requirement_key: string;
-  status: string;
-  progress: number;
-  file_name: string | null;
-  file_url: string | null;
-  uploaded_at: Date | null;
-  notes: string | null;
-  validator_notes: string | null;
-  validated_at: Date | null;
-}
 
 export async function GET(req: NextRequest) {
   const applicantIdHeader = req.headers.get("x-applicant-id");
@@ -34,20 +17,15 @@ export async function GET(req: NextRequest) {
 
   try {
     // Latest application for this applicant
-    const [application] = await query<ApplicationRow>(
-      `
-      SELECT
-        a.id,
-        a.status
-      FROM applications a
-      WHERE a.applicant_id = :applicant_id
-      ORDER BY a.created_at DESC
-      LIMIT 1
-    `,
-      { applicant_id: applicantId },
-    );
+    const { data: application, error: appError } = await supabase
+      .from("applications")
+      .select("id, status")
+      .eq("applicant_id", applicantId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
 
-    if (!application) {
+    if (appError || !application) {
       // No application yet — still show the requirement checklist (all "missing")
       const requirements = REQUIREMENT_CONFIGS.map((config, idx) => ({
         id: idx + 1,
@@ -71,23 +49,26 @@ export async function GET(req: NextRequest) {
     }
 
     // All submission statuses for this application
-    const submissions = await query<SubmissionRow>(
-      `
-      SELECT requirement_key, status, progress, file_name, file_url, uploaded_at, notes, validator_notes, validated_at
-      FROM requirement_submissions
-      WHERE application_id = :application_id
-    `,
-      { application_id: application.id },
-    );
+    const { data: submissions, error: subError } = await supabase
+      .from("requirement_submissions")
+      .select(
+        "requirement_key, status, progress, file_name, file_url, uploaded_at, notes, validator_notes, validated_at",
+      )
+      .eq("application_id", application.id);
+
+    if (subError) {
+      throw subError;
+    }
 
     const subMap = Object.fromEntries(
-      submissions.map((s) => [s.requirement_key, s]),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (submissions ?? []).map((s: Record<string, any>) => [s.requirement_key, s]),
     );
 
     // Merge static config with DB submission data
     const requirements = REQUIREMENT_CONFIGS.map((config, idx) => {
       const sub = subMap[config.key] ?? null;
-      // Normalise DB enum "in_progress" → "in-progress" for the UI
+      // Normalise DB enum "in_progress" -> "in-progress" for the UI
       const rawStatus = sub?.status ?? "missing";
       const status =
         rawStatus === "in_progress"
@@ -129,11 +110,11 @@ export async function GET(req: NextRequest) {
   }
 }
 
-/* ── POST /api/me/requirements ──────────────────────────────────────────────
+/* -- POST /api/me/requirements ------------------------------------------------
    Upserts a requirement submission for the applicant's latest application.
    Body: { requirementKey: string, fileName?: string, notes?: string }
-   Sets status → "pending" (awaiting review), progress → 100.
-────────────────────────────────────────────────────────────────────────────── */
+   Sets status -> "pending" (awaiting review), progress -> 100.
+----------------------------------------------------------------------------- */
 export async function POST(req: NextRequest) {
   const applicantIdHeader = req.headers.get("x-applicant-id");
   if (!applicantIdHeader) {
@@ -158,10 +139,17 @@ export async function POST(req: NextRequest) {
 
   try {
     // Check barangay access before allowing submission
-    const [applicantInfo] = await query<{ address: string | null }>(
-      "SELECT address FROM applicants WHERE id = :id LIMIT 1",
-      { id: applicantId },
-    );
+    const { data: applicantInfo, error: applicantInfoError } = await supabase
+      .from("applicants")
+      .select("address")
+      .eq("id", applicantId)
+      .limit(1)
+      .single();
+
+    if (applicantInfoError) {
+      throw applicantInfoError;
+    }
+
     const address = applicantInfo?.address || "";
     const parts = address.split(",").map((p: string) => p.trim());
     const marivIdx = parts.findIndex((p: string) =>
@@ -170,14 +158,12 @@ export async function POST(req: NextRequest) {
     const brgy = marivIdx > 0 ? parts[marivIdx - 1] : parts[0] || "";
 
     if (brgy) {
-      const [access] = await query<{
-        is_open: boolean;
-        submission_open_date: string | null;
-        submission_close_date: string | null;
-      }>(
-        "SELECT is_open, submission_open_date, submission_close_date FROM barangay_access WHERE barangay = :barangay LIMIT 1",
-        { barangay: brgy },
-      );
+      const { data: access } = await supabase
+        .from("barangay_access")
+        .select("is_open, submission_open_date, submission_close_date")
+        .eq("barangay", brgy)
+        .limit(1)
+        .single();
 
       if (access) {
         const isOpen = !!access.is_open;
@@ -212,20 +198,20 @@ export async function POST(req: NextRequest) {
             { status: 403 },
           );
         }
-        // If open with no dates → allowed (no expiry)
+        // If open with no dates -> allowed (no expiry)
       }
     }
 
     // Get the applicant's latest application
-    const [application] = await query<{ id: number }>(
-      `SELECT id FROM applications
-       WHERE applicant_id = :applicant_id
-       ORDER BY created_at DESC
-       LIMIT 1`,
-      { applicant_id: applicantId },
-    );
+    const { data: application, error: applicationError } = await supabase
+      .from("applications")
+      .select("id")
+      .eq("applicant_id", applicantId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
 
-    if (!application) {
+    if (applicationError || !application) {
       return NextResponse.json(
         { error: "No application found for this applicant" },
         { status: 404 },
@@ -233,35 +219,39 @@ export async function POST(req: NextRequest) {
     }
 
     // Upsert submission row — status becomes "pending" (under review), progress = 100
-    await execute(
-      `INSERT INTO requirement_submissions
-         (application_id, requirement_key, status, progress, file_name, file_url, uploaded_at, notes)
-       VALUES (:application_id, :requirement_key, 'pending', 100, :file_name, :file_url, NOW(), :notes)
-       ON DUPLICATE KEY UPDATE
-         status      = 'pending',
-         progress    = 100,
-         file_name   = VALUES(file_name),
-         file_url    = VALUES(file_url),
-         uploaded_at = NOW(),
-         notes       = VALUES(notes),
-         validated_by    = NULL,
-         validated_at    = NULL,
-         validator_notes = NULL`,
-      {
-        application_id: application.id,
-        requirement_key: requirementKey,
-        file_name: fileName ?? null,
-        file_url: fileUrl ?? null,
-        notes: notes ?? null,
-      },
-    );
+    const { error: upsertError } = await supabase
+      .from("requirement_submissions")
+      .upsert(
+        {
+          application_id: application.id,
+          requirement_key: requirementKey,
+          status: "pending",
+          progress: 100,
+          file_name: fileName ?? null,
+          file_url: fileUrl ?? null,
+          uploaded_at: new Date().toISOString(),
+          notes: notes ?? null,
+          validated_by: null,
+          validated_at: null,
+          validator_notes: null,
+        },
+        { onConflict: "application_id,requirement_key" },
+      );
+
+    if (upsertError) {
+      throw upsertError;
+    }
 
     // Move application back to under_review so staff knows there's new docs to review
-    await execute(
-      `UPDATE applications SET status = 'under_review'
-       WHERE id = :id AND status IN ('approved', 'rejected')`,
-      { id: application.id },
-    );
+    const { error: statusError } = await supabase
+      .from("applications")
+      .update({ status: "under_review" })
+      .eq("id", application.id)
+      .in("status", ["approved", "rejected"]);
+
+    if (statusError) {
+      throw statusError;
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {

@@ -5,7 +5,7 @@
  * PUT /api/me — handled in /api/me/profile/route.ts
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@db/connection";
+import { supabase } from "@db/connection";
 
 interface MeRow {
   user_id: number;
@@ -15,10 +15,6 @@ interface MeRow {
   applicant_id: number;
   contact_number: string | null;
   address: string | null;
-}
-
-interface ApplicationLink {
-  app_status: string;
 }
 
 function profileCompletion(row: MeRow): number {
@@ -39,45 +35,61 @@ export async function GET(req: NextRequest) {
   const applicantId = Number(applicantIdHeader);
 
   try {
-    const [row] = await query<MeRow>(
-      `
-      SELECT
-        u.id            AS user_id,
-        u.email,
-        u.full_name,
-        u.role,
-        a.id            AS applicant_id,
-        a.contact_number,
-        a.address
-      FROM applicants a
-      JOIN users u ON u.id = a.user_id
-      WHERE a.id = :applicant_id
-      LIMIT 1
-    `,
-      { applicant_id: applicantId },
-    );
+    // SELECT from applicants JOIN users
+    const { data: applicantRow, error: applicantError } = await supabase
+      .from("applicants")
+      .select(
+        `
+        id,
+        contact_number,
+        address,
+        users!inner(id, email, full_name, role)
+      `,
+      )
+      .eq("id", applicantId)
+      .limit(1)
+      .single();
 
-    if (!row) {
+    if (applicantError || !applicantRow) {
       return NextResponse.json(
         { error: "Applicant not found" },
         { status: 404 },
       );
     }
 
+    // Supabase returns the joined table as an object (or array depending on relation).
+    // With !inner and a belongs-to relation (many-to-one), it returns a single object.
+    const user = applicantRow.users as unknown as {
+      id: number;
+      email: string;
+      full_name: string;
+      role: string;
+    };
+
+    const row: MeRow = {
+      user_id: user.id,
+      email: user.email,
+      full_name: user.full_name,
+      role: user.role,
+      applicant_id: applicantRow.id,
+      contact_number: applicantRow.contact_number,
+      address: applicantRow.address,
+    };
+
     const nameParts = row.full_name.trim().split(/\s+/);
     const firstName = nameParts[0] ?? "";
     const lastName = nameParts.slice(1).join(" ");
 
-    const applications = await query<ApplicationLink>(
-      `
-      SELECT
-        app.status AS app_status
-      FROM applications app
-      WHERE app.applicant_id = :applicant_id
-      ORDER BY app.created_at DESC
-    `,
-      { applicant_id: applicantId },
-    );
+    // SELECT from applications for status
+    const { data: applications, error: appError } = await supabase
+      .from("applications")
+      .select("status")
+      .eq("applicant_id", applicantId)
+      .order("created_at", { ascending: false });
+
+    if (appError) {
+      throw appError;
+    }
 
     return NextResponse.json({
       user: {
@@ -92,12 +104,14 @@ export async function GET(req: NextRequest) {
         address: row.address,
         profileCompletion: profileCompletion(row),
       },
-      scholarships: applications.map((a) => ({
-        name: "Iskolar ng Mariveles",
-        grantor: "LGU Mariveles",
-        status: ["approved"].includes(a.app_status) ? "active" : "pending",
-        award: "LGU Mariveles",
-      })),
+      scholarships: (applications ?? []).map(
+        (a: { status: string }) => ({
+          name: "Iskolar ng Mariveles",
+          grantor: "LGU Mariveles",
+          status: ["approved"].includes(a.status) ? "active" : "pending",
+          award: "LGU Mariveles",
+        }),
+      ),
     });
   } catch (err) {
     console.error("[GET /api/me]", err);

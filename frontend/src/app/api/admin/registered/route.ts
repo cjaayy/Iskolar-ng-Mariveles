@@ -6,15 +6,19 @@
  * Supports ?barangay= filter and ?search= for name/email.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@db/connection";
+import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
 async function verifyAdmin(adminId: string): Promise<boolean> {
-  const [user] = await query<{ role: string }>(
-    `SELECT role FROM users WHERE id = :id AND role = 'admin' AND is_active = 1 LIMIT 1`,
-    { id: Number(adminId) },
-  );
-  return !!user;
+  const { data, error } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", Number(adminId))
+    .eq("role", "admin")
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+  return !error && !!data;
 }
 
 interface ApplicantRow {
@@ -43,43 +47,106 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search") || undefined;
     const barangay = searchParams.get("barangay") || undefined;
 
-    const conditions: string[] = ["a.status != 'draft'"];
-    const bind: Record<string, unknown> = {};
-
-    if (search) {
-      conditions.push("(u.full_name LIKE :search OR u.email LIKE :search)");
-      bind.search = `%${search}%`;
-    }
-    if (barangay) {
-      conditions.push("ap.barangay = :barangay");
-      bind.barangay = barangay;
-    }
-
-    const whereClause = `WHERE ${conditions.join(" AND ")}`;
-
-    const rows = await query<ApplicantRow>(
-      `
-      SELECT
-        a.id              AS application_id,
-        ap.id             AS applicant_id,
-        u.full_name       AS applicant_name,
-        u.email,
-        ap.barangay,
-        a.status,
-        a.submitted_at,
-        ${REQUIREMENT_CONFIGS.length} AS total_requirements,
-        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id) AS submitted_requirements,
-        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'approved') AS approved_requirements,
-        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'pending') AS pending_requirements,
-        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'rejected') AS rejected_requirements
-      FROM applications a
-      JOIN applicants   ap ON ap.id = a.applicant_id
-      JOIN users         u ON u.id  = ap.user_id
-      ${whereClause}
-      ORDER BY a.updated_at DESC
+    // Build query
+    let q = supabase
+      .from("applications")
+      .select(
+        `
+        id,
+        status,
+        submitted_at,
+        updated_at,
+        applicants!inner(
+          id,
+          barangay,
+          users!inner(full_name, email)
+        )
       `,
-      bind,
-    );
+      )
+      .neq("status", "draft")
+      .order("updated_at", { ascending: false });
+
+    if (barangay) {
+      q = q.eq("applicants.barangay", barangay);
+    }
+    if (search) {
+      q = q.or(
+        `users.full_name.ilike.%${search}%,users.email.ilike.%${search}%`,
+        { referencedTable: "applicants.users" },
+      );
+    }
+
+    const { data: appRows, error: appError } = await q;
+    if (appError) throw appError;
+
+    // Fetch requirement submissions for all applications
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const appIds = (appRows ?? []).map((r: Record<string, any>) => r.id);
+    let submissions: { application_id: number; status: string }[] = [];
+    if (appIds.length > 0) {
+      const { data: subs, error: subError } = await supabase
+        .from("requirement_submissions")
+        .select("application_id, status")
+        .in("application_id", appIds);
+      if (subError) throw subError;
+      submissions = subs ?? [];
+    }
+
+    // Compute counts per application
+    const countsByApp: Record<
+      number,
+      {
+        submitted: number;
+        approved: number;
+        pending: number;
+        rejected: number;
+      }
+    > = {};
+    for (const sub of submissions) {
+      if (!countsByApp[sub.application_id]) {
+        countsByApp[sub.application_id] = {
+          submitted: 0,
+          approved: 0,
+          pending: 0,
+          rejected: 0,
+        };
+      }
+      const c = countsByApp[sub.application_id];
+      c.submitted++;
+      if (sub.status === "approved") c.approved++;
+      if (sub.status === "pending") c.pending++;
+      if (sub.status === "rejected") c.rejected++;
+    }
+
+    // Build rows
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rows: ApplicantRow[] = (appRows ?? []).map((r: Record<string, any>) => {
+      const applicant = r.applicants as unknown as {
+        id: number;
+        barangay: string | null;
+        users: { full_name: string; email: string };
+      };
+      const counts = countsByApp[r.id] || {
+        submitted: 0,
+        approved: 0,
+        pending: 0,
+        rejected: 0,
+      };
+      return {
+        application_id: r.id,
+        applicant_id: applicant.id,
+        applicant_name: applicant.users.full_name,
+        email: applicant.users.email,
+        barangay: applicant.barangay,
+        status: r.status,
+        submitted_at: r.submitted_at,
+        total_requirements: REQUIREMENT_CONFIGS.length,
+        submitted_requirements: counts.submitted,
+        approved_requirements: counts.approved,
+        pending_requirements: counts.pending,
+        rejected_requirements: counts.rejected,
+      };
+    });
 
     // Group by barangay
     const grouped: Record<string, ApplicantRow[]> = {};

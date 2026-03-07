@@ -5,23 +5,17 @@
  * Supports filtering by status and search by applicant name / student number.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@db/connection";
+import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
-interface StaffApplicationRow {
-  id: number;
-  applicant_id: number;
-  status: string;
-  income_at_submission: number | null;
-  submitted_at: string | null;
-  created_at: string;
-  updated_at: string;
-  remarks: string | null;
-  applicant_name: string;
-  total_requirements: number;
-  approved_requirements: number;
-  pending_requirements: number;
-}
+// Status priority for sorting (lower = higher priority)
+const STATUS_PRIORITY: Record<string, number> = {
+  submitted: 1,
+  under_review: 2,
+  returned: 3,
+  approved: 4,
+  rejected: 5,
+};
 
 export async function GET(req: NextRequest) {
   // Validate staff/validator identity
@@ -32,10 +26,15 @@ export async function GET(req: NextRequest) {
 
   try {
     // Look up this validator's assigned barangay
-    const [validator] = await query<{ assigned_barangay: string | null }>(
-      `SELECT assigned_barangay FROM users WHERE id = :id AND role = 'validator' LIMIT 1`,
-      { id: Number(validatorId) },
-    );
+    const { data: validator, error: valError } = await supabase
+      .from("users")
+      .select("assigned_barangay")
+      .eq("id", Number(validatorId))
+      .eq("role", "validator")
+      .limit(1)
+      .maybeSingle();
+
+    if (valError) throw valError;
     const assignedBarangay = validator?.assigned_barangay ?? null;
 
     const { searchParams } = req.nextUrl;
@@ -48,107 +47,155 @@ export async function GET(req: NextRequest) {
     );
     const offset = (page - 1) * limit;
 
-    const conditions: string[] = [];
-    const bindValues: Record<string, unknown> = { limit, offset };
+    // ── Build data query ──────────────────────────────────────────────────────
+    let dataQuery = supabase
+      .from("applications")
+      .select(
+        `
+        id,
+        applicant_id,
+        status,
+        income_at_submission,
+        submitted_at,
+        created_at,
+        updated_at,
+        remarks,
+        applicants!inner(
+          barangay,
+          users!inner(full_name)
+        )
+      `,
+      )
+      .neq("status", "draft")
+      .order("updated_at", { ascending: false });
 
-    // Only show submitted+ applications (not drafts)
-    conditions.push("a.status != 'draft'");
+    // ── Build count query ─────────────────────────────────────────────────────
+    let countQuery = supabase
+      .from("applications")
+      .select(
+        "*, applicants!inner(barangay, users!inner(full_name))",
+        { count: "exact", head: true },
+      )
+      .neq("status", "draft");
 
-    // Filter by assigned barangay if validator has one
+    // ── Build summary query (all non-draft, filtered by barangay) ─────────
+    let summaryQuery = supabase
+      .from("applications")
+      .select(
+        "status, applicants!inner(barangay)",
+      )
+      .neq("status", "draft");
+
+    // ── Apply filters ─────────────────────────────────────────────────────────
+    // Filter by assigned barangay
     if (assignedBarangay) {
-      conditions.push("ap.barangay = :assignedBarangay");
-      bindValues.assignedBarangay = assignedBarangay;
+      dataQuery = dataQuery.eq("applicants.barangay", assignedBarangay);
+      countQuery = countQuery.eq("applicants.barangay", assignedBarangay);
+      summaryQuery = summaryQuery.eq("applicants.barangay", assignedBarangay);
     }
 
+    // Filter by status
     if (status && status !== "all") {
-      conditions.push("a.status = :status");
-      bindValues.status = status;
+      dataQuery = dataQuery.eq("status", status);
+      countQuery = countQuery.eq("status", status);
     }
 
+    // Search by applicant name
     if (search) {
-      conditions.push("(u.full_name LIKE :search)");
-      bindValues.search = `%${search}%`;
+      dataQuery = dataQuery.ilike("applicants.users.full_name", `%${search}%`);
+      countQuery = countQuery.ilike(
+        "applicants.users.full_name",
+        `%${search}%`,
+      );
     }
 
-    const whereClause =
-      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    // ── Execute queries in parallel ───────────────────────────────────────────
+    const [
+      { data: rows, error: dataError },
+      { count: totalCount, error: countError },
+      { data: summaryRows, error: summaryError },
+    ] = await Promise.all([
+      dataQuery.range(offset, offset + limit - 1),
+      countQuery,
+      summaryQuery,
+    ]);
 
-    const rows = await query<StaffApplicationRow>(
-      `
-      SELECT
-        a.id,
-        a.applicant_id,
-        a.status,
-        a.income_at_submission,
-        a.submitted_at,
-        a.created_at,
-        a.updated_at,
-        a.remarks,
-        u.full_name       AS applicant_name,
-        ${REQUIREMENT_CONFIGS.length} AS total_requirements,
-        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'approved') AS approved_requirements,
-        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'pending') AS pending_requirements
-      FROM applications a
-      JOIN applicants   ap ON ap.id = a.applicant_id
-      JOIN users         u ON u.id  = ap.user_id
-      ${whereClause}
-      ORDER BY
-        CASE a.status
-          WHEN 'submitted' THEN 1
-          WHEN 'under_review' THEN 2
-          WHEN 'returned' THEN 3
-          WHEN 'approved' THEN 4
-          WHEN 'rejected' THEN 5
-          ELSE 6
-        END,
-        a.updated_at DESC
-      LIMIT :limit OFFSET :offset
-      `,
-      bindValues,
+    if (dataError) throw dataError;
+    if (countError) throw countError;
+    if (summaryError) throw summaryError;
+
+    const applicationIds = (rows ?? []).map(
+      (r: Record<string, unknown>) => r.id as number,
     );
 
-    // Count total
-    const countBindValues: Record<string, unknown> = {};
-    if (assignedBarangay) {
-      countBindValues.assignedBarangay = assignedBarangay;
+    // ── Fetch requirement submission counts ───────────────────────────────────
+    const approvedMap: Record<number, number> = {};
+    const pendingMap: Record<number, number> = {};
+
+    if (applicationIds.length > 0) {
+      const { data: submissions, error: subError } = await supabase
+        .from("requirement_submissions")
+        .select("application_id, status")
+        .in("application_id", applicationIds);
+
+      if (subError) throw subError;
+
+      for (const sub of submissions ?? []) {
+        const appId = sub.application_id as number;
+        if (sub.status === "approved") {
+          approvedMap[appId] = (approvedMap[appId] ?? 0) + 1;
+        } else if (sub.status === "pending") {
+          pendingMap[appId] = (pendingMap[appId] ?? 0) + 1;
+        }
+      }
     }
-    if (bindValues.status) countBindValues.status = bindValues.status;
-    if (bindValues.search) countBindValues.search = bindValues.search;
 
-    const [{ total }] = await query<{ total: number }>(
-      `
-      SELECT COUNT(*) AS total
-      FROM applications a
-      JOIN applicants   ap ON ap.id = a.applicant_id
-      JOIN users         u ON u.id  = ap.user_id
-      ${whereClause}
-      `,
-      countBindValues,
-    );
+    // ── Flatten and merge ─────────────────────────────────────────────────────
+    const data = (rows ?? []).map((row: Record<string, unknown>) => {
+      const applicants = row.applicants as {
+        barangay: string | null;
+        users: { full_name: string };
+      };
+      const appId = row.id as number;
+      return {
+        id: row.id,
+        applicant_id: row.applicant_id,
+        status: row.status,
+        income_at_submission: row.income_at_submission,
+        submitted_at: row.submitted_at,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        remarks: row.remarks,
+        applicant_name: applicants?.users?.full_name ?? "",
+        total_requirements: REQUIREMENT_CONFIGS.length,
+        approved_requirements: approvedMap[appId] ?? 0,
+        pending_requirements: pendingMap[appId] ?? 0,
+      };
+    });
 
-    // Status summary counts (filtered by barangay if assigned)
-    const summaryConditions: string[] = ["a.status != 'draft'"];
-    const summaryBindValues: Record<string, unknown> = {};
-    if (assignedBarangay) {
-      summaryConditions.push("ap.barangay = :assignedBarangay");
-      summaryBindValues.assignedBarangay = assignedBarangay;
+    // Sort by status priority, then by updated_at DESC
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data.sort((a: Record<string, any>, b: Record<string, any>) => {
+      const aPriority = STATUS_PRIORITY[a.status as string] ?? 6;
+      const bPriority = STATUS_PRIORITY[b.status as string] ?? 6;
+      if (aPriority !== bPriority) return aPriority - bPriority;
+      return (
+        new Date(b.updated_at as string).getTime() -
+        new Date(a.updated_at as string).getTime()
+      );
+    });
+
+    // ── Build status summary ──────────────────────────────────────────────────
+    const summary: Record<string, number> = {};
+    for (const row of summaryRows ?? []) {
+      const s = (row as Record<string, unknown>).status as string;
+      summary[s] = (summary[s] ?? 0) + 1;
     }
-    const statusCounts = await query<{ status: string; count: number }>(
-      `
-      SELECT a.status, COUNT(*) AS count
-      FROM applications a
-      JOIN applicants ap ON ap.id = a.applicant_id
-      WHERE ${summaryConditions.join(" AND ")}
-      GROUP BY a.status
-      `,
-      summaryBindValues,
-    );
-    const summary = Object.fromEntries(
-      statusCounts.map((r) => [r.status, Number(r.count)]),
-    );
+
+    const total = totalCount ?? 0;
 
     return NextResponse.json({
-      data: rows,
+      data,
       summary,
       meta: { total, page, limit, pages: Math.ceil(total / limit) },
     });

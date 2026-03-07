@@ -6,7 +6,7 @@
  * Supports ?barangay= filter.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@db/connection";
+import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
 interface ApplicantRow {
@@ -32,56 +32,121 @@ export async function GET(req: NextRequest) {
 
   try {
     // Look up this validator's assigned barangay
-    const [validator] = await query<{ assigned_barangay: string | null }>(
-      `SELECT assigned_barangay FROM users WHERE id = :id AND role = 'validator' LIMIT 1`,
-      { id: Number(validatorId) },
-    );
+    const { data: validator, error: valError } = await supabase
+      .from("users")
+      .select("assigned_barangay")
+      .eq("id", Number(validatorId))
+      .eq("role", "validator")
+      .limit(1)
+      .maybeSingle();
+
+    if (valError) throw valError;
     const assignedBarangay = validator?.assigned_barangay ?? null;
 
     const { searchParams } = req.nextUrl;
     const barangayFilter = searchParams.get("barangay") || undefined;
 
-    const conditions: string[] = ["a.status != 'draft'"];
-    const bindValues: Record<string, unknown> = {};
+    // ── Build query ───────────────────────────────────────────────────────────
+    let dataQuery = supabase
+      .from("applications")
+      .select(
+        `
+        id,
+        applicant_id,
+        status,
+        submitted_at,
+        applicants!inner(
+          id,
+          barangay,
+          users!inner(full_name, email)
+        )
+      `,
+      )
+      .neq("status", "draft")
+      .order("updated_at", { ascending: false });
 
-    // If validator has an assigned barangay, only show applicants from that barangay
+    // Filter by assigned barangay or by query param
     if (assignedBarangay) {
-      conditions.push("ap.barangay = :assignedBarangay");
-      bindValues.assignedBarangay = assignedBarangay;
+      dataQuery = dataQuery.eq("applicants.barangay", assignedBarangay);
     } else if (barangayFilter) {
-      conditions.push("ap.barangay = :brgySearch");
-      bindValues.brgySearch = barangayFilter;
+      dataQuery = dataQuery.eq("applicants.barangay", barangayFilter);
     }
 
-    const whereClause = `WHERE ${conditions.join(" AND ")}`;
+    const { data: rows, error: dataError } = await dataQuery;
+    if (dataError) throw dataError;
 
-    const rows = await query<ApplicantRow>(
-      `
-      SELECT
-        a.id              AS application_id,
-        ap.id             AS applicant_id,
-        u.full_name       AS applicant_name,
-        u.email,
-        ap.barangay,
-        a.status,
-        a.submitted_at,
-        ${REQUIREMENT_CONFIGS.length} AS total_requirements,
-        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id) AS submitted_requirements,
-        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'approved') AS approved_requirements,
-        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'pending') AS pending_requirements,
-        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'rejected') AS rejected_requirements
-      FROM applications a
-      JOIN applicants   ap ON ap.id = a.applicant_id
-      JOIN users         u ON u.id  = ap.user_id
-      ${whereClause}
-      ORDER BY a.updated_at DESC
-      `,
-      bindValues,
+    const applicationIds = (rows ?? []).map(
+      (r: Record<string, unknown>) => r.id as number,
+    );
+
+    // ── Fetch requirement submissions and compute counts in JS ────────────
+    const submissionsByApp: Record<
+      number,
+      { submitted: number; approved: number; pending: number; rejected: number }
+    > = {};
+
+    if (applicationIds.length > 0) {
+      const { data: submissions, error: subError } = await supabase
+        .from("requirement_submissions")
+        .select("application_id, status")
+        .in("application_id", applicationIds);
+
+      if (subError) throw subError;
+
+      for (const sub of submissions ?? []) {
+        const appId = sub.application_id as number;
+        if (!submissionsByApp[appId]) {
+          submissionsByApp[appId] = {
+            submitted: 0,
+            approved: 0,
+            pending: 0,
+            rejected: 0,
+          };
+        }
+        submissionsByApp[appId].submitted += 1;
+        if (sub.status === "approved") submissionsByApp[appId].approved += 1;
+        else if (sub.status === "pending") submissionsByApp[appId].pending += 1;
+        else if (sub.status === "rejected")
+          submissionsByApp[appId].rejected += 1;
+      }
+    }
+
+    // ── Flatten and merge ─────────────────────────────────────────────────────
+    const flatRows: ApplicantRow[] = (rows ?? []).map(
+      (row: Record<string, unknown>) => {
+        const applicants = row.applicants as {
+          id: number;
+          barangay: string | null;
+          users: { full_name: string; email: string };
+        };
+        const appId = row.id as number;
+        const counts = submissionsByApp[appId] ?? {
+          submitted: 0,
+          approved: 0,
+          pending: 0,
+          rejected: 0,
+        };
+
+        return {
+          application_id: appId,
+          applicant_id: applicants.id,
+          applicant_name: applicants.users.full_name,
+          email: applicants.users.email,
+          barangay: applicants.barangay,
+          status: row.status as string,
+          submitted_at: row.submitted_at as string | null,
+          total_requirements: REQUIREMENT_CONFIGS.length,
+          submitted_requirements: counts.submitted,
+          approved_requirements: counts.approved,
+          pending_requirements: counts.pending,
+          rejected_requirements: counts.rejected,
+        };
+      },
     );
 
     // Group by barangay
     const grouped: Record<string, ApplicantRow[]> = {};
-    for (const row of rows) {
+    for (const row of flatRows) {
       const brgy = row.barangay || "Unknown";
       if (!grouped[brgy]) grouped[brgy] = [];
       grouped[brgy].push(row);
@@ -101,7 +166,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       grouped,
       summary: barangaySummary,
-      total: rows.length,
+      total: flatRows.length,
     });
   } catch (err) {
     console.error("[GET /api/staff/barangays]", err);

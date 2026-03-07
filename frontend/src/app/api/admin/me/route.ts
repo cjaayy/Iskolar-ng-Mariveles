@@ -4,14 +4,7 @@
  * GET /api/admin/me — returns admin user profile info.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@db/connection";
-
-interface AdminUserRow {
-  id: number;
-  email: string;
-  full_name: string;
-  role: string;
-}
+import { supabase } from "@db/connection";
 
 export async function GET(req: NextRequest) {
   const adminId = req.headers.get("x-admin-id");
@@ -20,15 +13,16 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const [user] = await query<AdminUserRow>(
-      `SELECT id, email, full_name, role
-       FROM users
-       WHERE id = :id AND role = 'admin' AND is_active = 1
-       LIMIT 1`,
-      { id: Number(adminId) },
-    );
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("id, email, full_name, role")
+      .eq("id", Number(adminId))
+      .eq("role", "admin")
+      .eq("is_active", true)
+      .limit(1)
+      .single();
 
-    if (!user) {
+    if (error || !user) {
       return NextResponse.json(
         { error: "Admin user not found" },
         { status: 404 },

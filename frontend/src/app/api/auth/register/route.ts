@@ -7,16 +7,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { pool } from "@db/connection";
-
-interface TokenRow {
-  id: number;
-  token: string;
-  max_uses: number;
-  times_used: number;
-  expires_at: Date | null;
-  is_active: boolean;
-}
+import { supabase } from "@db/connection";
 
 /** Generate an 8-character alphanumeric password */
 function generatePassword(): string {
@@ -28,7 +19,6 @@ function generatePassword(): string {
 }
 
 export async function POST(req: NextRequest) {
-  const conn = await pool.getConnection();
   try {
     const body = await req.json();
     const { token, email, fullName, address } = body as {
@@ -49,66 +39,6 @@ export async function POST(req: NextRequest) {
     // Auto-generate password
     const plainPassword = generatePassword();
 
-    // Start transaction
-    await conn.beginTransaction();
-
-    // Validate registration link
-    const [rows] = await conn.execute(
-      {
-        sql: `SELECT id, token, max_uses, times_used, expires_at, is_active
-       FROM registration_links
-       WHERE token = ? AND is_active = 1
-       LIMIT 1`,
-        namedPlaceholders: false,
-      } as import("mysql2").QueryOptions,
-      [token],
-    );
-    const linkRows = rows as import("mysql2").RowDataPacket[];
-    const link = linkRows[0] as TokenRow | undefined;
-
-    if (!link) {
-      await conn.rollback();
-      return NextResponse.json(
-        { error: "Invalid or expired registration link" },
-        { status: 400 },
-      );
-    }
-
-    // Check expiry
-    if (link.expires_at && new Date(link.expires_at) < new Date()) {
-      await conn.rollback();
-      return NextResponse.json(
-        { error: "This registration link has expired" },
-        { status: 400 },
-      );
-    }
-
-    // Check usage limit
-    if (link.max_uses > 0 && link.times_used >= link.max_uses) {
-      await conn.rollback();
-      return NextResponse.json(
-        { error: "This registration link has reached its maximum usage" },
-        { status: 400 },
-      );
-    }
-
-    // Check if email already exists
-    const [existingRows] = await conn.execute(
-      {
-        sql: "SELECT id FROM users WHERE email = ? LIMIT 1",
-        namedPlaceholders: false,
-      } as import("mysql2").QueryOptions,
-      [email],
-    );
-    const existingUsers = existingRows as import("mysql2").RowDataPacket[];
-    if (existingUsers.length > 0) {
-      await conn.rollback();
-      return NextResponse.json(
-        { error: "An account with this email already exists" },
-        { status: 409 },
-      );
-    }
-
     // Hash password
     let hash = plainPassword;
     try {
@@ -118,54 +48,41 @@ export async function POST(req: NextRequest) {
       // bcrypt not available — store raw (demo only)
     }
 
-    // Create user
-    const [userResult] = await conn.execute(
+    // Call the register_applicant RPC (handles validation + insert in a transaction)
+    const { data: result, error: rpcError } = await supabase.rpc(
+      "register_applicant",
       {
-        sql: `INSERT INTO users (email, password_hash, full_name, role)
-       VALUES (?, ?, ?, 'applicant')`,
-        namedPlaceholders: false,
-      } as import("mysql2").QueryOptions,
-      [email, hash, fullName],
-    );
-    const userId = (userResult as import("mysql2").ResultSetHeader).insertId;
-
-    // Create applicant profile
-    const [applicantResult] = await conn.execute(
-      {
-        sql: `INSERT INTO applicants (user_id, address)
-       VALUES (?, ?)`,
-        namedPlaceholders: false,
-      } as import("mysql2").QueryOptions,
-      [userId, address],
-    );
-    const applicantId = (applicantResult as import("mysql2").ResultSetHeader)
-      .insertId;
-
-    // Auto-create an application for the Iskolar ng Mariveles program
-    await conn.execute(
-      {
-        sql: `INSERT INTO applications (applicant_id, status) VALUES (?, 'submitted')`,
-        namedPlaceholders: false,
-      } as import("mysql2").QueryOptions,
-      [applicantId],
+        p_token: token,
+        p_email: email,
+        p_full_name: fullName,
+        p_address: address,
+        p_password_hash: hash,
+      },
     );
 
-    // Increment usage counter
-    await conn.execute(
-      {
-        sql: `UPDATE registration_links SET times_used = times_used + 1 WHERE id = ?`,
-        namedPlaceholders: false,
-      } as import("mysql2").QueryOptions,
-      [link.id],
-    );
+    if (rpcError) {
+      console.error("[POST /api/auth/register] RPC error:", rpcError);
+      return NextResponse.json(
+        { error: "Registration failed. Please try again." },
+        { status: 500 },
+      );
+    }
 
-    await conn.commit();
+    // The RPC returns JSON — check for application-level errors
+    if (result.error) {
+      // Determine appropriate status code based on error message
+      let status = 400;
+      if (result.error.includes("already exists")) {
+        status = 409;
+      }
+      return NextResponse.json({ error: result.error }, { status });
+    }
 
     return NextResponse.json(
       {
         message: "Account created successfully!",
-        userId,
-        applicantId,
+        userId: result.user_id,
+        applicantId: result.applicant_id,
         credentials: {
           email,
           password: plainPassword,
@@ -174,13 +91,10 @@ export async function POST(req: NextRequest) {
       { status: 201 },
     );
   } catch (err) {
-    await conn.rollback();
     console.error("[POST /api/auth/register]", err);
     return NextResponse.json(
       { error: "Registration failed. Please try again." },
       { status: 500 },
     );
-  } finally {
-    conn.release();
   }
 }

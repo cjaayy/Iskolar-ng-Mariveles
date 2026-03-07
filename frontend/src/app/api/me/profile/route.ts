@@ -4,7 +4,7 @@
  * PUT /api/me/profile — update editable profile fields.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query, execute } from "@db/connection";
+import { supabase } from "@db/connection";
 import { sanitizeText } from "@db/eligibility";
 
 interface ProfileBody {
@@ -30,11 +30,14 @@ export async function PUT(req: NextRequest) {
 
   try {
     // Resolve user_id
-    const [applicant] = await query<{ user_id: number }>(
-      "SELECT user_id FROM applicants WHERE id = :id LIMIT 1",
-      { id: applicantId },
-    );
-    if (!applicant) {
+    const { data: applicant, error: applicantError } = await supabase
+      .from("applicants")
+      .select("user_id")
+      .eq("id", applicantId)
+      .limit(1)
+      .single();
+
+    if (applicantError || !applicant) {
       return NextResponse.json(
         { error: "Applicant not found" },
         { status: 404 },
@@ -43,10 +46,17 @@ export async function PUT(req: NextRequest) {
 
     // Update full_name in users table
     if (body.firstName !== undefined || body.lastName !== undefined) {
-      const [current] = await query<{ full_name: string }>(
-        "SELECT full_name FROM users WHERE id = :id LIMIT 1",
-        { id: applicant.user_id },
-      );
+      const { data: current, error: userError } = await supabase
+        .from("users")
+        .select("full_name")
+        .eq("id", applicant.user_id)
+        .limit(1)
+        .single();
+
+      if (userError) {
+        throw userError;
+      }
+
       const parts = (current?.full_name ?? "").trim().split(/\s+/);
       const newFirst =
         body.firstName !== undefined
@@ -59,10 +69,14 @@ export async function PUT(req: NextRequest) {
       const fullName =
         [newFirst, newLast].filter(Boolean).join(" ") || current?.full_name;
 
-      await execute("UPDATE users SET full_name = :name WHERE id = :id", {
-        name: fullName,
-        id: applicant.user_id,
-      });
+      const { error: updateUserError } = await supabase
+        .from("users")
+        .update({ full_name: fullName })
+        .eq("id", applicant.user_id);
+
+      if (updateUserError) {
+        throw updateUserError;
+      }
     }
 
     // Update applicant contact fields
@@ -76,21 +90,22 @@ export async function PUT(req: NextRequest) {
         : undefined;
 
     if (contactNumber !== undefined || address !== undefined) {
-      const sets: string[] = [];
-      const params: Record<string, unknown> = { id: applicantId };
+      const updates: Record<string, unknown> = {};
       if (contactNumber !== undefined) {
-        sets.push("contact_number = :phone");
-        params.phone = contactNumber;
+        updates.contact_number = contactNumber;
       }
       if (address !== undefined) {
-        sets.push("address = :address");
-        params.address = address;
+        updates.address = address;
       }
-      if (sets.length > 0) {
-        await execute(
-          `UPDATE applicants SET ${sets.join(", ")} WHERE id = :id`,
-          params,
-        );
+      if (Object.keys(updates).length > 0) {
+        const { error: updateApplicantError } = await supabase
+          .from("applicants")
+          .update(updates)
+          .eq("id", applicantId);
+
+        if (updateApplicantError) {
+          throw updateApplicantError;
+        }
       }
     }
 

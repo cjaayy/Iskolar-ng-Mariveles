@@ -5,14 +5,14 @@
  * Public endpoint.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@db/connection";
+import { supabase } from "@db/connection";
 
 interface TokenRow {
   id: number;
   label: string | null;
   max_uses: number;
   times_used: number;
-  expires_at: Date | null;
+  expires_at: string | null;
   is_active: boolean;
 }
 
@@ -26,15 +26,14 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const [link] = await query<TokenRow>(
-      `SELECT id, label, max_uses, times_used, expires_at, is_active
-       FROM registration_links
-       WHERE token = :token
-       LIMIT 1`,
-      { token },
-    );
+    const { data: link, error } = await supabase
+      .from("registration_links")
+      .select("id, label, max_uses, times_used, expires_at, is_active")
+      .eq("token", token)
+      .limit(1)
+      .single<TokenRow>();
 
-    if (!link) {
+    if (error || !link) {
       return NextResponse.json({
         valid: false,
         error: "Invalid registration link",

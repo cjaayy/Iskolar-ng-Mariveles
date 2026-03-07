@@ -1,14 +1,12 @@
 /**
  * app/api/upload/route.ts
  *
- * POST /api/upload — handles actual file uploads, saves to /public/uploads/
- * Returns the public URL path of the uploaded file.
+ * POST /api/upload — handles file uploads to Supabase Storage.
+ * Returns the public URL of the uploaded file.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { supabase } from "@db/connection";
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB
 const MIN_FILE_SIZE = 500 * 1024; // 500KB
 const ALLOWED_TYPES = [
@@ -56,31 +54,42 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Ensure upload directory exists
-    await mkdir(UPLOAD_DIR, { recursive: true });
-
-    // Generate a unique filename: timestamp_applicantId_requirementKey_originalname
-    const ext = path.extname(file.name);
-    const baseName = path
-      .basename(file.name, ext)
+    // Generate a unique filename
+    const ext = file.name.substring(file.name.lastIndexOf("."));
+    const baseName = file.name
+      .replace(/\.[^.]+$/, "")
       .replace(/[^a-zA-Z0-9_-]/g, "_")
       .slice(0, 60);
     const timestamp = Date.now();
     const prefix = [applicantId, requirementKey].filter(Boolean).join("_");
     const uniqueName = `${timestamp}_${prefix}_${baseName}${ext}`;
 
-    // Write file to disk
+    // Upload to Supabase Storage
     const buffer = Buffer.from(await file.arrayBuffer());
-    const filePath = path.join(UPLOAD_DIR, uniqueName);
-    await writeFile(filePath, buffer);
+    const { error: uploadError } = await supabase.storage
+      .from("uploads")
+      .upload(uniqueName, buffer, {
+        contentType: file.type,
+        upsert: false,
+      });
 
-    // Return the public URL path
-    const fileUrl = `/uploads/${uniqueName}`;
+    if (uploadError) {
+      console.error("[POST /api/upload] Supabase Storage error:", uploadError);
+      return NextResponse.json(
+        { error: "Failed to upload file" },
+        { status: 500 },
+      );
+    }
+
+    // Get the public URL
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("uploads").getPublicUrl(uniqueName);
 
     return NextResponse.json({
       success: true,
       fileName: file.name,
-      fileUrl,
+      fileUrl: publicUrl,
       fileSize: file.size,
       fileType: file.type,
     });

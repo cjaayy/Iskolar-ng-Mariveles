@@ -12,15 +12,22 @@
  *      Body: { applicationId, action: 'approved' | 'rejected', notes?: string }
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query, execute } from "@db/connection";
+import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
-async function verifyAdmin(adminId: string): Promise<{ id: number } | null> {
-  const [user] = await query<{ id: number; role: string }>(
-    `SELECT id, role FROM users WHERE id = :id AND role = 'admin' AND is_active = 1 LIMIT 1`,
-    { id: Number(adminId) },
-  );
-  return user ?? null;
+async function verifyAdmin(
+  adminId: string,
+): Promise<{ id: number } | null> {
+  const { data, error } = await supabase
+    .from("users")
+    .select("id, role")
+    .eq("id", Number(adminId))
+    .eq("role", "admin")
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+  if (error || !data) return null;
+  return { id: data.id };
 }
 
 // ─── GET: list applications for admin validation ─────────────────────────────
@@ -42,88 +49,152 @@ export async function GET(req: NextRequest) {
     );
     const offset = (page - 1) * limit;
 
-    const conditions: string[] = ["a.status != 'draft'"];
-    const bind: Record<string, unknown> = { limit, offset };
+    // Build query
+    let q = supabase
+      .from("applications")
+      .select(
+        `
+        id,
+        applicant_id,
+        status,
+        income_at_submission,
+        submitted_at,
+        created_at,
+        updated_at,
+        remarks,
+        applicants!inner(
+          barangay,
+          users!inner(full_name)
+        )
+      `,
+      )
+      .neq("status", "draft");
 
     if (status && status !== "all") {
-      conditions.push("a.status = :status");
-      bind.status = status;
+      q = q.eq("status", status);
     }
     if (search) {
-      conditions.push("(u.full_name LIKE :search)");
-      bind.search = `%${search}%`;
+      q = q.ilike("applicants.users.full_name", `%${search}%`);
     }
 
-    const whereClause = `WHERE ${conditions.join(" AND ")}`;
-
-    const rows = await query(
-      `
-      SELECT
-        a.id,
-        a.applicant_id,
-        a.status,
-        a.income_at_submission,
-        a.submitted_at,
-        a.created_at,
-        a.updated_at,
-        a.remarks,
-        u.full_name       AS applicant_name,
-        ap.barangay,
-        ${REQUIREMENT_CONFIGS.length} AS total_requirements,
-        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'approved') AS approved_requirements,
-        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'pending') AS pending_requirements
-      FROM applications a
-      JOIN applicants   ap ON ap.id = a.applicant_id
-      JOIN users         u ON u.id  = ap.user_id
-      ${whereClause}
-      ORDER BY
-        CASE a.status
-          WHEN 'submitted' THEN 1
-          WHEN 'under_review' THEN 2
-          WHEN 'returned' THEN 3
-          WHEN 'approved' THEN 4
-          WHEN 'rejected' THEN 5
-          ELSE 6
-        END,
-        a.updated_at DESC
-      LIMIT :limit OFFSET :offset
-      `,
-      bind,
-    );
-
     // Count total
-    const countBind: Record<string, unknown> = {};
-    if (bind.status) countBind.status = bind.status;
-    if (bind.search) countBind.search = bind.search;
-
-    const [{ total }] = await query<{ total: number }>(
-      `
-      SELECT COUNT(*) AS total
-      FROM applications a
-      JOIN applicants   ap ON ap.id = a.applicant_id
-      JOIN users         u ON u.id  = ap.user_id
-      ${whereClause}
+    let countQ = supabase
+      .from("applications")
+      .select(
+        `
+        id,
+        applicants!inner(
+          id,
+          users!inner(full_name)
+        )
       `,
-      countBind,
-    );
+        { count: "exact", head: true },
+      )
+      .neq("status", "draft");
+
+    if (status && status !== "all") {
+      countQ = countQ.eq("status", status);
+    }
+    if (search) {
+      countQ = countQ.ilike("applicants.users.full_name", `%${search}%`);
+    }
+
+    const { count: total, error: countError } = await countQ;
+    if (countError) throw countError;
+
+    // Fetch paginated data
+    const { data: appRows, error: appError } = await q
+      .order("updated_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (appError) throw appError;
+
+    // Get requirement counts for all fetched applications
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const appIds = (appRows ?? []).map((r: Record<string, any>) => r.id);
+    let submissions: { application_id: number; status: string }[] = [];
+    if (appIds.length > 0) {
+      const { data: subs, error: subError } = await supabase
+        .from("requirement_submissions")
+        .select("application_id, status")
+        .in("application_id", appIds);
+      if (subError) throw subError;
+      submissions = subs ?? [];
+    }
+
+    const countsByApp: Record<
+      number,
+      { approved: number; pending: number }
+    > = {};
+    for (const sub of submissions) {
+      if (!countsByApp[sub.application_id]) {
+        countsByApp[sub.application_id] = { approved: 0, pending: 0 };
+      }
+      if (sub.status === "approved") countsByApp[sub.application_id].approved++;
+      if (sub.status === "pending") countsByApp[sub.application_id].pending++;
+    }
+
+    // Sort by status priority
+    const statusOrder: Record<string, number> = {
+      submitted: 1,
+      under_review: 2,
+      returned: 3,
+      approved: 4,
+      rejected: 5,
+    };
+
+    const rows = (appRows ?? [])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((r: Record<string, any>) => {
+        const applicant = r.applicants as unknown as {
+          barangay: string | null;
+          users: { full_name: string };
+        };
+        const counts = countsByApp[r.id] || { approved: 0, pending: 0 };
+        return {
+          id: r.id,
+          applicant_id: r.applicant_id,
+          status: r.status,
+          income_at_submission: r.income_at_submission,
+          submitted_at: r.submitted_at,
+          created_at: r.created_at,
+          updated_at: r.updated_at,
+          remarks: r.remarks,
+          applicant_name: applicant.users.full_name,
+          barangay: applicant.barangay,
+          total_requirements: REQUIREMENT_CONFIGS.length,
+          approved_requirements: counts.approved,
+          pending_requirements: counts.pending,
+        };
+      })
+      .sort((a: { status: string }, b: { status: string }) => {
+        const sa = statusOrder[a.status] ?? 6;
+        const sb = statusOrder[b.status] ?? 6;
+        return sa - sb;
+      });
 
     // Status summary counts
-    const statusCounts = await query<{ status: string; count: number }>(
-      `
-      SELECT a.status, COUNT(*) AS count
-      FROM applications a
-      WHERE a.status != 'draft'
-      GROUP BY a.status
-      `,
-    );
-    const summary = Object.fromEntries(
-      statusCounts.map((r) => [r.status, Number(r.count)]),
-    );
+    const { data: statusRows, error: statusError } = await supabase
+      .from("applications")
+      .select("status")
+      .neq("status", "draft");
+
+    if (statusError) throw statusError;
+
+    const summary: Record<string, number> = {};
+    for (const row of statusRows ?? []) {
+      summary[row.status] = (summary[row.status] || 0) + 1;
+    }
 
     return NextResponse.json({
       data: rows,
       summary,
-      meta: { total, page, limit, pages: Math.ceil(total / limit) },
+      meta: {
+        total: total ?? 0,
+        page,
+        limit,
+        pages: Math.ceil((total ?? 0) / limit),
+      },
     });
   } catch (err) {
     console.error("[GET /api/admin/validations]", err);
@@ -161,70 +232,23 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    const [submission] = await query<{
-      id: number;
-      application_id: number;
-      status: string;
-    }>(
-      "SELECT id, application_id, status FROM requirement_submissions WHERE id = :id LIMIT 1",
-      { id: submissionId },
-    );
-
-    if (!submission) {
-      return NextResponse.json(
-        { error: "Submission not found" },
-        { status: 404 },
-      );
-    }
-
-    await execute(
-      `UPDATE requirement_submissions
-       SET status = :status,
-           validated_by = :validator_id,
-           validated_at = NOW(),
-           validator_notes = :notes
-       WHERE id = :id`,
+    const { data: rpcResult, error: rpcError } = await supabase.rpc(
+      "validate_single_requirement",
       {
-        status: action,
-        validator_id: admin.id,
-        notes: notes ?? null,
-        id: submissionId,
+        p_submission_id: submissionId,
+        p_validator_id: admin.id,
+        p_action: action,
+        p_notes: notes ?? null,
       },
     );
 
-    // Check if all requirements approved → auto-approve application
-    const [counts] = await query<{
-      total: number;
-      approved: number;
-    }>(
-      `SELECT
-         COUNT(*) AS total,
-         SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) AS approved
-       FROM requirement_submissions
-       WHERE application_id = :application_id`,
-      { application_id: submission.application_id },
-    );
-
-    if (
-      counts &&
-      Number(counts.total) > 0 &&
-      Number(counts.approved) === Number(counts.total)
-    ) {
-      await execute(
-        "UPDATE applications SET status = 'approved', remarks = 'All documents validated by admin' WHERE id = :id AND status IN ('submitted', 'under_review')",
-        { id: submission.application_id },
-      );
-    } else if (action === "rejected") {
-      await execute(
-        "UPDATE applications SET status = 'under_review' WHERE id = :id AND status = 'submitted'",
-        { id: submission.application_id },
-      );
-    }
+    if (rpcError) throw rpcError;
 
     return NextResponse.json({
       message: `Document ${action} successfully`,
       submissionId,
       action,
+      ...(rpcResult && typeof rpcResult === "object" ? rpcResult : {}),
     });
   } catch (err) {
     console.error("[PUT /api/admin/validations]", err);
@@ -259,52 +283,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await execute(
-      `UPDATE requirement_submissions
-       SET status = :status,
-           validated_by = :validator_id,
-           validated_at = NOW(),
-           validator_notes = :notes
-       WHERE application_id = :application_id
-         AND status = 'pending'`,
+    const { data: rpcResult, error: rpcError } = await supabase.rpc(
+      "bulk_validate_requirements",
       {
-        status: action,
-        validator_id: admin.id,
-        notes: notes ?? null,
-        application_id: applicationId,
+        p_application_id: applicationId,
+        p_validator_id: admin.id,
+        p_action: action,
+        p_notes: notes ?? null,
       },
     );
 
-    const newAppStatus = action === "approved" ? "approved" : "under_review";
-    await execute(
-      "UPDATE applications SET status = :status, remarks = :remarks WHERE id = :id",
-      {
-        status: newAppStatus,
-        remarks:
-          notes ??
-          (action === "approved"
-            ? "All documents approved by admin"
-            : "Documents need revision"),
-        id: applicationId,
-      },
-    );
+    if (rpcError) throw rpcError;
 
-    await execute(
-      `INSERT INTO validations (application_id, validator_id, action, notes)
-       VALUES (:application_id, :validator_id, :action, :notes)`,
-      {
-        application_id: applicationId,
-        validator_id: admin.id,
-        action,
-        notes: notes ?? null,
-      },
-    );
+    const affected =
+      rpcResult && typeof rpcResult === "object" && "affected" in rpcResult
+        ? (rpcResult as { affected: number }).affected
+        : 0;
 
     return NextResponse.json({
-      message: `${result.affectedRows} document(s) ${action} successfully`,
+      message: `${affected} document(s) ${action} successfully`,
       applicationId,
       action,
-      affected: result.affectedRows,
+      affected,
     });
   } catch (err) {
     console.error("[POST /api/admin/validations]", err);

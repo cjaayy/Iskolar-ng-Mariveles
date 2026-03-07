@@ -5,7 +5,7 @@
  * requirement submissions + validation history for admin validation.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@db/connection";
+import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
 interface RouteContext {
@@ -13,11 +13,15 @@ interface RouteContext {
 }
 
 async function verifyAdmin(adminId: string): Promise<boolean> {
-  const [user] = await query<{ role: string }>(
-    `SELECT role FROM users WHERE id = :id AND role = 'admin' AND is_active = 1 LIMIT 1`,
-    { id: Number(adminId) },
-  );
-  return !!user;
+  const { data, error } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", Number(adminId))
+    .eq("role", "admin")
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+  return !error && !!data;
 }
 
 export async function GET(req: NextRequest, { params }: RouteContext) {
@@ -32,50 +36,75 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "Invalid id" }, { status: 400 });
     }
 
-    const [application] = await query(
-      `
-      SELECT
-        a.*,
-        u.full_name       AS applicant_name,
-        u.email           AS applicant_email,
-        ap.contact_number,
-        ap.address,
-        ap.barangay
-      FROM applications a
-      JOIN applicants   ap ON ap.id = a.applicant_id
-      JOIN users         u ON u.id  = ap.user_id
-      WHERE a.id = :id
-      LIMIT 1
+    // Application + applicant details
+    const { data: appRow, error: appError } = await supabase
+      .from("applications")
+      .select(
+        `
+        *,
+        applicants!inner(
+          contact_number,
+          address,
+          barangay,
+          users!inner(full_name, email)
+        )
       `,
-      { id },
-    );
+      )
+      .eq("id", id)
+      .limit(1)
+      .maybeSingle();
 
-    if (!application) {
+    if (appError) throw appError;
+
+    if (!appRow) {
       return NextResponse.json(
         { error: "Application not found" },
         { status: 404 },
       );
     }
 
-    const submissions = await query<Record<string, unknown>>(
-      `
-      SELECT
-        rs.*,
-        vu.full_name AS validator_name
-      FROM requirement_submissions rs
-      LEFT JOIN users vu ON vu.id = rs.validated_by
-      WHERE rs.application_id = :application_id
-      ORDER BY rs.requirement_key
+    // Flatten the joined data
+    const applicant = appRow.applicants as unknown as {
+      contact_number: string | null;
+      address: string | null;
+      barangay: string | null;
+      users: { full_name: string; email: string };
+    };
+
+    const application = {
+      ...appRow,
+      applicants: undefined,
+      applicant_name: applicant.users.full_name,
+      applicant_email: applicant.users.email,
+      contact_number: applicant.contact_number,
+      address: applicant.address,
+      barangay: applicant.barangay,
+    };
+
+    // All requirement submissions for this application
+    const { data: submissions, error: subError } = await supabase
+      .from("requirement_submissions")
+      .select(
+        `
+        *,
+        users:validated_by(full_name)
       `,
-      { application_id: id },
-    );
+      )
+      .eq("application_id", id)
+      .order("requirement_key", { ascending: true });
+
+    if (subError) throw subError;
 
     const subMap = Object.fromEntries(
-      submissions.map((s) => [s.requirement_key, s]),
+      (submissions ?? []).map((s: Record<string, unknown>) => [
+        s.requirement_key,
+        s,
+      ]),
     );
 
     const requirements = REQUIREMENT_CONFIGS.map((config, idx) => {
       const sub = subMap[config.key] ?? null;
+      const validator = sub?.users as { full_name: string } | null;
       return {
         id: sub ? (sub.id as number) : -(idx + 1),
         application_id: id,
@@ -89,24 +118,38 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
         validated_by: (sub?.validated_by as number) ?? null,
         validated_at: (sub?.validated_at as string) ?? null,
         validator_notes: (sub?.validator_notes as string) ?? null,
-        validator_name: (sub?.validator_name as string) ?? null,
+        validator_name: validator?.full_name ?? null,
       };
     });
 
-    const history = await query(
-      `
-      SELECT
-        v.*,
-        u.full_name AS validator_name
-      FROM validations v
-      JOIN users u ON u.id = v.validator_id
-      WHERE v.application_id = :application_id
-      ORDER BY v.created_at DESC
+    // Validation history
+    const { data: history, error: histError } = await supabase
+      .from("validations")
+      .select(
+        `
+        *,
+        users!inner(full_name)
       `,
-      { application_id: id },
-    );
+      )
+      .eq("application_id", id)
+      .order("created_at", { ascending: false });
 
-    return NextResponse.json({ data: application, requirements, history });
+    if (histError) throw histError;
+
+    const historyRows = (history ?? []).map((h: Record<string, unknown>) => {
+      const user = h.users as { full_name: string };
+      return {
+        ...h,
+        users: undefined,
+        validator_name: user.full_name,
+      };
+    });
+
+    return NextResponse.json({
+      data: application,
+      requirements,
+      history: historyRows,
+    });
   } catch (err) {
     console.error("[GET /api/admin/validations/:id]", err);
     return NextResponse.json(

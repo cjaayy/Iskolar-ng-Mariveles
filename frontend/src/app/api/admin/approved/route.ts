@@ -6,27 +6,19 @@
  * Supports ?search= for name/email filtering.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@db/connection";
+import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
 async function verifyAdmin(adminId: string): Promise<boolean> {
-  const [user] = await query<{ role: string }>(
-    `SELECT role FROM users WHERE id = :id AND role = 'admin' AND is_active = 1 LIMIT 1`,
-    { id: Number(adminId) },
-  );
-  return !!user;
-}
-
-interface ApprovedRow {
-  application_id: number;
-  applicant_id: number;
-  applicant_name: string;
-  email: string;
-  barangay: string | null;
-  contact_number: string | null;
-  submitted_at: string | null;
-  approved_requirements: number;
-  total_requirements: number;
+  const { data, error } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", Number(adminId))
+    .eq("role", "admin")
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+  return !error && !!data;
 }
 
 export async function GET(req: NextRequest) {
@@ -40,37 +32,82 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search") || undefined;
     const totalRequired = REQUIREMENT_CONFIGS.length;
 
-    const conditions: string[] = ["a.status != 'draft'"];
-    const bind: Record<string, unknown> = { totalRequired };
+    // Fetch all non-draft applications with applicant info
+    let q = supabase
+      .from("applications")
+      .select(
+        `
+        id,
+        submitted_at,
+        applicants!inner(
+          id,
+          barangay,
+          contact_number,
+          users!inner(full_name, email)
+        )
+      `,
+      )
+      .neq("status", "draft");
 
     if (search) {
-      conditions.push("(u.full_name LIKE :search OR u.email LIKE :search)");
-      bind.search = `%${search}%`;
+      q = q.or(
+        `users.full_name.ilike.%${search}%,users.email.ilike.%${search}%`,
+        { referencedTable: "applicants.users" },
+      );
     }
 
-    const whereClause = `WHERE ${conditions.join(" AND ")}`;
+    const { data: appRows, error: appError } = await q;
+    if (appError) throw appError;
 
-    const rows = await query<ApprovedRow>(
-      `
-      SELECT
-        a.id              AS application_id,
-        ap.id             AS applicant_id,
-        u.full_name       AS applicant_name,
-        u.email,
-        ap.barangay,
-        ap.contact_number,
-        a.submitted_at,
-        (SELECT COUNT(*) FROM requirement_submissions rs WHERE rs.application_id = a.id AND rs.status = 'approved') AS approved_requirements,
-        ${totalRequired} AS total_requirements
-      FROM applications a
-      JOIN applicants   ap ON ap.id = a.applicant_id
-      JOIN users         u ON u.id  = ap.user_id
-      ${whereClause}
-      HAVING approved_requirements = total_requirements
-      ORDER BY u.full_name ASC
-      `,
-      bind,
-    );
+    // Get all application IDs
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const appIds = (appRows ?? []).map((r: Record<string, any>) => r.id);
+
+    // Fetch requirement submissions to compute approved counts
+    let submissions: { application_id: number; status: string }[] = [];
+    if (appIds.length > 0) {
+      const { data: subs, error: subError } = await supabase
+        .from("requirement_submissions")
+        .select("application_id, status")
+        .in("application_id", appIds);
+      if (subError) throw subError;
+      submissions = subs ?? [];
+    }
+
+    // Count approved requirements per application
+    const approvedByApp: Record<number, number> = {};
+    for (const sub of submissions) {
+      if (sub.status === "approved") {
+        approvedByApp[sub.application_id] =
+          (approvedByApp[sub.application_id] || 0) + 1;
+      }
+    }
+
+    // Filter to only applications where ALL requirements are approved (HAVING equivalent)
+    const rows = (appRows ?? [])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((r: Record<string, any>) => {
+        const applicant = r.applicants as unknown as {
+          id: number;
+          barangay: string | null;
+          contact_number: string | null;
+          users: { full_name: string; email: string };
+        };
+        const approved = approvedByApp[r.id] || 0;
+        return {
+          application_id: r.id,
+          applicant_id: applicant.id,
+          applicant_name: applicant.users.full_name,
+          email: applicant.users.email,
+          barangay: applicant.barangay,
+          contact_number: applicant.contact_number,
+          submitted_at: r.submitted_at,
+          approved_requirements: approved,
+          total_requirements: totalRequired,
+        };
+      })
+      .filter((r: { approved_requirements: number; total_requirements: number }) => r.approved_requirements === r.total_requirements)
+      .sort((a: { applicant_name: string }, b: { applicant_name: string }) => a.applicant_name.localeCompare(b.applicant_name));
 
     return NextResponse.json({
       data: rows,

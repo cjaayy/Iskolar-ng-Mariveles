@@ -26,12 +26,9 @@ import {
   ExternalLink,
   Image as ImageIcon,
   User,
-  GraduationCap,
   Mail,
   Phone,
   MapPin,
-  DollarSign,
-  BookOpen,
 } from "lucide-react";
 import { Card, Badge, Button, Skeleton } from "@/components/ui";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
@@ -469,6 +466,7 @@ export default function AdminApplicationDetailPage() {
                     {application.applicant_email}
                   </p>
                 </div>
+              </div>
               {application.contact_number && (
                 <div>
                   <p className="text-xs font-body text-muted-fg mb-0.5 flex items-center gap-1">

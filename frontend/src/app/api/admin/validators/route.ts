@@ -8,24 +8,18 @@
  * Admin only.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query, execute } from "@db/connection";
-
-interface ValidatorListRow {
-  id: number;
-  email: string;
-  full_name: string;
-  is_active: boolean;
-  assigned_barangay: string | null;
-  created_at: string;
-  total_validations: number;
-}
+import { supabase } from "@db/connection";
 
 async function verifyAdmin(adminId: string): Promise<boolean> {
-  const [user] = await query<{ role: string }>(
-    `SELECT role FROM users WHERE id = :id AND role = 'admin' AND is_active = 1 LIMIT 1`,
-    { id: Number(adminId) },
-  );
-  return !!user;
+  const { data, error } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", Number(adminId))
+    .eq("role", "admin")
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+  return !error && !!data;
 }
 
 /* ─── GET ─── list validators ─── */
@@ -42,35 +36,50 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     const search = searchParams.get("search") || undefined;
 
-    const conditions: string[] = [];
-    const bindValues: Record<string, unknown> = {};
+    // Build query for validators
+    let q = supabase
+      .from("users")
+      .select("id, email, full_name, is_active, assigned_barangay, created_at")
+      .eq("role", "validator")
+      .order("created_at", { ascending: false });
 
     if (search) {
-      conditions.push("(u.full_name LIKE :search OR u.email LIKE :search)");
-      bindValues.search = `%${search}%`;
+      q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
     }
 
-    const whereClause =
-      conditions.length > 0 ? `AND ${conditions.join(" AND ")}` : "";
+    const { data: validators, error } = await q;
+    if (error) throw error;
 
-    const rows = await query<ValidatorListRow>(
-      `
-      SELECT
-        u.id,
-        u.email,
-        u.full_name,
-        u.is_active,
-        u.assigned_barangay,
-        u.created_at,
-        (SELECT COUNT(*) FROM validations v WHERE v.validator_id = u.id) AS total_validations
-      FROM users u
-      WHERE u.role = 'validator' ${whereClause}
-      ORDER BY u.created_at DESC
-      `,
-      bindValues,
-    );
+    // Fetch validation counts for all validators in one query
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const validatorIds = (validators ?? []).map((v: Record<string, any>) => v.id);
+    let validationCounts: Record<number, number> = {};
 
-    return NextResponse.json({ data: rows });
+    if (validatorIds.length > 0) {
+      const { data: counts, error: countError } = await supabase
+        .from("validations")
+        .select("validator_id")
+        .in("validator_id", validatorIds);
+
+      if (countError) throw countError;
+
+      // Count per validator
+      validationCounts = (counts ?? []).reduce(
+        (acc: Record<number, number>, row: { validator_id: number }) => {
+          acc[row.validator_id] = (acc[row.validator_id] || 0) + 1;
+          return acc;
+        },
+        {},
+      );
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = (validators ?? []).map((v: Record<string, any>) => ({
+      ...v,
+      total_validations: validationCounts[v.id] || 0,
+    }));
+
+    return NextResponse.json({ data });
   } catch (err) {
     console.error("[GET /api/admin/validators]", err);
     return NextResponse.json(
@@ -114,10 +123,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if email already exists
-    const [existing] = await query<{ id: number }>(
-      "SELECT id FROM users WHERE email = :email LIMIT 1",
-      { email },
-    );
+    const { data: existing } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", email)
+      .limit(1)
+      .maybeSingle();
+
     if (existing) {
       return NextResponse.json(
         { error: "A user with this email already exists" },
@@ -126,12 +138,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if another validator is already assigned to this barangay
-    const [barangayTaken] = await query<{ id: number; full_name: string }>(
-      `SELECT id, full_name FROM users
-       WHERE role = 'validator' AND assigned_barangay = :barangay AND is_active = 1
-       LIMIT 1`,
-      { barangay: assignedBarangay },
-    );
+    const { data: barangayTaken } = await supabase
+      .from("users")
+      .select("id, full_name")
+      .eq("role", "validator")
+      .eq("assigned_barangay", assignedBarangay)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+
     if (barangayTaken) {
       return NextResponse.json(
         {
@@ -150,19 +165,22 @@ export async function POST(req: NextRequest) {
       // bcrypt not available — store raw (demo only)
     }
 
-    const result = await execute(
-      `INSERT INTO users (email, password_hash, full_name, role, assigned_barangay)
-       VALUES (:email, :password_hash, :full_name, 'validator', :assigned_barangay)`,
-      {
+    const { data: inserted, error } = await supabase
+      .from("users")
+      .insert({
         email,
         password_hash: hash,
         full_name: fullName,
+        role: "validator",
         assigned_barangay: assignedBarangay,
-      },
-    );
+      })
+      .select("id")
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json(
-      { id: result.insertId, message: "Validator created successfully" },
+      { id: inserted.id, message: "Validator created successfully" },
       { status: 201 },
     );
   } catch (err) {
@@ -200,10 +218,14 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Verify target is a validator
-    const [target] = await query<{ role: string }>(
-      "SELECT role FROM users WHERE id = :id AND role = 'validator' LIMIT 1",
-      { id },
-    );
+    const { data: target } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", id)
+      .eq("role", "validator")
+      .limit(1)
+      .maybeSingle();
+
     if (!target) {
       return NextResponse.json(
         { error: "Validator not found" },
@@ -212,12 +234,20 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (action === "activate") {
-      await execute("UPDATE users SET is_active = 1 WHERE id = :id", { id });
+      const { error } = await supabase
+        .from("users")
+        .update({ is_active: true })
+        .eq("id", id);
+      if (error) throw error;
       return NextResponse.json({ message: "Validator activated" });
     }
 
     if (action === "deactivate") {
-      await execute("UPDATE users SET is_active = 0 WHERE id = :id", { id });
+      const { error } = await supabase
+        .from("users")
+        .update({ is_active: false })
+        .eq("id", id);
+      if (error) throw error;
       return NextResponse.json({ message: "Validator deactivated" });
     }
 
@@ -229,12 +259,16 @@ export async function PATCH(req: NextRequest) {
         );
       }
       // Check if another active validator is already assigned to this barangay
-      const [taken] = await query<{ id: number; full_name: string }>(
-        `SELECT id, full_name FROM users
-         WHERE role = 'validator' AND assigned_barangay = :barangay AND is_active = 1 AND id != :validatorId
-         LIMIT 1`,
-        { barangay: assignedBarangay, validatorId: id },
-      );
+      const { data: taken } = await supabase
+        .from("users")
+        .select("id, full_name")
+        .eq("role", "validator")
+        .eq("assigned_barangay", assignedBarangay)
+        .eq("is_active", true)
+        .neq("id", id)
+        .limit(1)
+        .maybeSingle();
+
       if (taken) {
         return NextResponse.json(
           {
@@ -243,10 +277,12 @@ export async function PATCH(req: NextRequest) {
           { status: 409 },
         );
       }
-      await execute(
-        "UPDATE users SET assigned_barangay = :barangay WHERE id = :id",
-        { barangay: assignedBarangay, id },
-      );
+
+      const { error } = await supabase
+        .from("users")
+        .update({ assigned_barangay: assignedBarangay })
+        .eq("id", id);
+      if (error) throw error;
       return NextResponse.json({ message: "Barangay assigned" });
     }
 
@@ -282,10 +318,14 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Verify target is a validator (prevent deleting admins)
-    const [target] = await query<{ role: string }>(
-      "SELECT role FROM users WHERE id = :id AND role = 'validator' LIMIT 1",
-      { id: Number(id) },
-    );
+    const { data: target } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", Number(id))
+      .eq("role", "validator")
+      .limit(1)
+      .maybeSingle();
+
     if (!target) {
       return NextResponse.json(
         { error: "Validator not found" },
@@ -293,9 +333,13 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    await execute("DELETE FROM users WHERE id = :id AND role = 'validator'", {
-      id: Number(id),
-    });
+    const { error } = await supabase
+      .from("users")
+      .delete()
+      .eq("id", Number(id))
+      .eq("role", "validator");
+
+    if (error) throw error;
 
     return NextResponse.json({ message: "Validator deleted successfully" });
   } catch (err) {

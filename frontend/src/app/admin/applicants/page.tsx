@@ -20,10 +20,8 @@ import {
   ArrowRight,
   Users,
   RefreshCw,
-  GraduationCap,
   Mail,
   Phone,
-  BookOpen,
 } from "lucide-react";
 import { Card, Badge, Skeleton, Button } from "@/components/ui";
 

@@ -4,14 +4,14 @@
  * PUT /api/validations — validator reviews an application
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query, execute } from "@db/connection";
+import { supabase } from "@db/connection";
 import type {
   ApplicationRow,
   UpdateValidationBody,
   ValidationChecklist,
 } from "@db/types";
 
-// Allowed transitions: current status → valid next statuses
+// Allowed transitions: current status -> valid next statuses
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   submitted: ["under_review"],
   under_review: ["approved", "rejected", "returned", "requested_info"],
@@ -59,10 +59,13 @@ export async function PUT(req: NextRequest) {
     const validatorId = Number(validatorIdHeader);
 
     // ── Load application ──────────────────────────────────────────────────────
-    const [application] = await query<ApplicationRow>(
-      "SELECT * FROM applications WHERE id = :id LIMIT 1",
-      { id: application_id },
-    );
+    const { data: application, error: appError } = await supabase
+      .from("applications")
+      .select("*")
+      .eq("id", application_id)
+      .maybeSingle();
+
+    if (appError) throw appError;
     if (!application) {
       return NextResponse.json(
         { error: "Application not found" },
@@ -71,8 +74,9 @@ export async function PUT(req: NextRequest) {
     }
 
     // ── Check status transition allowed ───────────────────────────────────────
-    const allowed = ALLOWED_TRANSITIONS[application.status] ?? [];
-    // Map action → ultimate application status
+    const typedApplication = application as ApplicationRow;
+    const allowed = ALLOWED_TRANSITIONS[typedApplication.status] ?? [];
+    // Map action -> ultimate application status
     const actionToStatus: Record<string, string> = {
       approved: "approved",
       rejected: "rejected",
@@ -84,7 +88,7 @@ export async function PUT(req: NextRequest) {
     if (!allowed.includes(nextStatus) && action !== "requested_info") {
       return NextResponse.json(
         {
-          error: `Cannot perform '${action}' on an application with status '${application.status}'`,
+          error: `Cannot perform '${action}' on an application with status '${typedApplication.status}'`,
         },
         { status: 409 },
       );
@@ -102,25 +106,25 @@ export async function PUT(req: NextRequest) {
     }
 
     // ── Write validation record ───────────────────────────────────────────────
-    await execute(
-      `
-      INSERT INTO validations (application_id, validator_id, action, checklist, notes)
-      VALUES (:application_id, :validator_id, :action, :checklist, :notes)
-    `,
-      {
+    const { error: insertError } = await supabase
+      .from("validations")
+      .insert({
         application_id,
         validator_id: validatorId,
         action,
-        checklist: checklist ? JSON.stringify(checklist) : null,
+        checklist: checklist ?? null,
         notes: notes ?? null,
-      },
-    );
+      });
+
+    if (insertError) throw insertError;
 
     // ── Update application status ─────────────────────────────────────────────
-    await execute(
-      "UPDATE applications SET status = :status, remarks = :remarks WHERE id = :id",
-      { status: nextStatus, remarks: notes ?? null, id: application_id },
-    );
+    const { error: updateError } = await supabase
+      .from("applications")
+      .update({ status: nextStatus, remarks: notes ?? null })
+      .eq("id", application_id);
+
+    if (updateError) throw updateError;
 
     return NextResponse.json({
       message: `Application ${nextStatus} successfully`,

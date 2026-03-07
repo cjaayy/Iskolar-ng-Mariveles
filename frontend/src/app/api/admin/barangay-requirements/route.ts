@@ -6,27 +6,18 @@
  * Supports ?barangay= filter.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@db/connection";
+import { supabase } from "@db/connection";
 
 async function verifyAdmin(adminId: string): Promise<boolean> {
-  const [user] = await query<{ role: string }>(
-    `SELECT role FROM users WHERE id = :id AND role = 'admin' AND is_active = 1 LIMIT 1`,
-    { id: Number(adminId) },
-  );
-  return !!user;
-}
-
-interface RequirementRow {
-  applicant_id: number;
-  full_name: string;
-  email: string;
-  address: string | null;
-  application_id: number | null;
-  app_status: string | null;
-  total_requirements: number;
-  submitted_requirements: number;
-  approved_requirements: number;
-  pending_requirements: number;
+  const { data, error } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", Number(adminId))
+    .eq("role", "admin")
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+  return !error && !!data;
 }
 
 export async function GET(req: NextRequest) {
@@ -39,72 +30,115 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     const barangay = searchParams.get("barangay") || undefined;
 
-    const conditions: string[] = [];
-    const bind: Record<string, unknown> = {};
+    // Fetch applicants with user info and application
+    let q = supabase
+      .from("applicants")
+      .select(
+        `
+        id,
+        address,
+        users!inner(full_name, email, role),
+        applications(id, status)
+      `,
+      )
+      .eq("users.role", "applicant");
 
     if (barangay) {
-      conditions.push("a.address LIKE :barangay");
-      bind.barangay = `%${barangay}%`;
+      q = q.ilike("address", `%${barangay}%`);
     }
 
-    const where =
-      conditions.length > 0 ? `AND ${conditions.join(" AND ")}` : "";
+    const { data: applicants, error: appError } = await q;
+    if (appError) throw appError;
 
-    const rows = await query<RequirementRow>(
-      `
-      SELECT
-        a.id           AS applicant_id,
-        u.full_name,
-        u.email,
-        a.address,
-        app.id         AS application_id,
-        app.status     AS app_status,
-        COALESCE(rs_total.cnt, 0) AS total_requirements,
-        COALESCE(rs_submitted.cnt, 0) AS submitted_requirements,
-        COALESCE(rs_approved.cnt, 0) AS approved_requirements,
-        COALESCE(rs_pending.cnt, 0) AS pending_requirements
-      FROM applicants a
-      JOIN users u ON u.id = a.user_id
-      LEFT JOIN applications app ON app.applicant_id = a.id
-      LEFT JOIN (
-        SELECT application_id, COUNT(*) AS cnt
-        FROM requirement_submissions
-        GROUP BY application_id
-      ) rs_total ON rs_total.application_id = app.id
-      LEFT JOIN (
-        SELECT application_id, COUNT(*) AS cnt
-        FROM requirement_submissions
-        WHERE status IN ('pending', 'approved')
-        GROUP BY application_id
-      ) rs_submitted ON rs_submitted.application_id = app.id
-      LEFT JOIN (
-        SELECT application_id, COUNT(*) AS cnt
-        FROM requirement_submissions
-        WHERE status = 'approved'
-        GROUP BY application_id
-      ) rs_approved ON rs_approved.application_id = app.id
-      LEFT JOIN (
-        SELECT application_id, COUNT(*) AS cnt
-        FROM requirement_submissions
-        WHERE status = 'pending'
-        GROUP BY application_id
-      ) rs_pending ON rs_pending.application_id = app.id
-      WHERE u.role = 'applicant' ${where}
-      ORDER BY a.address ASC, u.full_name ASC
-      `,
-      bind,
-    );
+    // Collect all application IDs
+    const applicationIds: number[] = [];
+    for (const applicant of applicants ?? []) {
+      const apps = applicant.applications as unknown as
+        | { id: number; status: string }[]
+        | null;
+      if (apps) {
+        for (const app of apps) {
+          applicationIds.push(app.id);
+        }
+      }
+    }
+
+    // Fetch all requirement_submissions for those applications
+    let submissions: { application_id: number; status: string }[] = [];
+    if (applicationIds.length > 0) {
+      const { data: subs, error: subError } = await supabase
+        .from("requirement_submissions")
+        .select("application_id, status")
+        .in("application_id", applicationIds);
+      if (subError) throw subError;
+      submissions = subs ?? [];
+    }
+
+    // Compute counts per application_id
+    const countsByApp: Record<
+      number,
+      { total: number; submitted: number; approved: number; pending: number }
+    > = {};
+    for (const sub of submissions) {
+      if (!countsByApp[sub.application_id]) {
+        countsByApp[sub.application_id] = {
+          total: 0,
+          submitted: 0,
+          approved: 0,
+          pending: 0,
+        };
+      }
+      const c = countsByApp[sub.application_id];
+      c.total++;
+      if (sub.status === "approved" || sub.status === "pending") {
+        c.submitted++;
+      }
+      if (sub.status === "approved") c.approved++;
+      if (sub.status === "pending") c.pending++;
+    }
+
+    // Build flat rows
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rows = (applicants ?? []).map((applicant: Record<string, any>) => {
+      const user = applicant.users as unknown as {
+        full_name: string;
+        email: string;
+      };
+      const apps = applicant.applications as unknown as
+        | { id: number; status: string }[]
+        | null;
+      const app = apps && apps.length > 0 ? apps[0] : null;
+      const counts = app ? countsByApp[app.id] : undefined;
+
+      return {
+        applicant_id: applicant.id,
+        full_name: user.full_name,
+        email: user.email,
+        address: applicant.address,
+        application_id: app?.id ?? null,
+        app_status: app?.status ?? null,
+        total_requirements: counts?.total ?? 0,
+        submitted_requirements: counts?.submitted ?? 0,
+        approved_requirements: counts?.approved ?? 0,
+        pending_requirements: counts?.pending ?? 0,
+      };
+    });
+
+    // Sort by address, then full_name
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rows.sort((a: Record<string, any>, b: Record<string, any>) => {
+      const addrCmp = (a.address || "").localeCompare(b.address || "");
+      if (addrCmp !== 0) return addrCmp;
+      return a.full_name.localeCompare(b.full_name);
+    });
 
     // Group by barangay
     const grouped: Record<string, typeof rows> = {};
     for (const row of rows) {
-      // Extract barangay from address (first part before ", Mariveles")
       const addr = row.address || "Unknown";
       const parts = addr.split(",");
-      // If address looks like "Brgy, Mariveles, Bataan" or "Street, Brgy, Mariveles, Bataan"
-      // The barangay is the second-to-last before "Mariveles"
       let brgy = "Unknown";
-      const marivIdx = parts.findIndex((p) =>
+      const marivIdx = parts.findIndex((p: string) =>
         p.trim().toLowerCase().includes("mariveles"),
       );
       if (marivIdx > 0) {

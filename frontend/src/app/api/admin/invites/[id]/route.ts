@@ -6,14 +6,18 @@
  * Admin only.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query, execute } from "@db/connection";
+import { supabase } from "@db/connection";
 
 async function verifyAdmin(adminId: string): Promise<boolean> {
-  const [user] = await query<{ role: string }>(
-    `SELECT role FROM users WHERE id = :id AND role = 'admin' AND is_active = 1 LIMIT 1`,
-    { id: Number(adminId) },
-  );
-  return !!user;
+  const { data, error } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", Number(adminId))
+    .eq("role", "admin")
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+  return !error && !!data;
 }
 
 export async function PATCH(
@@ -33,10 +37,12 @@ export async function PATCH(
     const body = await req.json();
     const { isActive } = body as { isActive?: boolean };
 
-    await execute(
-      `UPDATE registration_links SET is_active = :is_active WHERE id = :id`,
-      { is_active: isActive ? 1 : 0, id: Number(id) },
-    );
+    const { error } = await supabase
+      .from("registration_links")
+      .update({ is_active: !!isActive })
+      .eq("id", Number(id));
+
+    if (error) throw error;
 
     return NextResponse.json({ message: "Link updated" });
   } catch (err) {
@@ -62,9 +68,13 @@ export async function DELETE(
 
   try {
     const { id } = await params;
-    await execute(`DELETE FROM registration_links WHERE id = :id`, {
-      id: Number(id),
-    });
+
+    const { error } = await supabase
+      .from("registration_links")
+      .delete()
+      .eq("id", Number(id));
+
+    if (error) throw error;
 
     return NextResponse.json({ message: "Link deleted" });
   } catch (err) {

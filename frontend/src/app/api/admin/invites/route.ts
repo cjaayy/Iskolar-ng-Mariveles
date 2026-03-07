@@ -6,28 +6,19 @@
  * Admin only.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query, execute } from "@db/connection";
+import { supabase } from "@db/connection";
 import crypto from "crypto";
 
-interface InviteLinkRow {
-  id: number;
-  token: string;
-  label: string | null;
-  max_uses: number;
-  times_used: number;
-  expires_at: string | null;
-  created_by: number;
-  creator_name: string;
-  is_active: boolean;
-  created_at: string;
-}
-
 async function verifyAdmin(adminId: string): Promise<boolean> {
-  const [user] = await query<{ role: string }>(
-    `SELECT role FROM users WHERE id = :id AND role = 'admin' AND is_active = 1 LIMIT 1`,
-    { id: Number(adminId) },
-  );
-  return !!user;
+  const { data, error } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", Number(adminId))
+    .eq("role", "admin")
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+  return !error && !!data;
 }
 
 export async function GET(req: NextRequest) {
@@ -40,26 +31,44 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const rows = await query<InviteLinkRow>(
-      `
-      SELECT
-        rl.id,
-        rl.token,
-        rl.label,
-        rl.max_uses,
-        rl.times_used,
-        rl.expires_at,
-        rl.created_by,
-        u.full_name AS creator_name,
-        rl.is_active,
-        rl.created_at
-      FROM registration_links rl
-      JOIN users u ON u.id = rl.created_by
-      ORDER BY rl.created_at DESC
+    const { data: rows, error } = await supabase
+      .from("registration_links")
+      .select(
+        `
+        id,
+        token,
+        label,
+        max_uses,
+        times_used,
+        expires_at,
+        created_by,
+        is_active,
+        created_at,
+        users!inner(full_name)
       `,
-    );
+      )
+      .order("created_at", { ascending: false });
 
-    return NextResponse.json({ data: rows });
+    if (error) throw error;
+
+    // Flatten the joined user name into creator_name
+    const data = (rows ?? []).map((row: Record<string, unknown>) => {
+      const user = row.users as { full_name: string };
+      return {
+        id: row.id,
+        token: row.token,
+        label: row.label,
+        max_uses: row.max_uses,
+        times_used: row.times_used,
+        expires_at: row.expires_at,
+        created_by: row.created_by,
+        creator_name: user.full_name,
+        is_active: row.is_active,
+        created_at: row.created_at,
+      };
+    });
+
+    return NextResponse.json({ data });
   } catch (err) {
     console.error("[GET /api/admin/invites]", err);
     return NextResponse.json(
@@ -89,21 +98,23 @@ export async function POST(req: NextRequest) {
     // Generate a unique token
     const token = crypto.randomBytes(32).toString("hex");
 
-    const result = await execute(
-      `INSERT INTO registration_links (token, label, max_uses, expires_at, created_by)
-       VALUES (:token, :label, :max_uses, :expires_at, :created_by)`,
-      {
+    const { data, error } = await supabase
+      .from("registration_links")
+      .insert({
         token,
         label: label || null,
         max_uses: maxUses ?? 1,
         expires_at: expiresAt || null,
         created_by: Number(adminId),
-      },
-    );
+      })
+      .select("id")
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json(
       {
-        id: result.insertId,
+        id: data.id,
         token,
         message: "Registration link created successfully",
       },

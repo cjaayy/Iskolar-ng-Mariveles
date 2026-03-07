@@ -5,7 +5,7 @@
  * POST /api/applications  — submit a new application
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query, execute } from "@db/connection";
+import { supabase } from "@db/connection";
 import { checkEligibility } from "@db/eligibility";
 import type {
   ApplicationWithDetails,
@@ -13,7 +13,7 @@ import type {
   GetApplicationsQuery,
 } from "@db/types";
 
-// ─── GET ─────────────────────────────────────────────────────────────────────
+// ── GET ─────────────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
   try {
@@ -32,51 +32,62 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(100, Math.max(1, params.limit ?? 20));
     const offset = (page - 1) * limit;
 
-    // --- Build dynamic WHERE clause -----------------------------------------
-    const conditions: string[] = [];
-    const bindValues: Record<string, unknown> = { limit, offset };
+    // --- Fetch rows (JOIN via foreign key relations) ------------------------
+    let dataQuery = supabase
+      .from("applications")
+      .select(
+        `
+        *,
+        applicants!inner(
+          users!inner(full_name)
+        )
+      `,
+      )
+      .order("updated_at", { ascending: false })
+      .range(offset, offset + limit - 1);
 
+    // --- Count total for pagination -----------------------------------------
+    let countQuery = supabase
+      .from("applications")
+      .select("*", { count: "exact", head: true });
+
+    // --- Apply filters ------------------------------------------------------
     if (params.status) {
-      conditions.push("a.status = :status");
-      bindValues.status = params.status;
+      dataQuery = dataQuery.eq("status", params.status);
+      countQuery = countQuery.eq("status", params.status);
     }
 
-    const whereClause =
-      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    const [
+      { data: rows, error: dataError },
+      { count: total, error: countError },
+    ] = await Promise.all([dataQuery, countQuery]);
 
-    // --- Fetch rows (JOIN for display columns) --------------------------------
-    const rows = await query<ApplicationWithDetails>(
-      `
-      SELECT
-        a.*,
-        u.full_name     AS applicant_name
-      FROM applications a
-      JOIN applicants   ap ON ap.id   = a.applicant_id
-      JOIN users         u ON u.id    = ap.user_id
-      ${whereClause}
-      ORDER BY a.updated_at DESC
-      LIMIT :limit OFFSET :offset
-    `,
-      bindValues,
+    if (dataError) throw dataError;
+    if (countError) throw countError;
+
+    // Flatten nested relations to match the original response shape
+    const flatRows: ApplicationWithDetails[] = (rows ?? []).map(
+      (row: Record<string, unknown>) => {
+        const { applicants, ...rest } = row as Record<string, unknown> & {
+          applicants: { users: { full_name: string } };
+        };
+        return {
+          ...rest,
+          applicant_name: applicants?.users?.full_name ?? "",
+        } as ApplicationWithDetails;
+      },
     );
 
-    // --- Count total for pagination ------------------------------------------
-    const [{ total }] = await query<{ total: number }>(
-      `
-      SELECT COUNT(*) AS total
-      FROM applications a
-      ${whereClause}
-    `,
-      conditions.length > 0
-        ? {
-            status: bindValues.status,
-          }
-        : {},
-    );
+    const totalCount = total ?? 0;
 
     return NextResponse.json({
-      data: rows,
-      meta: { total, page, limit, pages: Math.ceil(total / limit) },
+      data: flatRows,
+      meta: {
+        total: totalCount,
+        page,
+        limit,
+        pages: Math.ceil(totalCount / limit),
+      },
     });
   } catch (err) {
     console.error("[GET /api/applications]", err);
@@ -87,22 +98,25 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// ─── POST ────────────────────────────────────────────────────────────────────
+// ── POST ────────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   try {
-    // --- Resolve applicant from header (simplified — replace with real auth) ----
+    // --- Resolve applicant from header (simplified -- replace with real auth) --
     const applicantIdHeader = req.headers.get("x-applicant-id");
     if (!applicantIdHeader) {
       return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
     }
     const applicantId = Number(applicantIdHeader);
 
-    // --- Load applicant -------------------------------------------------------
-    const [applicant] = await query<ApplicantRow>(
-      "SELECT * FROM applicants WHERE id = :id LIMIT 1",
-      { id: applicantId },
-    );
+    // --- Load applicant -----------------------------------------------------
+    const { data: applicant, error: applicantError } = await supabase
+      .from("applicants")
+      .select("*")
+      .eq("id", applicantId)
+      .maybeSingle();
+
+    if (applicantError) throw applicantError;
     if (!applicant) {
       return NextResponse.json(
         { error: "Applicant not found" },
@@ -110,8 +124,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // --- Eligibility check ---------------------------------------------------
-    const eligibility = checkEligibility(applicant);
+    // --- Eligibility check --------------------------------------------------
+    const eligibility = checkEligibility(applicant as ApplicantRow);
     if (!eligibility.eligible) {
       return NextResponse.json(
         { error: "Applicant is not eligible", reasons: eligibility.reasons },
@@ -119,34 +133,37 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // --- Prevent duplicate application ---------------------------------------
-    const existing = await query(
-      "SELECT id FROM applications WHERE applicant_id = :applicant_id LIMIT 1",
-      { applicant_id: applicantId },
-    );
-    if (existing.length > 0) {
+    // --- Prevent duplicate application --------------------------------------
+    const { data: existing, error: existingError } = await supabase
+      .from("applications")
+      .select("id")
+      .eq("applicant_id", applicantId)
+      .maybeSingle();
+
+    if (existingError) throw existingError;
+    if (existing) {
       return NextResponse.json(
         { error: "Application already exists" },
         { status: 409 },
       );
     }
 
-    // --- Insert application --------------------------------------------------
-    const result = await execute(
-      `
-      INSERT INTO applications
-        (applicant_id, status, income_at_submission, submitted_at)
-      VALUES
-        (:applicant_id, 'submitted', :income, NOW())
-    `,
-      {
+    // --- Insert application -------------------------------------------------
+    const { data: inserted, error: insertError } = await supabase
+      .from("applications")
+      .insert({
         applicant_id: applicantId,
-        income: 0,
-      },
-    );
+        status: "submitted",
+        income_at_submission: 0,
+        submitted_at: new Date().toISOString(),
+      })
+      .select("id")
+      .single();
+
+    if (insertError) throw insertError;
 
     return NextResponse.json(
-      { id: result.insertId, message: "Application submitted successfully" },
+      { id: inserted.id, message: "Application submitted successfully" },
       { status: 201 },
     );
   } catch (err) {
