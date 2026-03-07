@@ -35,7 +35,7 @@ export default function DashboardPage() {
       variants={container}
       initial="hidden"
       animate="show"
-      className="flex items-center justify-center min-h-[60vh]"
+      className="flex items-center justify-center min-h-[60vh] w-full"
     >
       <motion.div variants={item} className="flex flex-col items-center gap-6">
         <Image
