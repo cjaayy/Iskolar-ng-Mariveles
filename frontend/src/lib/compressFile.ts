@@ -69,13 +69,16 @@ function canvasToBlob(
 }
 
 /**
- * Compress an image file to fit within MAX_FILE_SIZE (3 MB).
+ * Compress an image file to land inside the 500 KB – 3 MB range.
  *
- * Strategy:
- *  1. Start at quality = 0.85 and step down by 0.05.
- *  2. If quality drops to 0.3 and the file is still too large,
- *     scale dimensions down by 10% and restart quality loop.
- *  3. Repeat until the file is within range or we hit the floor.
+ * Strategy — binary-search on JPEG quality at each scale level:
+ *  1. At the current scale, binary-search quality (0.1 – 0.92) to find the
+ *     highest quality whose output is ≤ 3 MB **and** ≥ 500 KB.
+ *  2. If even quality = 0.1 at this scale is still > 3 MB, shrink dimensions
+ *     by 10 % and retry.
+ *  3. If quality = 0.92 produces < 500 KB at this scale, that means the image
+ *     is inherently small — accept the highest-quality result we can get
+ *     (even if it sits below 500 KB).
  */
 async function compressImage(file: File): Promise<CompressionResult> {
   const originalSize = file.size;
@@ -85,52 +88,117 @@ async function compressImage(file: File): Promise<CompressionResult> {
     return { file, compressed: false, originalSize, finalSize: file.size };
   }
 
-  // Too small — cannot compress further and shouldn't
-  if (file.size < MIN_FILE_SIZE) {
-    return {
-      file,
-      compressed: false,
-      originalSize,
-      finalSize: file.size,
-      error: `File is too small (${formatBytes(file.size)}). Minimum size is 500 KB — please upload a higher-quality scan.`,
-    };
-  }
-
   const img = await loadImage(file);
   const originalUrl = img.src;
 
-  // Use JPEG for compression output (even for PNGs — JPEG compresses much better)
   const outputMime = "image/jpeg";
   const outputExt = ".jpg";
 
-  let width = img.naturalWidth;
-  let height = img.naturalHeight;
-  let scaleFactor = 1;
-  const minScale = 0.3; // don't go below 30 % of original dimensions
-  const qualityFloor = 0.3;
+  const width = img.naturalWidth;
+  const height = img.naturalHeight;
 
-  let bestBlob: Blob | null = null;
+  // ── Image is UNDER 500 KB — re-encode at max quality to reach minimum ──
+  if (file.size < MIN_FILE_SIZE) {
+    // Try increasing quality up to 1.0
+    let bestBlob: Blob | null = null;
 
-  outer: while (scaleFactor >= minScale) {
-    const w = Math.round(width * scaleFactor);
-    const h = Math.round(height * scaleFactor);
+    for (const q of [1.0, 0.98, 0.95]) {
+      const blob = await canvasToBlob(img, width, height, q, outputMime);
+      if (blob.size >= MIN_FILE_SIZE && blob.size <= MAX_FILE_SIZE) {
+        bestBlob = blob;
+        break;
+      }
+      // If q=1.0 is still < 500KB, try scaling up slightly
+      if (blob.size < MIN_FILE_SIZE && q === 1.0) {
+        // Scale up in steps until we reach 500 KB or 3 MB cap
+        for (let upScale = 1.25; upScale <= 3.0; upScale += 0.25) {
+          const w = Math.round(width * upScale);
+          const h = Math.round(height * upScale);
+          const upBlob = await canvasToBlob(img, w, h, 1.0, outputMime);
+          if (upBlob.size >= MIN_FILE_SIZE && upBlob.size <= MAX_FILE_SIZE) {
+            bestBlob = upBlob;
+            break;
+          }
+          if (upBlob.size > MAX_FILE_SIZE) break; // don't overshoot
+        }
+        break;
+      }
+      if (blob.size > MAX_FILE_SIZE) continue; // try lower quality
+    }
 
-    for (let q = 0.85; q >= qualityFloor; q -= 0.05) {
-      const blob = await canvasToBlob(img, w, h, q, outputMime);
+    URL.revokeObjectURL(originalUrl);
+
+    if (bestBlob && bestBlob.size >= MIN_FILE_SIZE) {
+      return {
+        file: blobToFile(bestBlob, file.name, outputExt, outputMime),
+        compressed: true,
+        originalSize,
+        finalSize: bestBlob.size,
+      };
+    }
+
+    // Could not bring it up to 500 KB — return the max-quality version anyway
+    const fallback = await canvasToBlob(img, width, height, 1.0, outputMime);
+    return {
+      file: blobToFile(fallback, file.name, outputExt, outputMime),
+      compressed: true,
+      originalSize,
+      finalSize: fallback.size,
+    };
+  }
+
+  // ── Image is OVER 3 MB — compress down ──
+  const minScale = 0.3;
+
+  // Helper: binary-search quality at a fixed scale, targeting ≤ 3 MB.
+  async function searchQuality(
+    scale: number,
+  ): Promise<{ blob: Blob; quality: number } | null> {
+    const w = Math.round(width * scale);
+    const h = Math.round(height * scale);
+
+    let lo = 0.1;
+    let hi = 0.92;
+    let bestBlob: Blob | null = null;
+    let bestQ = lo;
+
+    for (let i = 0; i < 8; i++) {
+      const mid = (lo + hi) / 2;
+      const blob = await canvasToBlob(img, w, h, mid, outputMime);
 
       if (blob.size <= MAX_FILE_SIZE) {
         bestBlob = blob;
-        break outer;
+        bestQ = mid;
+        lo = mid + 0.001;
+      } else {
+        hi = mid - 0.001;
       }
     }
 
-    // Reduce dimensions by 10 %
-    scaleFactor -= 0.1;
+    if (!bestBlob) return null;
+    return { blob: bestBlob, quality: bestQ };
+  }
+
+  let bestResult: { blob: Blob; quality: number } | null = null;
+
+  for (let scale = 1; scale >= minScale; scale -= 0.1) {
+    const result = await searchQuality(scale);
+
+    if (!result) continue; // too large even at lowest quality
+
+    if (result.blob.size >= MIN_FILE_SIZE) {
+      bestResult = result;
+      break;
+    }
+
+    // Result < 500 KB — image is inherently small at this scale; accept it
+    bestResult = result;
+    break;
   }
 
   URL.revokeObjectURL(originalUrl);
 
-  if (!bestBlob || bestBlob.size > MAX_FILE_SIZE) {
+  if (!bestResult) {
     return {
       file,
       compressed: false,
@@ -141,23 +209,11 @@ async function compressImage(file: File): Promise<CompressionResult> {
     };
   }
 
-  if (bestBlob.size < MIN_FILE_SIZE) {
-    // Compression went too aggressive — still return it but note the warning
-    // This is unlikely for real photos/scans but handle it gracefully
-    return {
-      file: blobToFile(bestBlob, file.name, outputExt, outputMime),
-      compressed: true,
-      originalSize,
-      finalSize: bestBlob.size,
-      error: `Compressed file is below 500 KB (${formatBytes(bestBlob.size)}). The original may be too low-resolution.`,
-    };
-  }
-
   return {
-    file: blobToFile(bestBlob, file.name, outputExt, outputMime),
+    file: blobToFile(bestResult.blob, file.name, outputExt, outputMime),
     compressed: true,
     originalSize,
-    finalSize: bestBlob.size,
+    finalSize: bestResult.blob.size,
   };
 }
 

@@ -70,9 +70,11 @@ export function DocumentUploadModal({
       setSizeError(null);
       setCompressionInfo(null);
 
-      const needsCompression = f.size > MAX_FILE_SIZE && isImageType(f.type);
-      const tooLarge = f.size > MAX_FILE_SIZE && !isImageType(f.type);
-      const tooSmall = f.size < MIN_FILE_SIZE;
+      const isImage = isImageType(f.type);
+      const needsCompression =
+        isImage && (f.size > MAX_FILE_SIZE || f.size < MIN_FILE_SIZE);
+      const tooLarge = f.size > MAX_FILE_SIZE && !isImage;
+      const tooSmall = f.size < MIN_FILE_SIZE && !isImage;
 
       // Non-image files that exceed 3 MB — reject immediately
       if (tooLarge) {
@@ -84,23 +86,17 @@ export function DocumentUploadModal({
         return;
       }
 
-      // Files below 500 KB — reject
+      // Non-image files below 500 KB — reject
       if (tooSmall) {
         setSizeError(
           `File is too small (${formatBytes(f.size)}). Minimum size is 500 KB — please upload a higher-quality file.`,
         );
         setFile(f);
-        if (f.type.startsWith("image/")) {
-          const reader = new FileReader();
-          reader.onload = (e) => setPreview(e.target?.result as string);
-          reader.readAsDataURL(f);
-        } else {
-          setPreview(null);
-        }
+        setPreview(null);
         return;
       }
 
-      // Image over 3 MB — auto-compress
+      // Image outside 500 KB – 3 MB range — auto-compress to fit
       if (needsCompression) {
         setCompressing(true);
         setFile(f); // show the original while compressing
@@ -398,7 +394,7 @@ export function DocumentUploadModal({
                         PDF, PNG, JPG, or DOCX &bull; 500 KB – 3 MB
                       </p>
                       <p className="font-body text-xs text-muted-fg mt-0.5">
-                        Images over 3 MB will be automatically compressed
+                        Images are auto-adjusted to fit the size range
                       </p>
                     </div>
 
