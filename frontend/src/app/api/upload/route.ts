@@ -9,7 +9,8 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB
+const MIN_FILE_SIZE = 500 * 1024; // 500KB
 const ALLOWED_TYPES = [
   "application/pdf",
   "image/png",
@@ -33,8 +34,15 @@ export async function POST(req: NextRequest) {
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: "File too large. Maximum size is 10MB." },
+        { error: "File too large. Maximum size is 3 MB." },
         { status: 413 },
+      );
+    }
+
+    if (file.size < MIN_FILE_SIZE) {
+      return NextResponse.json(
+        { error: "File too small. Minimum size is 500 KB." },
+        { status: 400 },
       );
     }
 

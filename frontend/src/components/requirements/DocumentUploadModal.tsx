@@ -7,10 +7,26 @@
 
 import React, { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Upload, FileText, Image as ImageIcon, File } from "lucide-react";
+import {
+  X,
+  Upload,
+  FileText,
+  Image as ImageIcon,
+  File,
+  Minimize2,
+  AlertTriangle,
+  CheckCircle2,
+} from "lucide-react";
 import { Button, Textarea, ProgressBar } from "@/components/ui";
 import { SuccessIllustration } from "@/components/illustrations";
 import { useToast } from "@/components/providers/ToastProvider";
+import {
+  compressFile,
+  MIN_FILE_SIZE,
+  MAX_FILE_SIZE,
+  formatBytes,
+  type CompressionResult,
+} from "@/lib/compressFile";
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -36,19 +52,113 @@ export function DocumentUploadModal({
   const [progress, setProgress] = useState(0);
   const [success, setSuccess] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [compressing, setCompressing] = useState(false);
+  const [compressionInfo, setCompressionInfo] = useState<{
+    compressed: boolean;
+    originalSize: number;
+    finalSize: number;
+  } | null>(null);
+  const [sizeError, setSizeError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addToast } = useToast();
 
-  const handleFile = useCallback((f: File) => {
-    setFile(f);
-    if (f.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = (e) => setPreview(e.target?.result as string);
-      reader.readAsDataURL(f);
-    } else {
-      setPreview(null);
-    }
-  }, []);
+  const isImageType = (type: string) =>
+    type === "image/jpeg" || type === "image/png" || type === "image/jpg";
+
+  const handleFile = useCallback(
+    async (f: File) => {
+      setSizeError(null);
+      setCompressionInfo(null);
+
+      const needsCompression = f.size > MAX_FILE_SIZE && isImageType(f.type);
+      const tooLarge = f.size > MAX_FILE_SIZE && !isImageType(f.type);
+      const tooSmall = f.size < MIN_FILE_SIZE;
+
+      // Non-image files that exceed 3 MB — reject immediately
+      if (tooLarge) {
+        setSizeError(
+          `File is ${formatBytes(f.size)}. Maximum allowed is 3 MB. Please compress this file externally before uploading.`,
+        );
+        setFile(f);
+        setPreview(null);
+        return;
+      }
+
+      // Files below 500 KB — reject
+      if (tooSmall) {
+        setSizeError(
+          `File is too small (${formatBytes(f.size)}). Minimum size is 500 KB — please upload a higher-quality file.`,
+        );
+        setFile(f);
+        if (f.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = (e) => setPreview(e.target?.result as string);
+          reader.readAsDataURL(f);
+        } else {
+          setPreview(null);
+        }
+        return;
+      }
+
+      // Image over 3 MB — auto-compress
+      if (needsCompression) {
+        setCompressing(true);
+        setFile(f); // show the original while compressing
+        // Show original preview
+        const reader = new FileReader();
+        reader.onload = (e) => setPreview(e.target?.result as string);
+        reader.readAsDataURL(f);
+
+        try {
+          const result: CompressionResult = await compressFile(f);
+
+          if (result.error) {
+            setSizeError(result.error);
+            setCompressing(false);
+            return;
+          }
+
+          // Replace file with compressed version
+          setFile(result.file);
+          setCompressionInfo({
+            compressed: result.compressed,
+            originalSize: result.originalSize,
+            finalSize: result.finalSize,
+          });
+
+          // Update preview with compressed image
+          if (result.file.type.startsWith("image/")) {
+            const compReader = new FileReader();
+            compReader.onload = (e) => setPreview(e.target?.result as string);
+            compReader.readAsDataURL(result.file);
+          }
+
+          addToast(
+            `File compressed: ${formatBytes(result.originalSize)} → ${formatBytes(result.finalSize)}`,
+            "success",
+          );
+        } catch {
+          setSizeError(
+            "Failed to compress the image. Please try a smaller file.",
+          );
+        } finally {
+          setCompressing(false);
+        }
+        return;
+      }
+
+      // File is within valid range — use as-is
+      setFile(f);
+      if (f.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (e) => setPreview(e.target?.result as string);
+        reader.readAsDataURL(f);
+      } else {
+        setPreview(null);
+      }
+    },
+    [addToast],
+  );
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -61,7 +171,7 @@ export function DocumentUploadModal({
   );
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || sizeError) return;
     setUploading(true);
     setProgress(0);
 
@@ -141,6 +251,9 @@ export function DocumentUploadModal({
     setProgress(0);
     setSuccess(false);
     setUploading(false);
+    setCompressing(false);
+    setCompressionInfo(null);
+    setSizeError(null);
     onClose();
   };
 
@@ -167,7 +280,10 @@ export function DocumentUploadModal({
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
           onClick={(e) =>
-            e.target === e.currentTarget && !uploading && resetAndClose()
+            e.target === e.currentTarget &&
+            !uploading &&
+            !compressing &&
+            resetAndClose()
           }
           role="dialog"
           aria-modal="true"
@@ -194,7 +310,7 @@ export function DocumentUploadModal({
               </div>
               <button
                 onClick={resetAndClose}
-                disabled={uploading}
+                disabled={uploading || compressing}
                 className="p-1.5 rounded-lg text-muted-fg hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
                 aria-label="Close"
               >
@@ -279,12 +395,68 @@ export function DocumentUploadModal({
                           : "Drag & drop your file here"}
                       </p>
                       <p className="font-body text-xs text-muted-fg">
-                        PDF, PNG, JPG, or DOCX • Max 10MB
+                        PDF, PNG, JPG, or DOCX &bull; 500 KB – 3 MB
+                      </p>
+                      <p className="font-body text-xs text-muted-fg mt-0.5">
+                        Images over 3 MB will be automatically compressed
                       </p>
                     </div>
 
+                    {/* Compressing indicator */}
+                    {compressing && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-ocean-50 dark:bg-ocean-400/10 border border-ocean-200 dark:border-ocean-400/20"
+                      >
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{
+                            repeat: Infinity,
+                            duration: 1,
+                            ease: "linear",
+                          }}
+                        >
+                          <Minimize2 className="w-4 h-4 text-ocean-500" />
+                        </motion.div>
+                        <p className="text-sm font-body text-ocean-700 dark:text-ocean-300">
+                          Compressing file…
+                        </p>
+                      </motion.div>
+                    )}
+
+                    {/* Size error */}
+                    {sizeError && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="flex items-start gap-3 p-3 rounded-xl bg-coral-50 dark:bg-coral-400/10 border border-coral-200 dark:border-coral-400/20"
+                      >
+                        <AlertTriangle className="w-4 h-4 text-coral-500 mt-0.5 flex-shrink-0" />
+                        <p className="text-sm font-body text-coral-700 dark:text-coral-300">
+                          {sizeError}
+                        </p>
+                      </motion.div>
+                    )}
+
+                    {/* Compression success info */}
+                    {compressionInfo?.compressed && !sizeError && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-400/10 border border-emerald-200 dark:border-emerald-400/20"
+                      >
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                        <p className="text-sm font-body text-emerald-700 dark:text-emerald-300">
+                          Compressed:{" "}
+                          {formatBytes(compressionInfo.originalSize)} →{" "}
+                          {formatBytes(compressionInfo.finalSize)}
+                        </p>
+                      </motion.div>
+                    )}
+
                     {/* File Preview */}
-                    {file && (
+                    {file && !compressing && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
@@ -318,6 +490,8 @@ export function DocumentUploadModal({
                               e.stopPropagation();
                               setFile(null);
                               setPreview(null);
+                              setCompressionInfo(null);
+                              setSizeError(null);
                             }}
                             className="text-muted-fg hover:text-coral-400 transition-colors"
                             aria-label="Remove file"
@@ -361,13 +535,13 @@ export function DocumentUploadModal({
                 <Button
                   variant="ghost"
                   onClick={resetAndClose}
-                  disabled={uploading}
+                  disabled={uploading || compressing}
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleUpload}
-                  disabled={!file || uploading}
+                  disabled={!file || uploading || compressing || !!sizeError}
                   isLoading={uploading}
                   leftIcon={<Upload className="w-4 h-4" />}
                 >
