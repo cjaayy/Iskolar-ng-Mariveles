@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { supabase } from "@db/connection";
+import { sendCredentialsEmail } from "@/lib/sendEmail";
 
 function generatePassword(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
@@ -60,6 +61,15 @@ export async function POST(req: NextRequest) {
         status = 409;
       }
       return NextResponse.json({ error: result.error }, { status });
+    }
+
+    try {
+      await sendCredentialsEmail(email, fullName, {
+        email,
+        password: plainPassword,
+      });
+    } catch (emailErr) {
+      console.error("[POST /api/auth/register] Email send error:", emailErr);
     }
 
     return NextResponse.json(
