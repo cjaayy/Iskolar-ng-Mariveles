@@ -290,7 +290,7 @@ export default function RegisterPage({
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="relative w-full max-w-md"
       >
-        <div className="bg-card-bg/95 backdrop-blur border border-card-border rounded-3xl p-8 md:p-10 shadow-xl">
+        <div className="bg-transparent border border-white/20 rounded-3xl p-8 md:p-10">
           <div className="text-center mb-6">
             <Image
               src="/mariveles-seal.png"
@@ -300,13 +300,13 @@ export default function RegisterPage({
               className="mx-auto mb-3"
               priority
             />
-            <h1 className="font-heading text-2xl font-bold text-foreground mb-1">
+            <h1 className="font-heading text-2xl font-bold text-white mb-1">
               Online Registration
             </h1>
             {linkLabel && (
               <p className="text-sm font-body text-ocean-400">{linkLabel}</p>
             )}
-            <p className="text-xs font-body text-muted-fg mt-1">
+            <p className="text-xs font-body text-white/70 mt-1">
               Iskolar ng Mariveles Scholarship System
             </p>
           </div>
