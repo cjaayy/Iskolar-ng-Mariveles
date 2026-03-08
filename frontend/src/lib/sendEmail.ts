@@ -58,3 +58,46 @@ export async function sendCredentialsEmail(
     html,
   });
 }
+
+export async function sendPasswordResetEmail(
+  to: string,
+  fullName: string,
+  resetLink: string,
+) {
+  const html = `
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e5e7eb;">
+      <div style="background: linear-gradient(135deg, #16a34a, #15803d); padding: 32px 24px; text-align: center;">
+        <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 700;">Iskolar ng Mariveles</h1>
+        <p style="color: #bbf7d0; margin: 8px 0 0; font-size: 13px;">Scholarship System</p>
+      </div>
+      <div style="padding: 32px 24px;">
+        <p style="color: #374151; font-size: 15px; margin: 0 0 8px;">Kumusta, <strong>${fullName}</strong>!</p>
+        <p style="color: #6b7280; font-size: 14px; margin: 0 0 24px;">
+          We received a request to reset your password. Click the button below to set a new password.
+        </p>
+        <div style="text-align: center; margin-bottom: 24px;">
+          <a href="${resetLink}" style="display: inline-block; background: #16a34a; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-size: 15px; font-weight: 600;">
+            Reset Password
+          </a>
+        </div>
+        <p style="color: #6b7280; font-size: 13px; margin: 0 0 8px;">
+          This link will expire in 1 hour. If you did not request a password reset, you can safely ignore this email.
+        </p>
+        <p style="color: #9ca3af; font-size: 12px; margin: 0 0 16px; word-break: break-all;">
+          ${resetLink}
+        </p>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+        <p style="color: #9ca3af; font-size: 11px; margin: 0; text-align: center;">
+          This is an automated message from Iskolar ng Mariveles. Please do not reply.
+        </p>
+      </div>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: `"Iskolar ng Mariveles" <${process.env.GMAIL_USER}>`,
+    to,
+    subject: "Reset Your Password — Iskolar ng Mariveles",
+    html,
+  });
+}
