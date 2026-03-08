@@ -1,10 +1,3 @@
-/**
- * app/api/admin/approved/route.ts
- *
- * GET /api/admin/approved — list all applicants whose requirements are ALL approved.
- * These are considered fully validated / approved scholars.
- * Supports ?search= for name/email filtering.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
@@ -32,7 +25,6 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search") || undefined;
     const totalRequired = REQUIREMENT_CONFIGS.length;
 
-    // Fetch all non-draft applications with applicant info
     let q = supabase
       .from("applications")
       .select(
@@ -59,11 +51,8 @@ export async function GET(req: NextRequest) {
     const { data: appRows, error: appError } = await q;
     if (appError) throw appError;
 
-    // Get all application IDs
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const appIds = (appRows ?? []).map((r: Record<string, any>) => r.id);
 
-    // Fetch requirement submissions to compute approved counts
     let submissions: { application_id: number; status: string }[] = [];
     if (appIds.length > 0) {
       const { data: subs, error: subError } = await supabase
@@ -74,7 +63,6 @@ export async function GET(req: NextRequest) {
       submissions = subs ?? [];
     }
 
-    // Count approved requirements per application
     const approvedByApp: Record<number, number> = {};
     for (const sub of submissions) {
       if (sub.status === "approved") {
@@ -83,9 +71,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Filter to only applications where ALL requirements are approved (HAVING equivalent)
     const rows = (appRows ?? [])
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .map((r: Record<string, any>) => {
         const applicant = r.applicants as unknown as {
           id: number;
@@ -106,8 +92,13 @@ export async function GET(req: NextRequest) {
           total_requirements: totalRequired,
         };
       })
-      .filter((r: { approved_requirements: number; total_requirements: number }) => r.approved_requirements === r.total_requirements)
-      .sort((a: { applicant_name: string }, b: { applicant_name: string }) => a.applicant_name.localeCompare(b.applicant_name));
+      .filter(
+        (r: { approved_requirements: number; total_requirements: number }) =>
+          r.approved_requirements === r.total_requirements,
+      )
+      .sort((a: { applicant_name: string }, b: { applicant_name: string }) =>
+        a.applicant_name.localeCompare(b.applicant_name),
+      );
 
     return NextResponse.json({
       data: rows,

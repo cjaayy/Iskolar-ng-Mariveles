@@ -1,8 +1,3 @@
-/* ================================================================
-   PROFILE SECTION
-   Read-only view of all basic information (Personal, Parents, Education)
-   ================================================================ */
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -15,7 +10,6 @@ import {
   getApplicantId,
 } from "@/components/providers/SessionProvider";
 
-/* ─── Sub-tab definitions ─── */
 const SUB_TABS = [
   { key: "personal", label: "Personal Information", icon: User },
   { key: "parents", label: "Parents", icon: Heart },
@@ -23,9 +17,7 @@ const SUB_TABS = [
 ] as const;
 type SubTabKey = (typeof SUB_TABS)[number]["key"];
 
-/* ─── Data shape ─── */
 interface ProfileData {
-  /* personal */
   date_of_birth: string;
   gender: string;
   blood_type: string;
@@ -41,7 +33,6 @@ interface ProfileData {
   house_street: string;
   town: string;
   barangay: string;
-  /* parents */
   father_name: string;
   father_occupation: string;
   father_contact: string;
@@ -51,7 +42,6 @@ interface ProfileData {
   guardian_name: string;
   guardian_relation: string;
   guardian_contact: string;
-  /* education */
   primary_school: string;
   primary_address: string;
   primary_year_graduated: string;
@@ -64,7 +54,6 @@ interface ProfileData {
   tertiary_program: string;
 }
 
-/* -- Animations -- */
 const stagger = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.08 } },
@@ -77,8 +66,6 @@ const fadeUp = {
     transition: { duration: 0.35, ease: "easeOut" as const },
   },
 };
-
-/* ======================== PROFILE PAGE ======================== */
 
 export default function ProfilePage() {
   const { user, loading: sessionLoading } = useSession();
@@ -178,7 +165,6 @@ export default function ProfilePage() {
       animate="show"
       className="space-y-6"
     >
-      {/* Breadcrumb */}
       <motion.div variants={fadeUp}>
         <Breadcrumb
           items={[
@@ -188,7 +174,6 @@ export default function ProfilePage() {
         />
       </motion.div>
 
-      {/* Profile Header */}
       <motion.div variants={fadeUp}>
         <Card className="relative overflow-hidden">
           <div
@@ -206,7 +191,6 @@ export default function ProfilePage() {
         </Card>
       </motion.div>
 
-      {/* Sub-tabs */}
       <motion.div variants={fadeUp}>
         <div className="flex gap-1 border-b border-card-border">
           {SUB_TABS.map((tab) => (
@@ -236,7 +220,6 @@ export default function ProfilePage() {
         </div>
       </motion.div>
 
-      {/* Tab Content */}
       <motion.div variants={fadeUp}>
         <Card>
           {activeTab === "personal" && data && <PersonalTab data={data} />}
@@ -248,12 +231,9 @@ export default function ProfilePage() {
   );
 }
 
-/* ======================== READ-ONLY TAB COMPONENTS ======================== */
-
-/* ── Personal Information ── */
 function PersonalTab({ data }: { data: ProfileData }) {
   const formatDate = (d: string) => {
-    if (!d) return "—";
+    if (!d) return "\u2014";
     return new Date(d).toLocaleDateString("en-US", {
       month: "long",
       day: "numeric",
@@ -301,7 +281,6 @@ function PersonalTab({ data }: { data: ProfileData }) {
   );
 }
 
-/* ── Parents / Guardian ── */
 function ParentsTab({ data }: { data: ProfileData }) {
   return (
     <div className="space-y-6">
@@ -329,7 +308,6 @@ function ParentsTab({ data }: { data: ProfileData }) {
   );
 }
 
-/* ── Education ── */
 function EducationTab({ data }: { data: ProfileData }) {
   return (
     <div className="space-y-6">
@@ -358,8 +336,6 @@ function EducationTab({ data }: { data: ProfileData }) {
   );
 }
 
-/* ======================== HELPER COMPONENTS ======================== */
-
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <h3 className="font-heading text-base font-semibold text-foreground border-b border-card-border pb-2">
@@ -373,7 +349,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     <div>
       <p className="text-xs font-body text-muted-fg">{label}</p>
       <p className="text-sm font-body font-medium text-foreground mt-0.5">
-        {value || "—"}
+        {value || "\u2014"}
       </p>
     </div>
   );

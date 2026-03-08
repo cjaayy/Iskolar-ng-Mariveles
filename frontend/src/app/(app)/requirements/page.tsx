@@ -1,8 +1,3 @@
-/* ================================================================
-   REQUIREMENTS TRACKER PAGE
-   Interactive checklist, filters, upload, sample docs, grouping
-   ================================================================ */
-
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
@@ -45,7 +40,6 @@ import {
   getApplicantId,
 } from "@/components/providers/SessionProvider";
 
-/* -- Types -- */
 type RequirementStatus =
   | "approved"
   | "pending"
@@ -69,8 +63,6 @@ interface Requirement {
   validatorNotes?: string | null;
   validatedAt?: string | null;
 }
-
-/* -- Mock Data removed – loaded from /api/me/requirements -- */
 
 const statusConfig: Record<
   RequirementStatus,
@@ -99,7 +91,6 @@ const groupIcons = {
   financial: Wallet,
 };
 
-/* -- Animations -- */
 const stagger = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.06 } },
@@ -112,8 +103,6 @@ const fadeUp = {
     transition: { duration: 0.35, ease: "easeOut" as const },
   },
 };
-
-/* ======================== REQUIREMENTS PAGE ======================== */
 
 export default function RequirementsPage() {
   const { user } = useSession();
@@ -135,7 +124,6 @@ export default function RequirementsPage() {
   }>({ open: false });
   const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
 
-  // Load requirements from API on mount
   const loadRequirements = useCallback(async () => {
     try {
       const applicantId = getApplicantId();
@@ -147,7 +135,6 @@ export default function RequirementsPage() {
         const data = await res.json();
         const reqs: Requirement[] = data.requirements ?? [];
         setRequirements(reqs);
-        // Pre-check approved items
         setCheckedItems(
           new Set(reqs.filter((r) => r.status === "approved").map((r) => r.id)),
         );
@@ -163,9 +150,8 @@ export default function RequirementsPage() {
     loadRequirements();
   }, [loadRequirements]);
 
-  void user; // session available for future auth gating
+  void user;
 
-  /* Filtered requirements */
   const filtered = useMemo(() => {
     return requirements.filter((r) => {
       const matchesFilter = filter === "all" || r.status === filter;
@@ -176,7 +162,6 @@ export default function RequirementsPage() {
     });
   }, [filter, searchQuery, requirements]);
 
-  /* Grouped */
   const grouped = useMemo(() => {
     const groups: Record<string, Requirement[]> = {
       personal: [],
@@ -227,7 +212,7 @@ export default function RequirementsPage() {
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-4 border-ocean-400 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm font-body text-muted-fg">
-            Loading requirements…
+            Loading requirements\u2026
           </p>
         </div>
       </div>
@@ -242,7 +227,6 @@ export default function RequirementsPage() {
         animate="show"
         className="space-y-6"
       >
-        {/* Breadcrumb */}
         <motion.div variants={fadeUp}>
           <Breadcrumb
             items={[
@@ -252,7 +236,6 @@ export default function RequirementsPage() {
           />
         </motion.div>
 
-        {/* Page Header */}
         <motion.div
           variants={fadeUp}
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
@@ -267,7 +250,6 @@ export default function RequirementsPage() {
           </div>
         </motion.div>
 
-        {/* Overall Progress */}
         <motion.div variants={fadeUp}>
           <Card>
             <ProgressBar
@@ -299,12 +281,10 @@ export default function RequirementsPage() {
           </Card>
         </motion.div>
 
-        {/* Search + Filters */}
         <motion.div
           variants={fadeUp}
           className="flex flex-col sm:flex-row gap-3"
         >
-          {/* Search */}
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
             <input
@@ -317,7 +297,6 @@ export default function RequirementsPage() {
             />
           </div>
 
-          {/* Filter pills */}
           <div className="flex items-center gap-2 flex-wrap">
             <Filter className="w-4 h-4 text-muted-fg flex-shrink-0" />
             {(
@@ -351,7 +330,6 @@ export default function RequirementsPage() {
           </div>
         </motion.div>
 
-        {/* Requirements Groups */}
         {(Object.entries(grouped) as [string, Requirement[]][]).map(
           ([group, items]) => {
             if (items.length === 0) return null;
@@ -359,7 +337,6 @@ export default function RequirementsPage() {
 
             return (
               <motion.div key={group} variants={fadeUp} className="space-y-3">
-                {/* Group Header */}
                 <button
                   onClick={() => toggleGroup(group)}
                   className="flex items-center gap-2 w-full text-left group"
@@ -386,7 +363,6 @@ export default function RequirementsPage() {
                   )}
                 </button>
 
-                {/* Requirements List */}
                 <AnimatePresence>
                   {isExpanded && (
                     <motion.div
@@ -419,7 +395,6 @@ export default function RequirementsPage() {
           },
         )}
 
-        {/* Empty State */}
         {filtered.length === 0 && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -447,7 +422,6 @@ export default function RequirementsPage() {
         )}
       </motion.div>
 
-      {/* Upload Modal */}
       <DocumentUploadModal
         isOpen={uploadModal.open}
         onClose={() => setUploadModal({ open: false })}
@@ -459,8 +433,6 @@ export default function RequirementsPage() {
     </>
   );
 }
-
-/* ======================== REQUIREMENT ROW COMPONENT ======================== */
 
 function RequirementRow({
   requirement: req,
@@ -475,7 +447,6 @@ function RequirementRow({
 }) {
   const [expanded, setExpanded] = useState(false);
   const config = statusConfig[req.status] ?? statusConfig.missing;
-  // StatusIcon available via config.icon if needed
   const dueDate = new Date(req.dueDate);
   const isOverdue = dueDate < new Date() && req.status !== "approved";
   const daysDiff = Math.ceil(
@@ -491,12 +462,10 @@ function RequirementRow({
     >
       <div className="p-4 sm:p-5">
         <div className="flex items-start gap-3">
-          {/* Checkbox */}
           <div className="pt-0.5">
             <Checkbox checked={isChecked} onChange={onToggle} />
           </div>
 
-          {/* Main content */}
           <div className="flex-1 min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
@@ -514,7 +483,6 @@ function RequirementRow({
               </div>
             </div>
 
-            {/* Rejection reason banner */}
             {isRejected && req.validatorNotes && (
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
@@ -557,7 +525,6 @@ function RequirementRow({
               </motion.div>
             )}
 
-            {/* Progress */}
             <div className="mt-3">
               <ProgressBar
                 value={isRejected ? 0 : req.progress}
@@ -573,7 +540,6 @@ function RequirementRow({
               />
             </div>
 
-            {/* Due date + actions */}
             <div className="flex flex-wrap items-center justify-between gap-2 mt-3">
               <div className="flex items-center gap-2">
                 <Calendar className="w-3.5 h-3.5 text-muted-fg" />
@@ -644,7 +610,6 @@ function RequirementRow({
         </div>
       </div>
 
-      {/* Expanded details */}
       <AnimatePresence>
         {expanded && (
           <motion.div

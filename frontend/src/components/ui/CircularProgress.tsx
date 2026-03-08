@@ -2,8 +2,6 @@
 
 import React from "react";
 
-/* ======================== CIRCULAR PROGRESS ======================== */
-
 interface CircularProgressProps {
   value: number;
   size?: number;

@@ -4,8 +4,6 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HelpCircle } from "lucide-react";
 
-/* ======================== TOOLTIP ======================== */
-
 interface TooltipProps {
   content: string;
   children: React.ReactNode;
@@ -53,8 +51,6 @@ export function Tooltip({ content, children, position = "top" }: TooltipProps) {
     </div>
   );
 }
-
-/* ======================== HELP TOOLTIP ICON ======================== */
 
 export function HelpTip({ content }: { content: string }) {
   return (

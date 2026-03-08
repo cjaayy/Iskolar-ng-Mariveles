@@ -1,9 +1,3 @@
-/* ================================================================
-   ONLINE REGISTRATION PAGE
-   Applicants register via a pre-registration link shared per barangay.
-   The system auto-generates their account credentials and displays them.
-   ================================================================ */
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -20,7 +14,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui";
 
-/* -- Barangay list for Mariveles, Bataan -- */
 const MARIVELES_BARANGAYS = [
   "Alas-asin",
   "Alion",
@@ -55,7 +48,6 @@ export default function RegisterPage({
   const [tokenError, setTokenError] = useState("");
   const [linkLabel, setLinkLabel] = useState("");
 
-  // Form fields
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [barangay, setBarangay] = useState("");
@@ -65,14 +57,12 @@ export default function RegisterPage({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
 
-  // Credentials returned after registration
   const [credentials, setCredentials] = useState<{
     email: string;
     password: string;
   } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Validate token on mount
   useEffect(() => {
     async function validateToken() {
       try {
@@ -113,7 +103,6 @@ export default function RegisterPage({
     if (!validate()) return;
     setIsLoading(true);
 
-    // Build full address
     const address = street.trim()
       ? `${street.trim()}, ${barangay}, Mariveles, Bataan`
       : `${barangay}, Mariveles, Bataan`;
@@ -156,7 +145,6 @@ export default function RegisterPage({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Token validation loading state
   if (validating) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -174,7 +162,6 @@ export default function RegisterPage({
     );
   }
 
-  // Invalid token
   if (!tokenValid) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -201,7 +188,6 @@ export default function RegisterPage({
     );
   }
 
-  // Success — show generated credentials
   if (success && credentials) {
     return (
       <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
@@ -232,7 +218,6 @@ export default function RegisterPage({
               Please save them.
             </p>
 
-            {/* Credentials card */}
             <div className="bg-muted rounded-2xl p-5 text-left mb-6 space-y-3">
               <div>
                 <p className="text-xs font-body text-muted-fg mb-0.5">
@@ -287,10 +272,8 @@ export default function RegisterPage({
     );
   }
 
-  // Registration form
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
-      {/* Background */}
       <Image
         src="/image.png"
         alt=""
@@ -301,7 +284,6 @@ export default function RegisterPage({
       />
       <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
 
-      {/* Registration Card */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -309,7 +291,6 @@ export default function RegisterPage({
         className="relative w-full max-w-md"
       >
         <div className="bg-card-bg/95 backdrop-blur border border-card-border rounded-3xl p-8 md:p-10 shadow-xl">
-          {/* Header */}
           <div className="text-center mb-6">
             <Image
               src="/mariveles-seal.png"
@@ -330,9 +311,7 @@ export default function RegisterPage({
             </p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            {/* Full Name */}
             <div>
               <label className="block text-xs font-body text-muted-fg mb-1">
                 Full Name
@@ -359,7 +338,6 @@ export default function RegisterPage({
               )}
             </div>
 
-            {/* Email */}
             <div>
               <label className="block text-xs font-body text-muted-fg mb-1">
                 Email
@@ -386,7 +364,6 @@ export default function RegisterPage({
               )}
             </div>
 
-            {/* Address in Mariveles, Bataan */}
             <div>
               <label className="block text-xs font-body text-muted-fg mb-1">
                 Barangay{" "}
@@ -419,7 +396,6 @@ export default function RegisterPage({
               )}
             </div>
 
-            {/* Street / Purok (optional) */}
             <div>
               <label className="block text-xs font-body text-muted-fg mb-1">
                 Street / Purok / Sitio{" "}
@@ -437,7 +413,6 @@ export default function RegisterPage({
               </div>
             </div>
 
-            {/* Submit error */}
             {errors.submit && (
               <div className="bg-coral-50 dark:bg-coral-500/10 border border-coral-200 dark:border-coral-500/20 rounded-xl px-4 py-3">
                 <p className="text-sm text-coral-500 font-body">
@@ -446,7 +421,6 @@ export default function RegisterPage({
               </div>
             )}
 
-            {/* Submit */}
             <Button
               type="submit"
               size="lg"

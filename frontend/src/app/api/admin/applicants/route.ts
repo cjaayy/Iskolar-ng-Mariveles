@@ -1,10 +1,3 @@
-/**
- * app/api/admin/applicants/route.ts
- *
- * GET /api/admin/applicants — list all applicants with their user info & application status.
- * Supports ?view=applications to return application-level rows instead.
- * Admin only.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
@@ -33,7 +26,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const { searchParams } = req.nextUrl;
-    const view = searchParams.get("view"); // "applications" or default (applicants)
+    const view = searchParams.get("view");
     const search = searchParams.get("search") || undefined;
     const page = Math.max(1, Number(searchParams.get("page") || 1));
     const limit = Math.min(
@@ -42,11 +35,9 @@ export async function GET(req: NextRequest) {
     );
     const offset = (page - 1) * limit;
 
-    // ─── Applications view ────────────────────────────────────────────
     if (view === "applications") {
       const status = searchParams.get("status") || undefined;
 
-      // Build the applications query
       let q = supabase
         .from("applications")
         .select(
@@ -71,7 +62,6 @@ export async function GET(req: NextRequest) {
         q = q.ilike("applicants.users.full_name", `%${search}%`);
       }
 
-      // Count total
       let countQ = supabase
         .from("applications")
         .select(
@@ -96,15 +86,12 @@ export async function GET(req: NextRequest) {
       const { count: total, error: countError } = await countQ;
       if (countError) throw countError;
 
-      // Fetch paginated data -- manual sorting with status priority
       const { data: appRows, error: appError } = await q
         .order("updated_at", { ascending: false })
         .range(offset, offset + limit - 1);
 
       if (appError) throw appError;
 
-      // Get all application IDs for requirement counts
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const appIds = (appRows ?? []).map((r: Record<string, any>) => r.id);
       let submissions: { application_id: number; status: string }[] = [];
       if (appIds.length > 0) {
@@ -116,11 +103,8 @@ export async function GET(req: NextRequest) {
         submissions = subs ?? [];
       }
 
-      // Compute counts per application
-      const countsByApp: Record<
-        number,
-        { approved: number; pending: number }
-      > = {};
+      const countsByApp: Record<number, { approved: number; pending: number }> =
+        {};
       for (const sub of submissions) {
         if (!countsByApp[sub.application_id]) {
           countsByApp[sub.application_id] = { approved: 0, pending: 0 };
@@ -130,7 +114,6 @@ export async function GET(req: NextRequest) {
         if (sub.status === "pending") countsByApp[sub.application_id].pending++;
       }
 
-      // Sort by status priority, then updated_at desc
       const statusOrder: Record<string, number> = {
         submitted: 1,
         under_review: 2,
@@ -140,7 +123,6 @@ export async function GET(req: NextRequest) {
       };
 
       const rows = (appRows ?? [])
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((r: Record<string, any>) => {
           const applicant = r.applicants as unknown as {
             barangay: string | null;
@@ -175,7 +157,6 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // ─── Default: Applicants (people) view ────────────────────────────
     let q = supabase
       .from("users")
       .select(
@@ -202,7 +183,6 @@ export async function GET(req: NextRequest) {
     const { data: userRows, error: userError } = await q;
     if (userError) throw userError;
 
-    // Count total
     let countQ = supabase
       .from("users")
       .select("id, applicants!inner(id)", { count: "exact", head: true })
@@ -215,17 +195,13 @@ export async function GET(req: NextRequest) {
     const { count: total, error: countError } = await countQ;
     if (countError) throw countError;
 
-    // Get applicant IDs to fetch application counts
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const applicantIds = (userRows ?? []).map((u: Record<string, any>) => {
       const applicant = u.applicants as unknown as { id: number };
       return applicant.id;
     });
 
-    let applicationCounts: Record<
-      number,
-      { total: number; approved: number }
-    > = {};
+    let applicationCounts: Record<number, { total: number; approved: number }> =
+      {};
 
     if (applicantIds.length > 0) {
       const { data: apps, error: appsError } = await supabase
@@ -250,7 +226,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rows = (userRows ?? []).map((u: Record<string, any>) => {
       const applicant = u.applicants as unknown as {
         id: number;

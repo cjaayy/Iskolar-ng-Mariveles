@@ -1,8 +1,3 @@
-/**
- * app/api/admin/me/route.ts
- *
- * GET /api/admin/me — returns admin user profile info.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 

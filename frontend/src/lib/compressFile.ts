@@ -1,13 +1,5 @@
-/**
- * Client-side file compression utility.
- *
- * Supports JPEG/PNG images via the Canvas API.
- * PDFs, DOC, and DOCX cannot be meaningfully compressed in the browser,
- * so those formats are returned as-is with a flag indicating no compression.
- */
-
-const MIN_FILE_SIZE = 500 * 1024; // 500 KB
-const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3 MB
+const MIN_FILE_SIZE = 500 * 1024;
+const MAX_FILE_SIZE = 3 * 1024 * 1024;
 
 export interface CompressionResult {
   file: File;
@@ -17,9 +9,6 @@ export interface CompressionResult {
   error?: string;
 }
 
-/**
- * Load an image from a File into an HTMLImageElement.
- */
 function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -29,10 +18,6 @@ function loadImage(file: File): Promise<HTMLImageElement> {
   });
 }
 
-/**
- * Render an image to a canvas at the given dimensions and quality,
- * then return the resulting Blob.
- */
 function canvasToBlob(
   img: HTMLImageElement,
   width: number,
@@ -53,7 +38,6 @@ function canvasToBlob(
 
     ctx.drawImage(img, 0, 0, width, height);
 
-    // PNG ignores quality; for PNG we may need to fall back to JPEG
     canvas.toBlob(
       (blob) => {
         if (!blob) {
@@ -68,22 +52,9 @@ function canvasToBlob(
   });
 }
 
-/**
- * Compress an image file to land inside the 500 KB – 3 MB range.
- *
- * Strategy — binary-search on JPEG quality at each scale level:
- *  1. At the current scale, binary-search quality (0.1 – 0.92) to find the
- *     highest quality whose output is ≤ 3 MB **and** ≥ 500 KB.
- *  2. If even quality = 0.1 at this scale is still > 3 MB, shrink dimensions
- *     by 10 % and retry.
- *  3. If quality = 0.92 produces < 500 KB at this scale, that means the image
- *     is inherently small — accept the highest-quality result we can get
- *     (even if it sits below 500 KB).
- */
 async function compressImage(file: File): Promise<CompressionResult> {
   const originalSize = file.size;
 
-  // Already within limits
   if (file.size <= MAX_FILE_SIZE && file.size >= MIN_FILE_SIZE) {
     return { file, compressed: false, originalSize, finalSize: file.size };
   }
@@ -97,9 +68,7 @@ async function compressImage(file: File): Promise<CompressionResult> {
   const width = img.naturalWidth;
   const height = img.naturalHeight;
 
-  // ── Image is UNDER 500 KB — re-encode at max quality to reach minimum ──
   if (file.size < MIN_FILE_SIZE) {
-    // Try increasing quality up to 1.0
     let bestBlob: Blob | null = null;
 
     for (const q of [1.0, 0.98, 0.95]) {
@@ -108,9 +77,7 @@ async function compressImage(file: File): Promise<CompressionResult> {
         bestBlob = blob;
         break;
       }
-      // If q=1.0 is still < 500KB, try scaling up slightly
       if (blob.size < MIN_FILE_SIZE && q === 1.0) {
-        // Scale up in steps until we reach 500 KB or 3 MB cap
         for (let upScale = 1.25; upScale <= 3.0; upScale += 0.25) {
           const w = Math.round(width * upScale);
           const h = Math.round(height * upScale);
@@ -119,11 +86,11 @@ async function compressImage(file: File): Promise<CompressionResult> {
             bestBlob = upBlob;
             break;
           }
-          if (upBlob.size > MAX_FILE_SIZE) break; // don't overshoot
+          if (upBlob.size > MAX_FILE_SIZE) break;
         }
         break;
       }
-      if (blob.size > MAX_FILE_SIZE) continue; // try lower quality
+      if (blob.size > MAX_FILE_SIZE) continue;
     }
 
     URL.revokeObjectURL(originalUrl);
@@ -137,7 +104,6 @@ async function compressImage(file: File): Promise<CompressionResult> {
       };
     }
 
-    // Could not bring it up to 500 KB — return the max-quality version anyway
     const fallback = await canvasToBlob(img, width, height, 1.0, outputMime);
     return {
       file: blobToFile(fallback, file.name, outputExt, outputMime),
@@ -147,10 +113,8 @@ async function compressImage(file: File): Promise<CompressionResult> {
     };
   }
 
-  // ── Image is OVER 3 MB — compress down ──
   const minScale = 0.3;
 
-  // Helper: binary-search quality at a fixed scale, targeting ≤ 3 MB.
   async function searchQuality(
     scale: number,
   ): Promise<{ blob: Blob; quality: number } | null> {
@@ -184,14 +148,13 @@ async function compressImage(file: File): Promise<CompressionResult> {
   for (let scale = 1; scale >= minScale; scale -= 0.1) {
     const result = await searchQuality(scale);
 
-    if (!result) continue; // too large even at lowest quality
+    if (!result) continue;
 
     if (result.blob.size >= MIN_FILE_SIZE) {
       bestResult = result;
       break;
     }
 
-    // Result < 500 KB — image is inherently small at this scale; accept it
     bestResult = result;
     break;
   }
@@ -233,15 +196,9 @@ function formatBytes(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }
 
-/**
- * Main entry point.
- * - Images: compress via Canvas API.
- * - PDF / DOC / DOCX: return size-validation result only (no browser compression).
- */
 export async function compressFile(file: File): Promise<CompressionResult> {
   const originalSize = file.size;
 
-  // Image types — can compress
   if (
     file.type === "image/jpeg" ||
     file.type === "image/png" ||
@@ -250,7 +207,6 @@ export async function compressFile(file: File): Promise<CompressionResult> {
     return compressImage(file);
   }
 
-  // Non-image types — validate size only
   if (file.size > MAX_FILE_SIZE) {
     return {
       file,

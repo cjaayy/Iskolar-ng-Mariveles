@@ -1,10 +1,3 @@
-/**
- * app/api/admin/invites/[id]/route.ts
- *
- * PATCH  /api/admin/invites/:id — toggle invite link active status
- * DELETE /api/admin/invites/:id — delete an invite link
- * Admin only.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 

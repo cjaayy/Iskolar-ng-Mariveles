@@ -1,12 +1,3 @@
-/**
- * app/api/admin/validators/route.ts
- *
- * GET    /api/admin/validators          — list all validator accounts.
- * POST   /api/admin/validators          — create a new validator account.
- * PATCH  /api/admin/validators          — toggle active / assign barangay.
- * DELETE /api/admin/validators?id=<id>  — permanently delete a validator.
- * Admin only.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 
@@ -22,7 +13,6 @@ async function verifyAdmin(adminId: string): Promise<boolean> {
   return !error && !!data;
 }
 
-/* ─── GET ─── list validators ─── */
 export async function GET(req: NextRequest) {
   const adminId = req.headers.get("x-admin-id");
   if (!adminId) {
@@ -36,7 +26,6 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     const search = searchParams.get("search") || undefined;
 
-    // Build query for validators
     let q = supabase
       .from("users")
       .select("id, email, full_name, is_active, assigned_barangay, created_at")
@@ -50,9 +39,9 @@ export async function GET(req: NextRequest) {
     const { data: validators, error } = await q;
     if (error) throw error;
 
-    // Fetch validation counts for all validators in one query
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const validatorIds = (validators ?? []).map((v: Record<string, any>) => v.id);
+    const validatorIds = (validators ?? []).map(
+      (v: Record<string, any>) => v.id,
+    );
     let validationCounts: Record<number, number> = {};
 
     if (validatorIds.length > 0) {
@@ -63,7 +52,6 @@ export async function GET(req: NextRequest) {
 
       if (countError) throw countError;
 
-      // Count per validator
       validationCounts = (counts ?? []).reduce(
         (acc: Record<number, number>, row: { validator_id: number }) => {
           acc[row.validator_id] = (acc[row.validator_id] || 0) + 1;
@@ -73,7 +61,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = (validators ?? []).map((v: Record<string, any>) => ({
       ...v,
       total_validations: validationCounts[v.id] || 0,
@@ -89,7 +76,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-/* ─── POST ─── create validator ─── */
 export async function POST(req: NextRequest) {
   const adminId = req.headers.get("x-admin-id");
   if (!adminId) {
@@ -122,7 +108,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if email already exists
     const { data: existing } = await supabase
       .from("users")
       .select("id")
@@ -137,7 +122,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if another validator is already assigned to this barangay
     const { data: barangayTaken } = await supabase
       .from("users")
       .select("id, full_name")
@@ -156,14 +140,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Hash password
     let hash = password;
     try {
       const bcrypt = await import("bcrypt");
       hash = await bcrypt.hash(password, 10);
-    } catch {
-      // bcrypt not available — store raw (demo only)
-    }
+    } catch {}
 
     const { data: inserted, error } = await supabase
       .from("users")
@@ -192,7 +173,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/* ─── PATCH ─── toggle active / update barangay ─── */
 export async function PATCH(req: NextRequest) {
   const adminId = req.headers.get("x-admin-id");
   if (!adminId) {
@@ -217,7 +197,6 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Verify target is a validator
     const { data: target } = await supabase
       .from("users")
       .select("role")
@@ -258,7 +237,6 @@ export async function PATCH(req: NextRequest) {
           { status: 400 },
         );
       }
-      // Check if another active validator is already assigned to this barangay
       const { data: taken } = await supabase
         .from("users")
         .select("id, full_name")
@@ -296,7 +274,6 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-/* ─── DELETE ─── remove validator ─── */
 export async function DELETE(req: NextRequest) {
   const adminId = req.headers.get("x-admin-id");
   if (!adminId) {
@@ -317,7 +294,6 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    // Verify target is a validator (prevent deleting admins)
     const { data: target } = await supabase
       .from("users")
       .select("role")

@@ -1,14 +1,7 @@
-/**
- * app/api/staff/applications/route.ts
- *
- * GET /api/staff/applications — list all submitted applications for staff review
- * Supports filtering by status and search by applicant name / student number.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
-// Status priority for sorting (lower = higher priority)
 const STATUS_PRIORITY: Record<string, number> = {
   submitted: 1,
   under_review: 2,
@@ -18,14 +11,12 @@ const STATUS_PRIORITY: Record<string, number> = {
 };
 
 export async function GET(req: NextRequest) {
-  // Validate staff/validator identity
   const validatorId = req.headers.get("x-validator-id");
   if (!validatorId) {
     return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
   }
 
   try {
-    // Look up this validator's assigned barangay
     const { data: validator, error: valError } = await supabase
       .from("users")
       .select("assigned_barangay")
@@ -47,7 +38,6 @@ export async function GET(req: NextRequest) {
     );
     const offset = (page - 1) * limit;
 
-    // ── Build data query ──────────────────────────────────────────────────────
     let dataQuery = supabase
       .from("applications")
       .select(
@@ -69,38 +59,30 @@ export async function GET(req: NextRequest) {
       .neq("status", "draft")
       .order("updated_at", { ascending: false });
 
-    // ── Build count query ─────────────────────────────────────────────────────
     let countQuery = supabase
       .from("applications")
-      .select(
-        "*, applicants!inner(barangay, users!inner(full_name))",
-        { count: "exact", head: true },
-      )
+      .select("*, applicants!inner(barangay, users!inner(full_name))", {
+        count: "exact",
+        head: true,
+      })
       .neq("status", "draft");
 
-    // ── Build summary query (all non-draft, filtered by barangay) ─────────
     let summaryQuery = supabase
       .from("applications")
-      .select(
-        "status, applicants!inner(barangay)",
-      )
+      .select("status, applicants!inner(barangay)")
       .neq("status", "draft");
 
-    // ── Apply filters ─────────────────────────────────────────────────────────
-    // Filter by assigned barangay
     if (assignedBarangay) {
       dataQuery = dataQuery.eq("applicants.barangay", assignedBarangay);
       countQuery = countQuery.eq("applicants.barangay", assignedBarangay);
       summaryQuery = summaryQuery.eq("applicants.barangay", assignedBarangay);
     }
 
-    // Filter by status
     if (status && status !== "all") {
       dataQuery = dataQuery.eq("status", status);
       countQuery = countQuery.eq("status", status);
     }
 
-    // Search by applicant name
     if (search) {
       dataQuery = dataQuery.ilike("applicants.users.full_name", `%${search}%`);
       countQuery = countQuery.ilike(
@@ -109,7 +91,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // ── Execute queries in parallel ───────────────────────────────────────────
     const [
       { data: rows, error: dataError },
       { count: totalCount, error: countError },
@@ -128,7 +109,6 @@ export async function GET(req: NextRequest) {
       (r: Record<string, unknown>) => r.id as number,
     );
 
-    // ── Fetch requirement submission counts ───────────────────────────────────
     const approvedMap: Record<number, number> = {};
     const pendingMap: Record<number, number> = {};
 
@@ -150,7 +130,6 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // ── Flatten and merge ─────────────────────────────────────────────────────
     const data = (rows ?? []).map((row: Record<string, unknown>) => {
       const applicants = row.applicants as {
         barangay: string | null;
@@ -173,8 +152,6 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    // Sort by status priority, then by updated_at DESC
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data.sort((a: Record<string, any>, b: Record<string, any>) => {
       const aPriority = STATUS_PRIORITY[a.status as string] ?? 6;
       const bPriority = STATUS_PRIORITY[b.status as string] ?? 6;
@@ -185,7 +162,6 @@ export async function GET(req: NextRequest) {
       );
     });
 
-    // ── Build status summary ──────────────────────────────────────────────────
     const summary: Record<string, number> = {};
     for (const row of summaryRows ?? []) {
       const s = (row as Record<string, unknown>).status as string;

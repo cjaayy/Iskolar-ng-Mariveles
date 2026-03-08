@@ -1,18 +1,9 @@
--- ============================================================
---  Iskolar ng Mariveles — Scholarship System Database Schema
---  XAMPP MySQL · localhost:3306
---  Run this file via phpMyAdmin or MySQL CLI
--- ============================================================
-
 CREATE DATABASE IF NOT EXISTS scholarship_system
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
 USE scholarship_system;
 
--- ------------------------------------------------------------
--- 1. USERS  (system accounts: admin, validator, applicant)
--- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
   id            INT UNSIGNED      NOT NULL AUTO_INCREMENT,
   email         VARCHAR(255)      NOT NULL UNIQUE,
@@ -27,9 +18,6 @@ CREATE TABLE IF NOT EXISTS users (
   INDEX idx_users_role  (role)
 ) ENGINE=InnoDB;
 
--- ------------------------------------------------------------
--- 2. APPLICANTS  (extended profile linked to a user account)
--- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS applicants (
   id                INT UNSIGNED    NOT NULL AUTO_INCREMENT,
   user_id           INT UNSIGNED    NOT NULL,
@@ -44,17 +32,12 @@ CREATE TABLE IF NOT EXISTS applicants (
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- ------------------------------------------------------------
--- 3. APPLICATIONS  (one application per applicant)
--- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS applications (
   id              INT UNSIGNED    NOT NULL AUTO_INCREMENT,
   applicant_id    INT UNSIGNED    NOT NULL,
   status          ENUM('draft','submitted','under_review','approved','rejected','withdrawn')
                                   NOT NULL DEFAULT 'draft',
-  -- Snapshot of eligibility at time of submission
   income_at_submission        DECIMAL(10,2) NULL,
-  -- Documents (JSON array of file paths / URLs)
   documents                   JSON          NULL,
   remarks                     TEXT          NULL             COMMENT 'Validator notes',
   submitted_at                TIMESTAMP     NULL,
@@ -67,16 +50,12 @@ CREATE TABLE IF NOT EXISTS applications (
     FOREIGN KEY (applicant_id)   REFERENCES applicants   (id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- ------------------------------------------------------------
--- 4. VALIDATIONS  (audit trail of every review action)
--- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS validations (
   id              INT UNSIGNED    NOT NULL AUTO_INCREMENT,
   application_id  INT UNSIGNED    NOT NULL,
   validator_id    INT UNSIGNED    NOT NULL               COMMENT 'users.id of the reviewer',
   action          ENUM('approved','rejected','returned','requested_info')
                                   NOT NULL,
-  -- Checklist results (JSON: { gpa: true, income: true, documents: false })
   checklist       JSON            NULL,
   notes           TEXT            NULL,
   created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -89,14 +68,6 @@ CREATE TABLE IF NOT EXISTS validations (
     FOREIGN KEY (validator_id)   REFERENCES users        (id)
 ) ENGINE=InnoDB;
 
--- ============================================================
---  SEED DATA  (safe to re-run — uses INSERT IGNORE)
--- ============================================================
-
--- ------------------------------------------------------------
--- 5. REQUIREMENT_SUBMISSIONS
---    Tracks per-requirement document upload + validation status
--- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS requirement_submissions (
   id              INT UNSIGNED  NOT NULL AUTO_INCREMENT,
   application_id  INT UNSIGNED  NOT NULL,
@@ -122,9 +93,6 @@ CREATE TABLE IF NOT EXISTS requirement_submissions (
     FOREIGN KEY (validated_by)   REFERENCES users (id)
 ) ENGINE=InnoDB;
 
--- ------------------------------------------------------------
--- 6. REGISTRATION_LINKS  (admin-generated pre-registration invites)
--- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS registration_links (
   id            INT UNSIGNED      NOT NULL AUTO_INCREMENT,
   token         VARCHAR(64)       NOT NULL UNIQUE          COMMENT 'Unique URL-safe token',
@@ -143,26 +111,17 @@ CREATE TABLE IF NOT EXISTS registration_links (
     FOREIGN KEY (created_by) REFERENCES users (id)
 ) ENGINE=InnoDB;
 
--- ============================================================
---  SEED DATA  (safe to re-run — uses INSERT IGNORE)
--- ============================================================
-
--- Default admin account  (password: Admin@1234 — change in production!)
 INSERT IGNORE INTO users (id, email, password_hash, full_name, role)
 VALUES (1, 'admin@iskolar.local',
-        '$2b$10$iXNCksNq2VCEDqXK5QKAyeClxU1UrTNvlOBpVgR5R.E3YnwHImbHC',   -- Admin@1234 (bcrypt 10 rounds)
+        '$2b$10$iXNCksNq2VCEDqXK5QKAyeClxU1UrTNvlOBpVgR5R.E3YnwHImbHC',
         'System Administrator', 'admin');
 
--- Default demo applicant account  (password: Demo@1234)
 INSERT IGNORE INTO users (id, email, password_hash, full_name, role)
 VALUES (2, 'demo@iskolar.local',
-        '$2b$10$eBGjYlPJfVi6CHAOYFZ4XOUpch2/3PhzypmM1LSPUvkiU1iEMa6zy',   -- Demo@1234 (bcrypt 10 rounds)
+        '$2b$10$eBGjYlPJfVi6CHAOYFZ4XOUpch2/3PhzypmM1LSPUvkiU1iEMa6zy',
         'Juan Dela Cruz', 'applicant');
 
--- Default validator / staff account  (password: Staff@1234)
 INSERT IGNORE INTO users (id, email, password_hash, full_name, role)
 VALUES (3, 'staff@iskolar.local',
-        '$2b$10$6MQyB60DycqiR2Cs2Fcr1..jQM4AdCcYudNWe2xAQ2qrdm8i9ZO6a',   -- Staff@1234 (bcrypt 10 rounds)
+        '$2b$10$6MQyB60DycqiR2Cs2Fcr1..jQM4AdCcYudNWe2xAQ2qrdm8i9ZO6a',
         'Staff Validator', 'validator');
-
-

@@ -1,9 +1,3 @@
-/**
- * app/api/me/route.ts
- *
- * GET /api/me — returns the current applicant's profile + application status.
- * PUT /api/me — handled in /api/me/profile/route.ts
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 
@@ -35,7 +29,6 @@ export async function GET(req: NextRequest) {
   const applicantId = Number(applicantIdHeader);
 
   try {
-    // SELECT from applicants JOIN users
     const { data: applicantRow, error: applicantError } = await supabase
       .from("applicants")
       .select(
@@ -57,8 +50,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Supabase returns the joined table as an object (or array depending on relation).
-    // With !inner and a belongs-to relation (many-to-one), it returns a single object.
     const user = applicantRow.users as unknown as {
       id: number;
       email: string;
@@ -80,7 +71,6 @@ export async function GET(req: NextRequest) {
     const firstName = nameParts[0] ?? "";
     const lastName = nameParts.slice(1).join(" ");
 
-    // SELECT from applications for status
     const { data: applications, error: appError } = await supabase
       .from("applications")
       .select("status")
@@ -104,14 +94,12 @@ export async function GET(req: NextRequest) {
         address: row.address,
         profileCompletion: profileCompletion(row),
       },
-      scholarships: (applications ?? []).map(
-        (a: { status: string }) => ({
-          name: "Iskolar ng Mariveles",
-          grantor: "LGU Mariveles",
-          status: ["approved"].includes(a.status) ? "active" : "pending",
-          award: "LGU Mariveles",
-        }),
-      ),
+      scholarships: (applications ?? []).map((a: { status: string }) => ({
+        name: "Iskolar ng Mariveles",
+        grantor: "LGU Mariveles",
+        status: ["approved"].includes(a.status) ? "active" : "pending",
+        award: "LGU Mariveles",
+      })),
     });
   } catch (err) {
     console.error("[GET /api/me]", err);

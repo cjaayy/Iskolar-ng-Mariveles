@@ -1,9 +1,3 @@
-/**
- * app/api/staff/applications/[id]/route.ts
- *
- * GET /api/staff/applications/:id — fetch a single application with all
- * requirement submissions + validation history for the staff review panel.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
@@ -24,7 +18,6 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "Invalid id" }, { status: 400 });
     }
 
-    // Application + applicant details + user info via Supabase relations
     const { data: appRow, error: appError } = await supabase
       .from("applications")
       .select(
@@ -48,14 +41,12 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    // Flatten the nested relation into the shape the original SQL returned
     const applicant = appRow.applicants as Record<string, unknown> & {
       users: { full_name: string; email: string };
     };
     const user = applicant.users;
 
     const application: Record<string, unknown> = {
-      // application columns
       id: appRow.id,
       applicant_id: appRow.applicant_id,
       status: appRow.status,
@@ -64,10 +55,8 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       created_at: appRow.created_at,
       updated_at: appRow.updated_at,
       remarks: appRow.remarks,
-      // user columns
       applicant_name: user.full_name,
       applicant_email: user.email,
-      // applicant columns
       contact_number: applicant.contact_number,
       address: applicant.address,
       date_of_birth: applicant.date_of_birth,
@@ -105,7 +94,6 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       tertiary_program: applicant.tertiary_program,
     };
 
-    // All requirement submissions for this application, with validator name
     const { data: submissions, error: subError } = await supabase
       .from("requirement_submissions")
       .select(
@@ -119,8 +107,6 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
 
     if (subError) throw subError;
 
-    // Merge ALL requirement configs with actual submissions
-    // so staff sees the full picture: submitted, pending, missing
     const subMap = Object.fromEntries(
       (submissions ?? []).map((s: Record<string, unknown>) => [
         s.requirement_key,
@@ -132,7 +118,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       const sub = (subMap[config.key] as Record<string, unknown>) ?? null;
       const validator = sub?.validator as { full_name: string } | null;
       return {
-        id: sub ? (sub.id as number) : -(idx + 1), // negative id for unsubmitted
+        id: sub ? (sub.id as number) : -(idx + 1),
         application_id: id,
         requirement_key: config.key,
         status: (sub?.status as string) ?? "missing",
@@ -148,7 +134,6 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       };
     });
 
-    // Validation history
     const { data: history, error: histError } = await supabase
       .from("validations")
       .select(
@@ -162,10 +147,8 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
 
     if (histError) throw histError;
 
-    // Flatten validator_name from the joined relation
     const flatHistory = (history ?? []).map((h: Record<string, unknown>) => {
       const val = h.validator as { full_name: string } | null;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { validator: _unused, ...rest } = h;
       return {
         ...rest,

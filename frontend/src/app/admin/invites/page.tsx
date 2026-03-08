@@ -1,8 +1,3 @@
-/* ================================================================
-   ADMIN — REGISTRATION LINKS (Invite links for pre-registration)
-   Create, view, copy, toggle, and delete registration links
-   ================================================================ */
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -56,7 +51,6 @@ export default function AdminInvitesPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
-  // Create form
   const [label, setLabel] = useState("");
   const [maxUses, setMaxUses] = useState("1");
   const [expiresAt, setExpiresAt] = useState("");
@@ -99,7 +93,6 @@ export default function AdminInvitesPage() {
       setCopiedId(link.id);
       setTimeout(() => setCopiedId(null), 2000);
     } catch {
-      // Fallback
       const input = document.createElement("input");
       input.value = getRegistrationUrl(link.token);
       document.body.appendChild(input);
@@ -202,7 +195,6 @@ export default function AdminInvitesPage() {
       animate="show"
       className="space-y-6"
     >
-      {/* Header */}
       <motion.div
         variants={fadeUp}
         className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
@@ -245,7 +237,6 @@ export default function AdminInvitesPage() {
         </div>
       </motion.div>
 
-      {/* Create Form */}
       {showCreate && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
@@ -307,7 +298,6 @@ export default function AdminInvitesPage() {
         </motion.div>
       )}
 
-      {/* Links List */}
       <motion.div variants={fadeUp}>
         {loading ? (
           <div className="space-y-4">
@@ -347,7 +337,6 @@ export default function AdminInvitesPage() {
               return (
                 <Card key={link.id} padding="md">
                   <div className="flex flex-col gap-3">
-                    {/* Top row: label + status + actions */}
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <LinkIcon className="w-4 h-4 text-ocean-400 flex-shrink-0" />
@@ -405,12 +394,10 @@ export default function AdminInvitesPage() {
                       </div>
                     </div>
 
-                    {/* URL */}
                     <div className="bg-muted rounded-lg px-3 py-2 text-xs font-mono text-muted-fg break-all select-all">
                       {getRegistrationUrl(link.token)}
                     </div>
 
-                    {/* Meta info */}
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-body text-muted-fg">
                       <span className="flex items-center gap-1">
                         <Hash className="w-3.5 h-3.5" />

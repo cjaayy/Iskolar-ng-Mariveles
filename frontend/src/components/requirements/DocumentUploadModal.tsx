@@ -1,8 +1,3 @@
-/* ================================================================
-   DOCUMENT UPLOAD MODAL
-   Drag-and-drop upload with preview, progress, and success animation
-   ================================================================ */
-
 "use client";
 
 import React, { useState, useRef, useCallback } from "react";
@@ -76,7 +71,6 @@ export function DocumentUploadModal({
       const tooLarge = f.size > MAX_FILE_SIZE && !isImage;
       const tooSmall = f.size < MIN_FILE_SIZE && !isImage;
 
-      // Non-image files that exceed 3 MB — reject immediately
       if (tooLarge) {
         setSizeError(
           `File is ${formatBytes(f.size)}. Maximum allowed is 3 MB. Please compress this file externally before uploading.`,
@@ -86,7 +80,6 @@ export function DocumentUploadModal({
         return;
       }
 
-      // Non-image files below 500 KB — reject
       if (tooSmall) {
         setSizeError(
           `File is too small (${formatBytes(f.size)}). Minimum size is 500 KB — please upload a higher-quality file.`,
@@ -96,11 +89,9 @@ export function DocumentUploadModal({
         return;
       }
 
-      // Image outside 500 KB – 3 MB range — auto-compress to fit
       if (needsCompression) {
         setCompressing(true);
-        setFile(f); // show the original while compressing
-        // Show original preview
+        setFile(f);
         const reader = new FileReader();
         reader.onload = (e) => setPreview(e.target?.result as string);
         reader.readAsDataURL(f);
@@ -114,7 +105,6 @@ export function DocumentUploadModal({
             return;
           }
 
-          // Replace file with compressed version
           setFile(result.file);
           setCompressionInfo({
             compressed: result.compressed,
@@ -122,7 +112,6 @@ export function DocumentUploadModal({
             finalSize: result.finalSize,
           });
 
-          // Update preview with compressed image
           if (result.file.type.startsWith("image/")) {
             const compReader = new FileReader();
             compReader.onload = (e) => setPreview(e.target?.result as string);
@@ -143,7 +132,6 @@ export function DocumentUploadModal({
         return;
       }
 
-      // File is within valid range — use as-is
       setFile(f);
       if (f.type.startsWith("image/")) {
         const reader = new FileReader();
@@ -171,14 +159,12 @@ export function DocumentUploadModal({
     setUploading(true);
     setProgress(0);
 
-    // Animate progress to 90% while calling the API
     const tick = setInterval(() => {
       setProgress((p) => (p < 90 ? p + 10 : p));
     }, 120);
 
     try {
       if (requirementKey && applicantId) {
-        // Step 1: Upload the actual file to /api/upload
         const formData = new FormData();
         formData.append("file", file);
         formData.append("requirementKey", requirementKey);
@@ -196,7 +182,6 @@ export function DocumentUploadModal({
 
         const uploadData = await uploadRes.json();
 
-        // Step 2: Record the submission in the database with the file URL
         const res = await fetch("/api/me/requirements", {
           method: "POST",
           headers: {
@@ -216,7 +201,6 @@ export function DocumentUploadModal({
           throw new Error(err.error ?? "Upload failed");
         }
       } else {
-        // Fallback: no DB key provided, just simulate
         clearInterval(tick);
         await new Promise((r) => setTimeout(r, 800));
       }
@@ -292,7 +276,6 @@ export function DocumentUploadModal({
             transition={{ duration: 0.3, ease: "easeOut" }}
             className="bg-card-bg border border-card-border rounded-2xl shadow-soft-lg w-full max-w-lg max-h-[90vh] overflow-y-auto"
           >
-            {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-card-border">
               <div>
                 <h2 className="font-heading text-lg font-semibold text-foreground">
@@ -314,11 +297,9 @@ export function DocumentUploadModal({
               </button>
             </div>
 
-            {/* Body */}
             <div className="p-6 space-y-5">
               <AnimatePresence mode="wait">
                 {success ? (
-                  /* Success State */
                   <motion.div
                     key="success"
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -340,7 +321,6 @@ export function DocumentUploadModal({
                     exit={{ opacity: 0 }}
                     className="space-y-5"
                   >
-                    {/* Drop Zone */}
                     <div
                       onDragOver={(e) => {
                         e.preventDefault();
@@ -398,7 +378,6 @@ export function DocumentUploadModal({
                       </p>
                     </div>
 
-                    {/* Compressing indicator */}
                     {compressing && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
@@ -421,7 +400,6 @@ export function DocumentUploadModal({
                       </motion.div>
                     )}
 
-                    {/* Size error */}
                     {sizeError && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
@@ -435,7 +413,6 @@ export function DocumentUploadModal({
                       </motion.div>
                     )}
 
-                    {/* Compression success info */}
                     {compressionInfo?.compressed && !sizeError && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
@@ -451,17 +428,14 @@ export function DocumentUploadModal({
                       </motion.div>
                     )}
 
-                    {/* File Preview */}
                     {file && !compressing && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         className="space-y-3"
                       >
-                        {/* Image preview */}
                         {preview && (
                           <div className="relative rounded-xl overflow-hidden border border-card-border">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={preview}
                               alt="Preview of uploaded document"
@@ -470,7 +444,6 @@ export function DocumentUploadModal({
                           </div>
                         )}
 
-                        {/* File info pill */}
                         <div className="flex items-center gap-3 p-3 rounded-xl bg-muted">
                           {getFileIcon(file.type)}
                           <div className="flex-1 min-w-0">
@@ -498,7 +471,6 @@ export function DocumentUploadModal({
                       </motion.div>
                     )}
 
-                    {/* Notes */}
                     <Textarea
                       label="Additional Notes (optional)"
                       value={notes}
@@ -506,7 +478,6 @@ export function DocumentUploadModal({
                       rows={3}
                     />
 
-                    {/* Upload Progress */}
                     {uploading && (
                       <motion.div
                         initial={{ opacity: 0 }}
@@ -525,7 +496,6 @@ export function DocumentUploadModal({
               </AnimatePresence>
             </div>
 
-            {/* Footer */}
             {!success && (
               <div className="flex items-center justify-end gap-3 p-6 pt-0">
                 <Button

@@ -1,7 +1,5 @@
 "use client";
 
-/* ======================== FILE PILL ======================== */
-
 interface FilePillProps {
   name: string;
   size?: string;

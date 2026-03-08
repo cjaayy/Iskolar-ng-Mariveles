@@ -2,8 +2,6 @@
 
 import React from "react";
 
-/* ======================== BADGE ======================== */
-
 type BadgeVariant = "success" | "warning" | "error" | "info" | "neutral";
 
 interface BadgeProps {

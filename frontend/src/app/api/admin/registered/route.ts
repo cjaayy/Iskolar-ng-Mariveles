@@ -1,10 +1,3 @@
-/**
- * app/api/admin/registered/route.ts
- *
- * GET /api/admin/registered — list all registered applicants with their
- * application & requirement submission stats across all barangays.
- * Supports ?barangay= filter and ?search= for name/email.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
@@ -47,7 +40,6 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search") || undefined;
     const barangay = searchParams.get("barangay") || undefined;
 
-    // Build query
     let q = supabase
       .from("applications")
       .select(
@@ -79,8 +71,6 @@ export async function GET(req: NextRequest) {
     const { data: appRows, error: appError } = await q;
     if (appError) throw appError;
 
-    // Fetch requirement submissions for all applications
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const appIds = (appRows ?? []).map((r: Record<string, any>) => r.id);
     let submissions: { application_id: number; status: string }[] = [];
     if (appIds.length > 0) {
@@ -92,7 +82,6 @@ export async function GET(req: NextRequest) {
       submissions = subs ?? [];
     }
 
-    // Compute counts per application
     const countsByApp: Record<
       number,
       {
@@ -118,37 +107,36 @@ export async function GET(req: NextRequest) {
       if (sub.status === "rejected") c.rejected++;
     }
 
-    // Build rows
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rows: ApplicantRow[] = (appRows ?? []).map((r: Record<string, any>) => {
-      const applicant = r.applicants as unknown as {
-        id: number;
-        barangay: string | null;
-        users: { full_name: string; email: string };
-      };
-      const counts = countsByApp[r.id] || {
-        submitted: 0,
-        approved: 0,
-        pending: 0,
-        rejected: 0,
-      };
-      return {
-        application_id: r.id,
-        applicant_id: applicant.id,
-        applicant_name: applicant.users.full_name,
-        email: applicant.users.email,
-        barangay: applicant.barangay,
-        status: r.status,
-        submitted_at: r.submitted_at,
-        total_requirements: REQUIREMENT_CONFIGS.length,
-        submitted_requirements: counts.submitted,
-        approved_requirements: counts.approved,
-        pending_requirements: counts.pending,
-        rejected_requirements: counts.rejected,
-      };
-    });
+    const rows: ApplicantRow[] = (appRows ?? []).map(
+      (r: Record<string, any>) => {
+        const applicant = r.applicants as unknown as {
+          id: number;
+          barangay: string | null;
+          users: { full_name: string; email: string };
+        };
+        const counts = countsByApp[r.id] || {
+          submitted: 0,
+          approved: 0,
+          pending: 0,
+          rejected: 0,
+        };
+        return {
+          application_id: r.id,
+          applicant_id: applicant.id,
+          applicant_name: applicant.users.full_name,
+          email: applicant.users.email,
+          barangay: applicant.barangay,
+          status: r.status,
+          submitted_at: r.submitted_at,
+          total_requirements: REQUIREMENT_CONFIGS.length,
+          submitted_requirements: counts.submitted,
+          approved_requirements: counts.approved,
+          pending_requirements: counts.pending,
+          rejected_requirements: counts.rejected,
+        };
+      },
+    );
 
-    // Group by barangay
     const grouped: Record<string, ApplicantRow[]> = {};
     for (const row of rows) {
       const brgy = row.barangay || "Unknown";
@@ -156,7 +144,6 @@ export async function GET(req: NextRequest) {
       grouped[brgy].push(row);
     }
 
-    // Summary
     const barangaySummary = Object.entries(grouped)
       .map(([barangayName, applicants]) => ({
         barangay: barangayName,

@@ -1,9 +1,3 @@
-/* ================================================================
-   ADMIN — APPLICANTS LIST (All Barangays)
-   View all scholarship applications across all barangays with
-   search, status filters, and click-through to detail view.
-   ================================================================ */
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -25,7 +19,6 @@ import {
 } from "lucide-react";
 import { Card, Badge, Skeleton, Button } from "@/components/ui";
 
-/* -- Types -- */
 interface Applicant {
   user_id: number;
   email: string;
@@ -50,10 +43,8 @@ interface Application {
   barangay: string | null;
 }
 
-/* -- View mode -- */
 type ViewMode = "applicants" | "applications";
 
-/* -- Status config -- */
 const statusConfig: Record<
   string,
   {
@@ -81,7 +72,6 @@ const filterOptions = [
   { value: "rejected", label: "Rejected" },
 ];
 
-/* -- Animations -- */
 const stagger = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.06 } },
@@ -108,7 +98,6 @@ export default function AdminApplicantsPage() {
   const adminId =
     typeof window !== "undefined" ? localStorage.getItem("adminId") : null;
 
-  /* -- Fetch applicants (person-level view) -- */
   const fetchApplicants = useCallback(async () => {
     if (!adminId) return;
     try {
@@ -132,7 +121,6 @@ export default function AdminApplicantsPage() {
     }
   }, [adminId, search]);
 
-  /* -- Fetch applications (application-level view) -- */
   const fetchApplications = useCallback(async () => {
     if (!adminId) return;
     try {
@@ -174,7 +162,6 @@ export default function AdminApplicantsPage() {
       animate="show"
       className="space-y-6"
     >
-      {/* ── Header ─────────────────────────────────────────── */}
       <motion.div
         variants={fadeUp}
         className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
@@ -191,7 +178,6 @@ export default function AdminApplicantsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {/* View mode toggle */}
           <div className="flex bg-muted rounded-lg p-0.5">
             <button
               onClick={() => {
@@ -235,11 +221,9 @@ export default function AdminApplicantsPage() {
         </div>
       </motion.div>
 
-      {/* ── Filters ────────────────────────────────────────── */}
       <motion.div variants={fadeUp}>
         <Card padding="md">
           <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
               <input
@@ -255,7 +239,6 @@ export default function AdminApplicantsPage() {
               />
             </div>
 
-            {/* Status filter (applications view only) */}
             {viewMode === "applications" && (
               <div className="flex items-center gap-2 flex-wrap">
                 <Filter className="w-4 h-4 text-muted-fg" />
@@ -278,7 +261,6 @@ export default function AdminApplicantsPage() {
         </Card>
       </motion.div>
 
-      {/* ── Content ────────────────────────────────────────── */}
       <motion.div variants={fadeUp}>
         {loading ? (
           <div className="space-y-4">
@@ -296,7 +278,6 @@ export default function AdminApplicantsPage() {
             ))}
           </div>
         ) : viewMode === "applications" ? (
-          /* ─── Applications View ─── */
           applications.length === 0 ? (
             <Card padding="lg">
               <div className="text-center py-8">
@@ -334,7 +315,6 @@ export default function AdminApplicantsPage() {
                         href={`/admin/applicants/${app.id}`}
                         className="flex flex-col md:flex-row md:items-center gap-4"
                       >
-                        {/* Applicant info */}
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-ocean-300 to-ocean-500 flex items-center justify-center flex-shrink-0">
                             <span className="text-white font-heading font-bold text-sm">
@@ -361,14 +341,12 @@ export default function AdminApplicantsPage() {
                           </div>
                         </div>
 
-                        {/* Status */}
                         <div className="md:w-32 shrink-0">
                           <Badge variant={cfg.variant} dot>
                             {cfg.label}
                           </Badge>
                         </div>
 
-                        {/* Doc progress */}
                         <div className="md:w-28 shrink-0">
                           <div className="flex items-center gap-2">
                             <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
@@ -388,7 +366,6 @@ export default function AdminApplicantsPage() {
                           )}
                         </div>
 
-                        {/* Arrow */}
                         <ArrowRight className="w-4 h-4 text-muted-fg shrink-0 hidden md:block" />
                       </Link>
                     </Card>
@@ -397,8 +374,7 @@ export default function AdminApplicantsPage() {
               })}
             </div>
           )
-        ) : /* ─── People View (original) ─── */
-        applicants.length === 0 ? (
+        ) : applicants.length === 0 ? (
           <Card padding="lg">
             <div className="text-center py-8">
               <Users className="w-12 h-12 text-muted-fg mx-auto mb-3" />
@@ -417,14 +393,12 @@ export default function AdminApplicantsPage() {
             {applicants.map((a) => (
               <Card key={a.user_id} padding="md" hover>
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
-                  {/* Avatar */}
                   <div className="w-12 h-12 rounded-full bg-ocean-50 dark:bg-ocean-400/10 flex items-center justify-center flex-shrink-0">
                     <span className="text-ocean-400 font-heading font-bold text-lg">
                       {a.full_name.charAt(0).toUpperCase()}
                     </span>
                   </div>
 
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-heading font-semibold text-foreground truncate">
@@ -448,7 +422,6 @@ export default function AdminApplicantsPage() {
                     </div>
                   </div>
 
-                  {/* Stats */}
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <div className="text-center">
                       <p className="text-lg font-heading font-bold text-foreground">

@@ -2,8 +2,6 @@
 
 import { ChevronRight } from "lucide-react";
 
-/* ======================== BREADCRUMB ======================== */
-
 interface BreadcrumbItem {
   label: string;
   href?: string;

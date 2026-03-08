@@ -1,9 +1,3 @@
-/**
- * app/api/admin/barangay-access/route.ts
- *
- * GET  /api/admin/barangay-access — list all barangays + open/closed status
- * PATCH /api/admin/barangay-access — bulk-update which barangays are open
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 
@@ -35,8 +29,6 @@ export async function GET(req: NextRequest) {
 
     if (error) throw error;
 
-    // Normalize dates to YYYY-MM-DD strings
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = (rows ?? []).map((r: Record<string, any>) => ({
       ...r,
       is_open: !!r.is_open,
@@ -78,15 +70,13 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Close all first
     const { error: closeAllError } = await supabase
       .from("barangay_access")
       .update({ is_open: false, updated_by: Number(adminId) })
-      .neq("id", 0); // match all rows
+      .neq("id", 0);
 
     if (closeAllError) throw closeAllError;
 
-    // Open selected ones
     if (openBarangays.length > 0) {
       for (const brgy of openBarangays) {
         const { error } = await supabase
@@ -97,7 +87,6 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    // Update submission date windows per barangay
     if (submissionDates && typeof submissionDates === "object") {
       for (const [brgy, dates] of Object.entries(submissionDates)) {
         const { error } = await supabase

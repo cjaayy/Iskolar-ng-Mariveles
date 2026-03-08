@@ -1,23 +1,8 @@
-/**
- * app/api/admin/validations/route.ts
- *
- * GET  /api/admin/validations — list all submitted applications across all
- *      barangays for admin validation. Supports ?status= and ?search= filters.
- *
- * PUT  /api/admin/validations — validate a single requirement submission
- *      Body: { submissionId, action: 'approved' | 'rejected', notes?: string }
- *
- * POST /api/admin/validations — bulk-validate all pending requirements of
- *      an application at once
- *      Body: { applicationId, action: 'approved' | 'rejected', notes?: string }
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
-async function verifyAdmin(
-  adminId: string,
-): Promise<{ id: number } | null> {
+async function verifyAdmin(adminId: string): Promise<{ id: number } | null> {
   const { data, error } = await supabase
     .from("users")
     .select("id, role")
@@ -29,8 +14,6 @@ async function verifyAdmin(
   if (error || !data) return null;
   return { id: data.id };
 }
-
-// ─── GET: list applications for admin validation ─────────────────────────────
 
 export async function GET(req: NextRequest) {
   const adminId = req.headers.get("x-admin-id");
@@ -49,7 +32,6 @@ export async function GET(req: NextRequest) {
     );
     const offset = (page - 1) * limit;
 
-    // Build query
     let q = supabase
       .from("applications")
       .select(
@@ -77,7 +59,6 @@ export async function GET(req: NextRequest) {
       q = q.ilike("applicants.users.full_name", `%${search}%`);
     }
 
-    // Count total
     let countQ = supabase
       .from("applications")
       .select(
@@ -102,15 +83,12 @@ export async function GET(req: NextRequest) {
     const { count: total, error: countError } = await countQ;
     if (countError) throw countError;
 
-    // Fetch paginated data
     const { data: appRows, error: appError } = await q
       .order("updated_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (appError) throw appError;
 
-    // Get requirement counts for all fetched applications
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const appIds = (appRows ?? []).map((r: Record<string, any>) => r.id);
     let submissions: { application_id: number; status: string }[] = [];
     if (appIds.length > 0) {
@@ -122,10 +100,8 @@ export async function GET(req: NextRequest) {
       submissions = subs ?? [];
     }
 
-    const countsByApp: Record<
-      number,
-      { approved: number; pending: number }
-    > = {};
+    const countsByApp: Record<number, { approved: number; pending: number }> =
+      {};
     for (const sub of submissions) {
       if (!countsByApp[sub.application_id]) {
         countsByApp[sub.application_id] = { approved: 0, pending: 0 };
@@ -134,7 +110,6 @@ export async function GET(req: NextRequest) {
       if (sub.status === "pending") countsByApp[sub.application_id].pending++;
     }
 
-    // Sort by status priority
     const statusOrder: Record<string, number> = {
       submitted: 1,
       under_review: 2,
@@ -144,7 +119,6 @@ export async function GET(req: NextRequest) {
     };
 
     const rows = (appRows ?? [])
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .map((r: Record<string, any>) => {
         const applicant = r.applicants as unknown as {
           barangay: string | null;
@@ -173,7 +147,6 @@ export async function GET(req: NextRequest) {
         return sa - sb;
       });
 
-    // Status summary counts
     const { data: statusRows, error: statusError } = await supabase
       .from("applications")
       .select("status")
@@ -204,8 +177,6 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
-// ─── PUT: validate a single requirement ──────────────────────────────────────
 
 export async function PUT(req: NextRequest) {
   const adminId = req.headers.get("x-admin-id");
@@ -258,8 +229,6 @@ export async function PUT(req: NextRequest) {
     );
   }
 }
-
-// ─── POST: bulk validate all pending requirements of an application ──────────
 
 export async function POST(req: NextRequest) {
   const adminId = req.headers.get("x-admin-id");

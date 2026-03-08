@@ -1,8 +1,3 @@
-/**
- * app/api/staff/me/route.ts
- *
- * GET /api/staff/me — returns staff/validator profile info.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 

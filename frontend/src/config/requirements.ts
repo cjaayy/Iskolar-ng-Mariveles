@@ -1,13 +1,3 @@
-/**
- * src/config/requirements.ts
- * Static definition of all Iskolar ng Mariveles scholarship document requirements.
- * The API merges this with per-application submission statuses from the DB.
- *
- * Deadline: On or before June 30, 2025.
- * Submission Location: Office of the Municipal Administrator, 2nd Floor,
- *   Municipality of Mariveles, Monday–Friday 8:00 AM – 5:00 PM.
- */
-
 export type RequirementGroup = "personal" | "academic" | "financial";
 
 export interface RequirementConfig {
@@ -17,18 +7,15 @@ export interface RequirementConfig {
   group: RequirementGroup;
   helpTip: string;
   sampleUrl?: string;
-  /** ISO date string — same for all applicants in a cycle */
   dueDate: string;
 }
 
-/** Submission deadline for all requirements (SY 2025-2026 cycle) */
 export const SUBMISSION_DEADLINE = "2025-06-30";
 export const SUBMISSION_LOCATION =
   "Office of the Municipal Administrator, 2nd Floor, Municipality of Mariveles";
 export const SUBMISSION_HOURS = "Monday–Friday, 8:00 AM – 5:00 PM";
 
 export const REQUIREMENT_CONFIGS: RequirementConfig[] = [
-  // ─── Personal Documents ────────────────────────────────────────
   {
     key: "application_form",
     name: "Accomplished Application Form",
@@ -79,8 +66,6 @@ export const REQUIREMENT_CONFIGS: RequirementConfig[] = [
       "Both parents must have COMELEC proof of registration in Mariveles/Bataan. Acceptable documents: Voter's ID, Voter's Registration Record, or COMELEC Certification. Upload copies for both parents in a single file or separately.",
     dueDate: SUBMISSION_DEADLINE,
   },
-
-  // ─── Academic Records ──────────────────────────────────────────
   {
     key: "report_card",
     name: "Report Card (Form 138)",

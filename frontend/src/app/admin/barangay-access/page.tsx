@@ -1,8 +1,3 @@
-/* ================================================================
-   ADMIN — BARANGAY ACCESS CONTROL
-   Toggle which barangays can login / submit requirements
-   ================================================================ */
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -67,7 +62,6 @@ export default function BarangayAccessPage() {
       });
       if (res.ok) {
         const { data } = await res.json();
-        // Normalize is_open from MySQL 0/1 to boolean
         setBarangays(
           data.map((b: BarangayRow) => ({
             ...b,
@@ -117,7 +111,6 @@ export default function BarangayAccessPage() {
       prev.map((b) => ({
         ...b,
         is_open: open,
-        // Clear dates when closing all
         ...(open
           ? {}
           : { submission_open_date: null, submission_close_date: null }),
@@ -178,7 +171,6 @@ export default function BarangayAccessPage() {
         .filter((b) => !!b.is_open)
         .map((b) => b.barangay);
 
-      // Build submission dates map
       const submissionDates: Record<
         string,
         { open: string | null; close: string | null }
@@ -213,7 +205,6 @@ export default function BarangayAccessPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground flex items-center gap-2">
@@ -257,7 +248,6 @@ export default function BarangayAccessPage() {
         </div>
       </div>
 
-      {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <Card className="p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-sage-50 dark:bg-sage-400/10 flex items-center justify-center">
@@ -314,7 +304,6 @@ export default function BarangayAccessPage() {
         </Card>
       </div>
 
-      {/* Barangay grid */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {Array.from({ length: 12 }).map((_, i) => (
@@ -343,7 +332,6 @@ export default function BarangayAccessPage() {
                     }
                   `}
               >
-                {/* Toggle row */}
                 <button
                   onClick={() => toggle(b.barangay)}
                   className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:opacity-80 transition-opacity"
@@ -374,7 +362,6 @@ export default function BarangayAccessPage() {
                   </div>
                 </button>
 
-                {/* Date schedule button */}
                 <div className="border-t border-card-border">
                   <button
                     onClick={() => setDateModalBrgy(b.barangay)}
@@ -396,26 +383,22 @@ export default function BarangayAccessPage() {
         </motion.div>
       )}
 
-      {/* Date picker popup modal */}
       {dateModalBrgy &&
         (() => {
           const b = barangays.find((x) => x.barangay === dateModalBrgy);
           if (!b) return null;
           return (
             <div className="fixed inset-0 z-50 flex items-center justify-center">
-              {/* Backdrop */}
               <div
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                 onClick={() => setDateModalBrgy(null)}
               />
-              {/* Modal */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 className="relative bg-card-bg border border-card-border rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6 space-y-4"
               >
-                {/* Header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CalendarDays className="w-5 h-5 text-ocean-400" />
@@ -438,7 +421,6 @@ export default function BarangayAccessPage() {
                   </span>
                 </p>
 
-                {/* Open date */}
                 <div>
                   <label className="block text-sm font-body font-medium text-foreground mb-1.5">
                     Open Date
@@ -457,7 +439,6 @@ export default function BarangayAccessPage() {
                   />
                 </div>
 
-                {/* Close date */}
                 <div>
                   <label className="block text-sm font-body font-medium text-foreground mb-1.5">
                     Close Date
@@ -476,7 +457,6 @@ export default function BarangayAccessPage() {
                   />
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center justify-between pt-2">
                   <button
                     onClick={() => {
@@ -496,7 +476,6 @@ export default function BarangayAccessPage() {
           );
         })()}
 
-      {/* Bulk date assignment popup modal */}
       {bulkDateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
@@ -513,7 +492,6 @@ export default function BarangayAccessPage() {
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="relative bg-card-bg border border-card-border rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 space-y-4 max-h-[85vh] flex flex-col"
           >
-            {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CalendarDays className="w-5 h-5 text-ocean-400" />
@@ -533,7 +511,6 @@ export default function BarangayAccessPage() {
               </button>
             </div>
 
-            {/* Date inputs */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-body font-medium text-foreground mb-1.5">
@@ -559,7 +536,6 @@ export default function BarangayAccessPage() {
               </div>
             </div>
 
-            {/* Select all / none */}
             <div className="flex items-center justify-between">
               <p className="text-sm font-body text-muted-fg">
                 Select barangays ({bulkSelected.size}/{barangays.length})
@@ -574,7 +550,6 @@ export default function BarangayAccessPage() {
               </button>
             </div>
 
-            {/* Barangay checklist */}
             <div className="overflow-y-auto flex-1 -mx-1 px-1 space-y-1 max-h-60">
               {barangays.map((b) => {
                 const checked = bulkSelected.has(b.barangay);
@@ -602,7 +577,6 @@ export default function BarangayAccessPage() {
               })}
             </div>
 
-            {/* Actions */}
             <div className="flex items-center justify-between pt-2 border-t border-card-border">
               <button
                 onClick={() => {

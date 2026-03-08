@@ -1,9 +1,3 @@
-/* ================================================================
-   STAFF — LIST OF APPLICANTS
-   Simple name list for the validator's assigned barangay
-   with search bar and popup modal for applicant details
-   ================================================================ */
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
@@ -29,7 +23,6 @@ import {
 import { Card, Badge, Skeleton, Button } from "@/components/ui";
 import { useStaffSession } from "@/components/providers/StaffSessionProvider";
 
-/* ── Types ─────────────────────────────────────────────── */
 interface ApplicantRow {
   application_id: number;
   applicant_id: number;
@@ -61,7 +54,6 @@ interface RequirementSummary {
   status: string;
 }
 
-/* ── Animations ────────────────────────────────────────── */
 const stagger = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.04 } },
@@ -75,7 +67,6 @@ const fadeUp = {
   },
 };
 
-/* ── Detail row helper ─────────────────────────────────── */
 function DetailItem({
   icon: Icon,
   label,
@@ -105,7 +96,6 @@ export default function StaffBarangaysPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  // Modal state
   const [modalApplicant, setModalApplicant] = useState<ApplicantRow | null>(
     null,
   );
@@ -120,7 +110,6 @@ export default function StaffBarangaysPage() {
   const { user } = useStaffSession();
   const assignedBarangay = user?.assignedBarangay ?? null;
 
-  /* ── Load list ───────────────────────────────────────── */
   const load = useCallback(async () => {
     if (!staffId) return;
     setLoading(true);
@@ -145,7 +134,6 @@ export default function StaffBarangaysPage() {
     load();
   }, [load]);
 
-  /* ── Fetch detail for a single applicant ─────────────── */
   const fetchDetail = useCallback(
     async (applicationId: number) => {
       if (!staffId || detailCache[applicationId]) return;
@@ -178,13 +166,11 @@ export default function StaffBarangaysPage() {
     [staffId, detailCache],
   );
 
-  /* ── Open modal ──────────────────────────────────────── */
   const openModal = (applicant: ApplicantRow) => {
     setModalApplicant(applicant);
     fetchDetail(applicant.application_id);
   };
 
-  /* ── Search filter ───────────────────────────────────── */
   const filtered = useMemo(() => {
     if (!search.trim()) return allApplicants;
     const q = search.toLowerCase();
@@ -199,7 +185,6 @@ export default function StaffBarangaysPage() {
     (a) => a.pending_requirements > 0 || a.submitted_requirements === 0,
   ).length;
 
-  // Modal detail data
   const detail = modalApplicant
     ? detailCache[modalApplicant.application_id]
     : null;
@@ -209,7 +194,6 @@ export default function StaffBarangaysPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground flex items-center gap-2">
@@ -245,7 +229,6 @@ export default function StaffBarangaysPage() {
         </Button>
       </div>
 
-      {/* Search bar */}
       <Card padding="md">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
@@ -259,7 +242,6 @@ export default function StaffBarangaysPage() {
         </div>
       </Card>
 
-      {/* Applicant list */}
       {loading ? (
         <div className="space-y-3">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -309,7 +291,6 @@ export default function StaffBarangaysPage() {
                 >
                   <Card hover padding="md">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                      {/* Name */}
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="min-w-0">
                           <p className="text-sm font-body font-semibold text-foreground truncate">
@@ -321,7 +302,6 @@ export default function StaffBarangaysPage() {
                         </div>
                       </div>
 
-                      {/* Requirement stats */}
                       <div className="flex items-center gap-3 text-xs font-body flex-shrink-0">
                         <div className="flex items-center gap-2 w-24">
                           <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
@@ -368,7 +348,6 @@ export default function StaffBarangaysPage() {
         </motion.div>
       )}
 
-      {/* ── Applicant Detail Modal ─────────────────────────── */}
       <AnimatePresence>
         {modalApplicant && (
           <motion.div
@@ -390,7 +369,6 @@ export default function StaffBarangaysPage() {
               transition={{ duration: 0.25, ease: "easeOut" }}
               className="bg-card-bg border border-card-border rounded-2xl shadow-soft-lg w-full max-w-md overflow-hidden"
             >
-              {/* Modal header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-card-border">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-11 h-11 rounded-full bg-gradient-to-br from-ocean-300 to-ocean-500 flex items-center justify-center flex-shrink-0">
@@ -421,7 +399,6 @@ export default function StaffBarangaysPage() {
                 </button>
               </div>
 
-              {/* Modal body */}
               <div className="px-5 py-4 space-y-4">
                 {isLoadingDetail && !detail ? (
                   <div className="flex items-center justify-center py-10 gap-2 text-sm text-muted-fg font-body">
@@ -430,7 +407,6 @@ export default function StaffBarangaysPage() {
                   </div>
                 ) : detail ? (
                   <>
-                    {/* Personal info */}
                     <div className="space-y-3">
                       <DetailItem
                         icon={User}
@@ -454,7 +430,6 @@ export default function StaffBarangaysPage() {
                       />
                     </div>
 
-                    {/* Requirement status badges */}
                     <div>
                       <h3 className="text-xs font-heading font-semibold text-muted-fg uppercase tracking-wider mb-2">
                         Requirements Status
@@ -495,7 +470,6 @@ export default function StaffBarangaysPage() {
                 )}
               </div>
 
-              {/* Modal footer */}
               <div className="px-5 py-4 border-t border-card-border flex items-center justify-between gap-3">
                 <div className="text-xs font-body text-muted-fg">
                   {modalApplicant.pending_requirements > 0 && (

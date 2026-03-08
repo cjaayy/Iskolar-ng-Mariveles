@@ -1,16 +1,5 @@
-/**
- * app/api/staff/validate/route.ts
- *
- * PUT /api/staff/validate — staff validates a single requirement submission
- *   Body: { submissionId, action: 'approved' | 'rejected', notes?: string }
- *
- * POST /api/staff/validate — staff validates ALL requirements of an application at once
- *   Body: { applicationId, action: 'approved' | 'rejected', notes?: string }
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
-
-// ─── PUT: validate a single requirement ──────────────────────────────────────
 
 export async function PUT(req: NextRequest) {
   const validatorId = req.headers.get("x-validator-id");
@@ -36,7 +25,6 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Check submission exists
     const { data: submission, error: subError } = await supabase
       .from("requirement_submissions")
       .select("id, application_id, status")
@@ -52,7 +40,6 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Call RPC to validate the single requirement
     const { error: rpcError } = await supabase.rpc(
       "validate_single_requirement",
       {
@@ -79,8 +66,6 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-// ─── POST: bulk validate all pending requirements of an application ──────────
-
 export async function POST(req: NextRequest) {
   const validatorId = req.headers.get("x-validator-id");
   if (!validatorId) {
@@ -102,7 +87,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Call RPC to bulk validate all pending requirements
     const { data: rpcResult, error: rpcError } = await supabase.rpc(
       "bulk_validate_requirements",
       {

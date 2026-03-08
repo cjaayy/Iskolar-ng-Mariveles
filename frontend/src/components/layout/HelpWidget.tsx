@@ -1,8 +1,3 @@
-/* ================================================================
-   HELP WIDGET
-   Floating FAQ button with expandable panel
-   ================================================================ */
-
 "use client";
 
 import React, { useState } from "react";
@@ -62,7 +57,6 @@ export function HelpWidget() {
             transition={{ duration: 0.25 }}
             className="absolute bottom-16 right-0 w-80 sm:w-96 bg-card-bg border border-card-border rounded-2xl shadow-soft-lg overflow-hidden"
           >
-            {/* Header */}
             <div className="bg-gradient-to-r from-ocean-400 to-ocean-500 p-4 text-white">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -84,7 +78,6 @@ export function HelpWidget() {
               </p>
             </div>
 
-            {/* FAQ List */}
             <div className="max-h-80 overflow-y-auto p-2">
               {faqs.map((faq, i) => (
                 <div
@@ -124,7 +117,6 @@ export function HelpWidget() {
               ))}
             </div>
 
-            {/* Footer */}
             <div className="p-3 border-t border-card-border bg-muted/30">
               <a
                 href="#"
@@ -138,7 +130,6 @@ export function HelpWidget() {
         )}
       </AnimatePresence>
 
-      {/* Toggle Button */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.05 }}

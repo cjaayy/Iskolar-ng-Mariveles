@@ -1,9 +1,3 @@
-/* ================================================================
-   ADMIN — APPLICATION DETAIL (Read-Only)
-   View a single application's documents, applicant info, and
-   validation history across all barangays.
-   ================================================================ */
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -33,7 +27,6 @@ import {
 import { Card, Badge, Button, Skeleton } from "@/components/ui";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
-/* -- Types -- */
 interface ApplicationDetail {
   id: number;
   applicant_id: number;
@@ -71,7 +64,6 @@ interface ValidationHistory {
   validator_name: string;
 }
 
-/* -- Status configs -- */
 const appStatusConfig: Record<
   string,
   {
@@ -102,12 +94,10 @@ const docStatusConfig: Record<
   in_progress: { label: "In Progress", variant: "info", icon: Clock },
 };
 
-/* -- Build requirement key → config map -- */
 const reqConfigMap = Object.fromEntries(
   REQUIREMENT_CONFIGS.map((c) => [c.key, c]),
 );
 
-/* -- Animations -- */
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
   show: {
@@ -157,7 +147,6 @@ export default function AdminApplicationDetailPage() {
     fetchData();
   }, [fetchData]);
 
-  // Loading state
   if (loading) {
     return (
       <div className="space-y-6">
@@ -215,7 +204,6 @@ export default function AdminApplicationDetailPage() {
       animate={{ opacity: 1 }}
       className="space-y-6"
     >
-      {/* ── Back Navigation ──────────────────────────────────── */}
       <div className="flex items-center gap-4">
         <Link
           href="/admin/applicants"
@@ -226,7 +214,6 @@ export default function AdminApplicationDetailPage() {
         </Link>
       </div>
 
-      {/* ── Header ───────────────────────────────────────────── */}
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
@@ -246,9 +233,7 @@ export default function AdminApplicationDetailPage() {
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* ── Left: Documents ─────────────────────────────────── */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Summary bar */}
           <Card padding="sm">
             <div className="flex items-center gap-4 flex-wrap px-2">
               <div className="flex items-center gap-1.5">
@@ -289,7 +274,6 @@ export default function AdminApplicationDetailPage() {
             </div>
           </Card>
 
-          {/* Document Cards */}
           {requirements.length === 0 ? (
             <Card padding="lg">
               <div className="text-center py-8">
@@ -331,7 +315,6 @@ export default function AdminApplicationDetailPage() {
                     }`}
                   >
                     <div className="space-y-3">
-                      {/* Document header */}
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3">
                           <div
@@ -372,7 +355,6 @@ export default function AdminApplicationDetailPage() {
                         </Badge>
                       </div>
 
-                      {/* Document View / Download actions */}
                       {req.file_url && (
                         <div className="flex items-center gap-2 flex-wrap">
                           <Button
@@ -413,7 +395,6 @@ export default function AdminApplicationDetailPage() {
                         </div>
                       )}
 
-                      {/* Validator info (if already reviewed) */}
                       {isValidated && req.validator_name && (
                         <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg">
                           <ShieldCheck className="w-3.5 h-3.5 text-muted-fg" />
@@ -439,9 +420,7 @@ export default function AdminApplicationDetailPage() {
           )}
         </div>
 
-        {/* ── Right: Sidebar ─────────────────── */}
         <div className="space-y-4">
-          {/* Applicant Info */}
           <Card padding="md">
             <h3 className="font-heading text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
               <User className="w-4 h-4 text-muted-fg" />
@@ -503,7 +482,6 @@ export default function AdminApplicationDetailPage() {
             </div>
           </Card>
 
-          {/* Validation History */}
           {history.length > 0 && (
             <Card padding="md">
               <h3 className="font-heading text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
@@ -562,7 +540,6 @@ export default function AdminApplicationDetailPage() {
         </div>
       </div>
 
-      {/* ── Document Preview Modal ───────────────────────────── */}
       <AnimatePresence>
         {previewDoc && previewDoc.file_url && (
           <motion.div
@@ -582,7 +559,6 @@ export default function AdminApplicationDetailPage() {
               transition={{ duration: 0.3, ease: "easeOut" }}
               className="bg-card-bg border border-card-border rounded-2xl shadow-soft-lg w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden"
             >
-              {/* Preview Header */}
               <div className="flex items-center justify-between p-4 border-b border-card-border shrink-0">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-lg bg-ocean-100 dark:bg-ocean-500/20 flex items-center justify-center shrink-0">
@@ -632,11 +608,9 @@ export default function AdminApplicationDetailPage() {
                 </div>
               </div>
 
-              {/* Preview Body */}
               <div className="flex-1 overflow-auto bg-muted/30">
                 {previewDoc.file_url.match(/\.(png|jpg|jpeg|gif|webp)$/i) ? (
                   <div className="flex items-center justify-center p-6 min-h-[400px]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={previewDoc.file_url}
                       alt={previewDoc.file_name ?? "Document preview"}

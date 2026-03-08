@@ -1,8 +1,3 @@
-/* ================================================================
-   STAFF APPLICATION REVIEW — Validate individual documents
-   Staff can approve/reject each uploaded document requirement
-   ================================================================ */
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -31,7 +26,6 @@ import {
 import { Card, Badge, Button, Skeleton } from "@/components/ui";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
-/* -- Types -- */
 interface ApplicationDetail {
   id: number;
   applicant_id: number;
@@ -43,7 +37,6 @@ interface ApplicationDetail {
   applicant_email: string;
   contact_number: string | null;
   address: string | null;
-  /* basic info – personal */
   date_of_birth: string | null;
   gender: string | null;
   blood_type: string | null;
@@ -58,7 +51,6 @@ interface ApplicationDetail {
   house_street: string | null;
   town: string | null;
   barangay: string | null;
-  /* basic info – parents */
   father_name: string | null;
   father_occupation: string | null;
   father_contact: string | null;
@@ -68,7 +60,6 @@ interface ApplicationDetail {
   guardian_name: string | null;
   guardian_relation: string | null;
   guardian_contact: string | null;
-  /* basic info – education */
   primary_school: string | null;
   primary_address: string | null;
   primary_year_graduated: string | null;
@@ -105,7 +96,6 @@ interface ValidationHistory {
   validator_name: string;
 }
 
-/* -- Status configs -- */
 const docStatusConfig: Record<
   string,
   {
@@ -121,12 +111,10 @@ const docStatusConfig: Record<
   in_progress: { label: "In Progress", variant: "info", icon: Clock },
 };
 
-/* -- Build a map of requirement key → config -- */
 const reqConfigMap = Object.fromEntries(
   REQUIREMENT_CONFIGS.map((c) => [c.key, c]),
 );
 
-/* -- Animations -- */
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
   show: {
@@ -186,7 +174,6 @@ export default function StaffApplicationReviewPage() {
     fetchData();
   }, [fetchData]);
 
-  /* -- Single document validation -- */
   const handleValidateDoc = async (
     submissionId: number,
     action: "approved" | "rejected",
@@ -209,7 +196,6 @@ export default function StaffApplicationReviewPage() {
       });
 
       if (res.ok) {
-        // Refresh data
         await fetchData();
         setActionNotes((prev) => {
           const next = { ...prev };
@@ -224,7 +210,6 @@ export default function StaffApplicationReviewPage() {
     }
   };
 
-  /* -- Bulk validation -- */
   const handleBulkValidate = async () => {
     if (!staffId || !bulkAction) return;
     setBulkLoading(true);
@@ -255,7 +240,6 @@ export default function StaffApplicationReviewPage() {
     }
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="space-y-6">
@@ -311,7 +295,6 @@ export default function StaffApplicationReviewPage() {
       animate={{ opacity: 1 }}
       className="space-y-6"
     >
-      {/* ── Back Navigation ──────────────────────────────────── */}
       <div className="flex items-center gap-4">
         <Link
           href="/staff/validate"
@@ -322,7 +305,6 @@ export default function StaffApplicationReviewPage() {
         </Link>
       </div>
 
-      {/* ── Header ───────────────────────────────────────────── */}
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
@@ -331,7 +313,6 @@ export default function StaffApplicationReviewPage() {
             </h1>
           </div>
 
-          {/* Bulk actions */}
           {pendingDocs.length > 0 && (
             <div className="flex gap-2">
               <Button
@@ -356,7 +337,6 @@ export default function StaffApplicationReviewPage() {
         </div>
       </motion.div>
 
-      {/* ── Bulk Action Modal ────────────────────────────────── */}
       <AnimatePresence>
         {bulkAction && (
           <motion.div
@@ -428,14 +408,12 @@ export default function StaffApplicationReviewPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Basic Information ────────────────────────────────── */}
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <Card>
           <h2 className="font-heading text-lg font-semibold text-foreground mb-4">
             Basic Information
           </h2>
 
-          {/* Sub-tabs */}
           <div className="flex gap-1 border-b border-card-border mb-5">
             {[
               {
@@ -475,7 +453,6 @@ export default function StaffApplicationReviewPage() {
             ))}
           </div>
 
-          {/* Tab content */}
           {activeInfoTab === "personal" && (
             <div className="space-y-6">
               <SectionTitle>Basic Details</SectionTitle>
@@ -624,9 +601,7 @@ export default function StaffApplicationReviewPage() {
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* ── Left: Documents to Review ─────────────────────── */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Summary bar */}
           <Card padding="sm">
             <div className="flex items-center gap-4 flex-wrap px-2">
               <div className="flex items-center gap-1.5">
@@ -667,7 +642,6 @@ export default function StaffApplicationReviewPage() {
             </div>
           </Card>
 
-          {/* Document Cards */}
           {requirements.length === 0 ? (
             <Card padding="lg">
               <div className="text-center py-8">
@@ -709,7 +683,6 @@ export default function StaffApplicationReviewPage() {
                     }`}
                   >
                     <div className="space-y-3">
-                      {/* Document header */}
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3">
                           <div
@@ -750,7 +723,6 @@ export default function StaffApplicationReviewPage() {
                         </Badge>
                       </div>
 
-                      {/* Document View / Download actions */}
                       {req.file_url && (
                         <div className="flex items-center gap-2 flex-wrap">
                           <Button
@@ -792,7 +764,6 @@ export default function StaffApplicationReviewPage() {
                         </div>
                       )}
 
-                      {/* Validator info (if already reviewed) */}
                       {isValidated && req.validator_name && (
                         <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg">
                           <ShieldCheck className="w-3.5 h-3.5 text-muted-fg" />
@@ -811,10 +782,8 @@ export default function StaffApplicationReviewPage() {
                         </div>
                       )}
 
-                      {/* Action buttons for pending documents */}
                       {isPending && (
                         <div className="space-y-3 pt-2 border-t border-card-border">
-                          {/* Notes input */}
                           <div>
                             <label className="text-xs font-body text-muted-fg mb-1 block">
                               Feedback / Notes (optional)
@@ -833,7 +802,6 @@ export default function StaffApplicationReviewPage() {
                             />
                           </div>
 
-                          {/* Buttons */}
                           <div className="flex gap-2">
                             <Button
                               size="sm"
@@ -869,9 +837,7 @@ export default function StaffApplicationReviewPage() {
           )}
         </div>
 
-        {/* ── Right: Sidebar ─────────────────── */}
         <div className="space-y-4">
-          {/* Validation History */}
           {history.length > 0 && (
             <Card padding="md">
               <h3 className="font-heading text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
@@ -930,7 +896,6 @@ export default function StaffApplicationReviewPage() {
         </div>
       </div>
 
-      {/* ── Document Preview Modal ───────────────────────────── */}
       <AnimatePresence>
         {previewDoc && previewDoc.file_url && (
           <motion.div
@@ -950,7 +915,6 @@ export default function StaffApplicationReviewPage() {
               transition={{ duration: 0.3, ease: "easeOut" }}
               className="bg-card-bg border border-card-border rounded-2xl shadow-soft-lg w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden"
             >
-              {/* Preview Header */}
               <div className="flex items-center justify-between p-4 border-b border-card-border shrink-0">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-lg bg-ocean-100 dark:bg-ocean-500/20 flex items-center justify-center shrink-0">
@@ -1000,12 +964,9 @@ export default function StaffApplicationReviewPage() {
                 </div>
               </div>
 
-              {/* Preview Body */}
               <div className="flex-1 overflow-auto bg-muted/30">
                 {previewDoc.file_url.match(/\.(png|jpg|jpeg|gif|webp)$/i) ? (
-                  /* Image preview */
                   <div className="flex items-center justify-center p-6 min-h-[400px]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={previewDoc.file_url}
                       alt={previewDoc.file_name ?? "Document preview"}
@@ -1013,14 +974,12 @@ export default function StaffApplicationReviewPage() {
                     />
                   </div>
                 ) : previewDoc.file_url.match(/\.pdf$/i) ? (
-                  /* PDF preview via iframe */
                   <iframe
                     src={previewDoc.file_url}
                     title={previewDoc.file_name ?? "PDF preview"}
                     className="w-full h-[70vh] border-0"
                   />
                 ) : (
-                  /* Unsupported file type */
                   <div className="flex flex-col items-center justify-center p-12 min-h-[400px] text-center">
                     <FileText className="w-16 h-16 text-muted-fg opacity-30 mb-4" />
                     <h4 className="font-heading text-lg font-semibold text-foreground mb-1">
@@ -1041,7 +1000,6 @@ export default function StaffApplicationReviewPage() {
                 )}
               </div>
 
-              {/* Preview Footer — quick validate actions */}
               {previewDoc.status === "pending" && (
                 <div className="p-4 border-t border-card-border shrink-0 bg-card-bg">
                   <div className="flex items-center justify-between gap-4">
@@ -1084,10 +1042,8 @@ export default function StaffApplicationReviewPage() {
   );
 }
 
-/* ======================== BASIC INFO HELPER COMPONENTS ======================== */
-
 function formatDate(d: string | null | undefined): string {
-  if (!d) return "—";
+  if (!d) return "\u2014";
   return new Date(d).toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
@@ -1114,7 +1070,7 @@ function InfoRow({
     <div>
       <p className="text-xs font-body text-muted-fg">{label}</p>
       <p className="text-sm font-body font-medium text-foreground mt-0.5">
-        {value || "—"}
+        {value || "\u2014"}
       </p>
     </div>
   );

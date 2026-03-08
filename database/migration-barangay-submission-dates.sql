@@ -1,9 +1,3 @@
--- ============================================================
---  Migration: Add submission date window to barangay_access
---  Each barangay can have a scheduled date window for when
---  applicants may submit requirements.
--- ============================================================
-
 USE scholarship_system;
 
 ALTER TABLE barangay_access

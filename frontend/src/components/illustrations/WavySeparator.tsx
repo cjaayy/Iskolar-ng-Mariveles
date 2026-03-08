@@ -1,6 +1,5 @@
 import React from "react";
 
-/* -- Wavy Separator -- */
 export function WavySeparator({ className = "" }: { className?: string }) {
   return (
     <svg

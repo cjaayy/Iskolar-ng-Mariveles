@@ -1,13 +1,6 @@
-/**
- * app/api/me/basic-info/route.ts
- *
- * GET  /api/me/basic-info — returns all basic-information fields for the applicant.
- * PUT  /api/me/basic-info — updates basic-information fields.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 
-/* ---------- Column list for the SELECT query ---------- */
 const BASIC_INFO_COLUMNS = [
   "date_of_birth",
   "gender",
@@ -45,7 +38,6 @@ const BASIC_INFO_COLUMNS = [
   "tertiary_program",
 ] as const;
 
-/* ======================== GET ======================== */
 export async function GET(req: NextRequest) {
   const applicantIdHeader = req.headers.get("x-applicant-id");
   if (!applicantIdHeader) {
@@ -78,9 +70,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-/* ======================== PUT ======================== */
-
-// All fields that may be updated via this endpoint
 const ALLOWED_FIELDS = new Set(BASIC_INFO_COLUMNS);
 
 export async function PUT(req: NextRequest) {
@@ -103,7 +92,6 @@ export async function PUT(req: NextRequest) {
     for (const [key, value] of Object.entries(body)) {
       if (!ALLOWED_FIELDS.has(key as (typeof BASIC_INFO_COLUMNS)[number]))
         continue;
-      // Convert empty strings to null
       updates[key] = value === "" ? null : value;
     }
 

@@ -1,9 +1,3 @@
-/* ================================================================
-   ADMIN — APPROVED APPLICANTS
-   Shows all applicants whose requirements are ALL approved.
-   Supports search, and download as PDF or Excel.
-   ================================================================ */
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -20,7 +14,6 @@ import {
 import { Card, Badge, Skeleton, Button } from "@/components/ui";
 import { useToast } from "@/components/providers/ToastProvider";
 
-/* ── Types ─────────────────────────────────────────────── */
 interface ApprovedApplicant {
   application_id: number;
   applicant_id: number;
@@ -33,14 +26,11 @@ interface ApprovedApplicant {
   total_requirements: number;
 }
 
-/* ── Animations ────────────────────────────────────────── */
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
   show: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 };
 
-
-/* ── Helper: Generate Excel content (HTML table format) ───── */
 function generateExcel(applicants: ApprovedApplicant[]): string {
   const headers = ["No.", "Full Name", "Email", "Barangay", "Contact Number"];
 
@@ -80,7 +70,6 @@ function generateExcel(applicants: ApprovedApplicant[]): string {
   `;
 }
 
-/* ── Helper: Generate and download PDF via browser print ─── */
 function downloadPDF(applicants: ApprovedApplicant[]) {
   const printWindow = window.open("", "_blank");
   if (!printWindow) return;
@@ -141,7 +130,6 @@ function downloadPDF(applicants: ApprovedApplicant[]) {
   printWindow.document.close();
 }
 
-/* ======================== PAGE COMPONENT ======================== */
 export default function ApprovedApplicantsPage() {
   const { addToast } = useToast();
   const [applicants, setApplicants] = useState<ApprovedApplicant[]>([]);
@@ -175,7 +163,6 @@ export default function ApprovedApplicantsPage() {
     return () => clearTimeout(debounce);
   }, [loadData]);
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (
@@ -218,7 +205,6 @@ export default function ApprovedApplicantsPage() {
     addToast("PDF generated", "success");
   };
 
-  /* ── Loading state ── */
   if (loading && applicants.length === 0) {
     return (
       <div className="space-y-6">
@@ -239,7 +225,6 @@ export default function ApprovedApplicantsPage() {
         show: { opacity: 1, transition: { staggerChildren: 0.06 } },
       }}
     >
-      {/* Header */}
       <motion.div
         variants={fadeUp}
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
@@ -255,7 +240,6 @@ export default function ApprovedApplicantsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Download dropdown */}
           <div className="relative" ref={dropdownRef}>
             <Button
               variant="success"
@@ -299,7 +283,6 @@ export default function ApprovedApplicantsPage() {
         </div>
       </motion.div>
 
-      {/* Summary card */}
       <motion.div variants={fadeUp}>
         <Card className="flex items-center gap-4 p-4">
           <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-500/10 flex items-center justify-center">
@@ -316,7 +299,6 @@ export default function ApprovedApplicantsPage() {
         </Card>
       </motion.div>
 
-      {/* Search */}
       <motion.div variants={fadeUp}>
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
@@ -331,7 +313,6 @@ export default function ApprovedApplicantsPage() {
         </div>
       </motion.div>
 
-      {/* Table */}
       <motion.div variants={fadeUp}>
         <Card className="overflow-x-auto">
           {applicants.length === 0 ? (

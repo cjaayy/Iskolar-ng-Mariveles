@@ -1,8 +1,3 @@
-/* ================================================================
-   ADMIN DASHBOARD
-   Welcome page
-   ================================================================ */
-
 "use client";
 
 import React from "react";
@@ -34,7 +29,6 @@ export default function AdminDashboardPage() {
       animate="show"
       className="space-y-8"
     >
-      {/* Welcome section */}
       <motion.div
         variants={item}
         className="flex flex-col items-center gap-6 py-4"

@@ -1,6 +1,5 @@
 import React from "react";
 
-/* -- Success Illustration (for upload complete, etc.) -- */
 export function SuccessIllustration({
   className = "",
 }: {
@@ -26,7 +25,6 @@ export function SuccessIllustration({
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* Confetti particles */}
       <rect
         x="20"
         y="20"

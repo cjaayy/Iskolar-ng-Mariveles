@@ -3,10 +3,6 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { X, CheckCircle, AlertTriangle, Info, AlertCircle } from "lucide-react";
 
-/* ================================================================
-   TOAST NOTIFICATION SYSTEM
-   ================================================================ */
-
 export type ToastType = "success" | "error" | "warning" | "info";
 
 interface Toast {
@@ -59,7 +55,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ addToast }}>
       {children}
-      {/* Toast Container */}
       <div
         className="fixed top-16 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 max-w-xs"
         aria-live="polite"

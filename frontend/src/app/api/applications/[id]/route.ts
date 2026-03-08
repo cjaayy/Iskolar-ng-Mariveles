@@ -1,8 +1,3 @@
-/**
- * app/api/applications/[id]/route.ts
- *
- * GET /api/applications/:id — fetch a single application with full details
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import type { ApplicationWithDetails } from "@db/types";
@@ -18,7 +13,6 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "Invalid id" }, { status: 400 });
     }
 
-    // Fetch application with applicant name via foreign key relations
     const { data: row, error: appError } = await supabase
       .from("applications")
       .select(
@@ -40,7 +34,6 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    // Flatten nested relations to match the original response shape
     const { applicants, ...rest } = row as Record<string, unknown> & {
       applicants: { users: { full_name: string } };
     };
@@ -49,7 +42,6 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       applicant_name: applicants?.users?.full_name ?? "",
     } as ApplicationWithDetails;
 
-    // Fetch validation history
     const { data: history, error: histError } = await supabase
       .from("validations")
       .select(
@@ -63,7 +55,6 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
 
     if (histError) throw histError;
 
-    // Flatten validator_name from the nested users relation
     const flatHistory = (history ?? []).map(
       (v: Record<string, unknown> & { users: { full_name: string } }) => {
         const { users, ...rest } = v;

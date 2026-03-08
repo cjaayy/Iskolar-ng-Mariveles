@@ -1,8 +1,3 @@
--- ============================================================
---  Migration: Registration Links (Pre-registration invite system)
---  Adds a table for admin-generated registration links
--- ============================================================
-
 USE scholarship_system;
 
 CREATE TABLE IF NOT EXISTS registration_links (

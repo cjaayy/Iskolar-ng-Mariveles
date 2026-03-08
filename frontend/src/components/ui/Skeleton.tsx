@@ -1,7 +1,5 @@
 "use client";
 
-/* ======================== SKELETON ======================== */
-
 interface SkeletonProps {
   className?: string;
   variant?: "text" | "circular" | "rectangular";

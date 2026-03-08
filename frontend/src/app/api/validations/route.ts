@@ -1,8 +1,3 @@
-/**
- * app/api/validations/route.ts
- *
- * PUT /api/validations — validator reviews an application
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import type {
@@ -11,7 +6,6 @@ import type {
   ValidationChecklist,
 } from "@db/types";
 
-// Allowed transitions: current status -> valid next statuses
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   submitted: ["under_review"],
   under_review: ["approved", "rejected", "returned", "requested_info"],
@@ -20,7 +14,6 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
 
 export async function PUT(req: NextRequest) {
   try {
-    // ── Parse body ────────────────────────────────────────────────────────────
     let body: UpdateValidationBody;
     try {
       body = await req.json();
@@ -30,7 +23,6 @@ export async function PUT(req: NextRequest) {
 
     const { application_id, action, checklist, notes } = body;
 
-    // ── Input validation ──────────────────────────────────────────────────────
     const validActions = ["approved", "rejected", "returned", "requested_info"];
     if (!application_id || !Number.isInteger(Number(application_id))) {
       return NextResponse.json(
@@ -51,14 +43,12 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // ── Resolve validator from header (replace with real auth session) ────────
     const validatorIdHeader = req.headers.get("x-validator-id");
     if (!validatorIdHeader) {
       return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
     }
     const validatorId = Number(validatorIdHeader);
 
-    // ── Load application ──────────────────────────────────────────────────────
     const { data: application, error: appError } = await supabase
       .from("applications")
       .select("*")
@@ -73,10 +63,8 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // ── Check status transition allowed ───────────────────────────────────────
     const typedApplication = application as ApplicationRow;
     const allowed = ALLOWED_TRANSITIONS[typedApplication.status] ?? [];
-    // Map action -> ultimate application status
     const actionToStatus: Record<string, string> = {
       approved: "approved",
       rejected: "rejected",
@@ -94,7 +82,6 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // ── Validate checklist when approving ─────────────────────────────────────
     if (action === "approved") {
       const cl = checklist as ValidationChecklist | undefined;
       if (!cl || !cl.documents_complete || !cl.enrollment_verified) {
@@ -105,20 +92,16 @@ export async function PUT(req: NextRequest) {
       }
     }
 
-    // ── Write validation record ───────────────────────────────────────────────
-    const { error: insertError } = await supabase
-      .from("validations")
-      .insert({
-        application_id,
-        validator_id: validatorId,
-        action,
-        checklist: checklist ?? null,
-        notes: notes ?? null,
-      });
+    const { error: insertError } = await supabase.from("validations").insert({
+      application_id,
+      validator_id: validatorId,
+      action,
+      checklist: checklist ?? null,
+      notes: notes ?? null,
+    });
 
     if (insertError) throw insertError;
 
-    // ── Update application status ─────────────────────────────────────────────
     const { error: updateError } = await supabase
       .from("applications")
       .update({ status: nextStatus, remarks: notes ?? null })

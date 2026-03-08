@@ -1,9 +1,3 @@
-/* ================================================================
-   ADMIN — APPLICATION VALIDATION (Full Power)
-   Admin can approve/reject each uploaded document requirement
-   across all barangays.
-   ================================================================ */
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -29,7 +23,6 @@ import {
 import { Card, Badge, Button, Skeleton } from "@/components/ui";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
-/* -- Types -- */
 interface ApplicationDetail {
   id: number;
   applicant_id: number;
@@ -67,7 +60,6 @@ interface ValidationHistory {
   validator_name: string;
 }
 
-/* -- Status configs -- */
 const docStatusConfig: Record<
   string,
   {
@@ -87,7 +79,6 @@ const reqConfigMap = Object.fromEntries(
   REQUIREMENT_CONFIGS.map((c) => [c.key, c]),
 );
 
-/* -- Animations -- */
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
   show: {
@@ -144,7 +135,6 @@ export default function AdminValidateDetailPage() {
     fetchData();
   }, [fetchData]);
 
-  /* -- Single document validation -- */
   const handleValidateDoc = async (
     submissionId: number,
     action: "approved" | "rejected",
@@ -181,7 +171,6 @@ export default function AdminValidateDetailPage() {
     }
   };
 
-  /* -- Bulk validation -- */
   const handleBulkValidate = async () => {
     if (!adminId || !bulkAction) return;
     setBulkLoading(true);
@@ -212,7 +201,6 @@ export default function AdminValidateDetailPage() {
     }
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="space-y-6">
@@ -268,7 +256,6 @@ export default function AdminValidateDetailPage() {
       animate={{ opacity: 1 }}
       className="space-y-6"
     >
-      {/* ── Back Navigation ──────────────────────────────────── */}
       <div className="flex items-center gap-4">
         <Link
           href="/admin/validate"
@@ -279,7 +266,6 @@ export default function AdminValidateDetailPage() {
         </Link>
       </div>
 
-      {/* ── Header ───────────────────────────────────────────── */}
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
@@ -287,12 +273,10 @@ export default function AdminValidateDetailPage() {
               Document Validation
             </h1>
             <p className="font-body text-sm text-muted-fg">
-              {application.applicant_name} &middot;{" "}
-              Iskolar ng Mariveles
+              {application.applicant_name} &middot; Iskolar ng Mariveles
             </p>
           </div>
 
-          {/* Bulk actions */}
           {pendingDocs.length > 0 && (
             <div className="flex gap-2">
               <Button
@@ -317,7 +301,6 @@ export default function AdminValidateDetailPage() {
         </div>
       </motion.div>
 
-      {/* ── Bulk Action Modal ────────────────────────────────── */}
       <AnimatePresence>
         {bulkAction && (
           <motion.div
@@ -390,9 +373,7 @@ export default function AdminValidateDetailPage() {
       </AnimatePresence>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* ── Left: Documents to Review ─────────────────────── */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Summary bar */}
           <Card padding="sm">
             <div className="flex items-center gap-4 flex-wrap px-2">
               <div className="flex items-center gap-1.5">
@@ -433,7 +414,6 @@ export default function AdminValidateDetailPage() {
             </div>
           </Card>
 
-          {/* Document Cards */}
           {requirements.length === 0 ? (
             <Card padding="lg">
               <div className="text-center py-8">
@@ -475,7 +455,6 @@ export default function AdminValidateDetailPage() {
                     }`}
                   >
                     <div className="space-y-3">
-                      {/* Document header */}
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3">
                           <div
@@ -516,7 +495,6 @@ export default function AdminValidateDetailPage() {
                         </Badge>
                       </div>
 
-                      {/* Document View / Download actions */}
                       {req.file_url && (
                         <div className="flex items-center gap-2 flex-wrap">
                           <Button
@@ -557,7 +535,6 @@ export default function AdminValidateDetailPage() {
                         </div>
                       )}
 
-                      {/* Validator info (if already reviewed) */}
                       {isValidated && req.validator_name && (
                         <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg">
                           <ShieldCheck className="w-3.5 h-3.5 text-muted-fg" />
@@ -576,7 +553,6 @@ export default function AdminValidateDetailPage() {
                         </div>
                       )}
 
-                      {/* Action buttons for pending documents */}
                       {isPending && (
                         <div className="space-y-3 pt-2 border-t border-card-border">
                           <div>
@@ -632,9 +608,7 @@ export default function AdminValidateDetailPage() {
           )}
         </div>
 
-        {/* ── Right: Sidebar ─────────────────── */}
         <div className="space-y-4">
-          {/* Validation History */}
           {history.length > 0 && (
             <Card padding="md">
               <h3 className="font-heading text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
@@ -693,7 +667,6 @@ export default function AdminValidateDetailPage() {
         </div>
       </div>
 
-      {/* ── Document Preview Modal ───────────────────────────── */}
       <AnimatePresence>
         {previewDoc && previewDoc.file_url && (
           <motion.div
@@ -713,7 +686,6 @@ export default function AdminValidateDetailPage() {
               transition={{ duration: 0.3, ease: "easeOut" }}
               className="bg-card-bg border border-card-border rounded-2xl shadow-soft-lg w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden"
             >
-              {/* Preview Header */}
               <div className="flex items-center justify-between p-4 border-b border-card-border shrink-0">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-lg bg-ocean-100 dark:bg-ocean-500/20 flex items-center justify-center shrink-0">
@@ -763,11 +735,9 @@ export default function AdminValidateDetailPage() {
                 </div>
               </div>
 
-              {/* Preview Body */}
               <div className="flex-1 overflow-auto bg-muted/30">
                 {previewDoc.file_url.match(/\.(png|jpg|jpeg|gif|webp)$/i) ? (
                   <div className="flex items-center justify-center p-6 min-h-[400px]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={previewDoc.file_url}
                       alt={previewDoc.file_name ?? "Document preview"}
@@ -801,7 +771,6 @@ export default function AdminValidateDetailPage() {
                 )}
               </div>
 
-              {/* Preview Footer — quick validate actions */}
               {previewDoc.status === "pending" && (
                 <div className="p-4 border-t border-card-border shrink-0 bg-card-bg">
                   <div className="flex items-center justify-between gap-4">

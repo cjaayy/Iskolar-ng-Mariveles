@@ -1,8 +1,3 @@
-/**
- * app/api/me/profile/route.ts
- *
- * PUT /api/me/profile — update editable profile fields.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { sanitizeText } from "@db/eligibility";
@@ -29,7 +24,6 @@ export async function PUT(req: NextRequest) {
   }
 
   try {
-    // Resolve user_id
     const { data: applicant, error: applicantError } = await supabase
       .from("applicants")
       .select("user_id")
@@ -44,7 +38,6 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Update full_name in users table
     if (body.firstName !== undefined || body.lastName !== undefined) {
       const { data: current, error: userError } = await supabase
         .from("users")
@@ -79,7 +72,6 @@ export async function PUT(req: NextRequest) {
       }
     }
 
-    // Update applicant contact fields
     const contactNumber =
       body.contactNumber !== undefined
         ? body.contactNumber.trim() || null

@@ -1,9 +1,7 @@
 "use client";
 
-/* ======================== PROGRESS BAR ======================== */
-
 interface ProgressProps {
-  value: number; // 0-100
+  value: number;
   label?: string;
   showValue?: boolean;
   size?: "sm" | "md" | "lg";

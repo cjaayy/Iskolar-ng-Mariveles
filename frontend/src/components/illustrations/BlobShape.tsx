@@ -1,6 +1,5 @@
 import React from "react";
 
-/* -- Decorative Blob Shapes -- */
 export function BlobShape({
   className = "",
   color = "#4A6FA5",

@@ -1,11 +1,3 @@
-/**
- * database/types.ts
- * TypeScript interfaces that mirror the PostgreSQL (Supabase) schema tables.
- * Use these as the single source of truth for DB row shapes.
- */
-
-// ─── Enums ──────────────────────────────────────────────────────────────────
-
 export type UserRole = "admin" | "validator" | "applicant";
 
 export type ApplicationStatus =
@@ -28,8 +20,6 @@ export type RequirementSubmissionStatus =
   | "pending"
   | "approved"
   | "rejected";
-
-// ─── Table row shapes ────────────────────────────────────────────────────────
 
 export interface UserRow {
   id: number;
@@ -148,14 +138,11 @@ export interface BarangayAccessRow {
   updated_at: string;
 }
 
-// ─── Domain subtypes ─────────────────────────────────────────────────────────
-
 export interface DocumentEntry {
   type: "transcript" | "income_cert" | "id" | "endorsement" | "other";
   label: string;
-  /** Relative URL path or storage key */
   path: string;
-  uploaded_at: string; // ISO 8601
+  uploaded_at: string;
 }
 
 export interface ValidationChecklist {
@@ -163,14 +150,8 @@ export interface ValidationChecklist {
   enrollment_verified: boolean;
 }
 
-// ─── API request / response shapes ──────────────────────────────────────────
+export interface CreateApplicationBody {}
 
-/** POST /api/applications — request body */
-export interface CreateApplicationBody {
-  /** applicant_id is resolved from the authenticated session server-side */
-}
-
-/** PUT /api/validations — request body */
 export interface UpdateValidationBody {
   application_id: number;
   action: ValidationAction;
@@ -178,21 +159,15 @@ export interface UpdateValidationBody {
   notes?: string;
 }
 
-/** GET /api/applications — query params */
 export interface GetApplicationsQuery {
   status?: ApplicationStatus;
-  /** page number (1-based) */
   page?: number;
-  /** rows per page, default 20 */
   limit?: number;
 }
 
-/** Enriched application row returned to clients */
 export interface ApplicationWithDetails extends ApplicationRow {
   applicant_name: string;
 }
-
-// ─── Eligibility result ──────────────────────────────────────────────────────
 
 export interface EligibilityResult {
   eligible: boolean;

@@ -1,6 +1,5 @@
 import React from "react";
 
-/* -- Error Illustration -- */
 export function ErrorIllustration({ className = "" }: { className?: string }) {
   return (
     <svg
@@ -12,7 +11,6 @@ export function ErrorIllustration({ className = "" }: { className?: string }) {
       className={className}
       aria-hidden="true"
     >
-      {/* Warning triangle */}
       <path
         d="M100 30 L170 150 L30 150 Z"
         fill="#FFF8E6"
@@ -21,7 +19,6 @@ export function ErrorIllustration({ className = "" }: { className?: string }) {
         strokeLinejoin="round"
       />
 
-      {/* Exclamation */}
       <line
         x1="100"
         y1="70"
@@ -33,7 +30,6 @@ export function ErrorIllustration({ className = "" }: { className?: string }) {
       />
       <circle cx="100" cy="130" r="4" fill="#E0A800" />
 
-      {/* Decorative sparks */}
       <line
         x1="60"
         y1="50"

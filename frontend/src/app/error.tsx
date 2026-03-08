@@ -1,8 +1,3 @@
-/* ================================================================
-   CUSTOM ERROR PAGE
-   Friendly error boundary with helpful illustration
-   ================================================================ */
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -24,7 +19,6 @@ export default function Error({
   }, [error]);
 
   useEffect(() => {
-    // Determine the correct dashboard based on the current path or stored session
     if (pathname.startsWith("/admin")) {
       setDashboardHref("/admin/dashboard");
     } else if (pathname.startsWith("/staff")) {

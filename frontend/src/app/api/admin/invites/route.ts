@@ -1,10 +1,3 @@
-/**
- * app/api/admin/invites/route.ts
- *
- * GET  /api/admin/invites — list all registration links.
- * POST /api/admin/invites — create a new registration link.
- * Admin only.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import crypto from "crypto";
@@ -51,7 +44,6 @@ export async function GET(req: NextRequest) {
 
     if (error) throw error;
 
-    // Flatten the joined user name into creator_name
     const data = (rows ?? []).map((row: Record<string, unknown>) => {
       const user = row.users as { full_name: string };
       return {
@@ -95,7 +87,6 @@ export async function POST(req: NextRequest) {
       expiresAt?: string;
     };
 
-    // Generate a unique token
     const token = crypto.randomBytes(32).toString("hex");
 
     const { data, error } = await supabase

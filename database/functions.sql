@@ -1,13 +1,3 @@
--- ============================================================
---  Iskolar ng Mariveles — PostgreSQL Functions for Supabase
---  Run this AFTER schema-supabase.sql in the Supabase SQL Editor.
--- ============================================================
-
--- ─── 1. register_applicant ──────────────────────────────────
--- Handles the entire registration flow atomically:
---   validate token → check email → create user → create applicant → create application → increment usage
--- Returns: { user_id, applicant_id, email }
-
 CREATE OR REPLACE FUNCTION register_applicant(
   p_token       TEXT,
   p_email       TEXT,
@@ -28,7 +18,6 @@ DECLARE
   v_applicant_id INT;
   v_existing    INT;
 BEGIN
-  -- Validate the registration link
   SELECT id, max_uses, times_used, expires_at
     INTO v_link_id, v_max_uses, v_times_used, v_expires_at
     FROM registration_links
@@ -47,27 +36,22 @@ BEGIN
     RETURN json_build_object('error', 'This registration link has reached its maximum usage');
   END IF;
 
-  -- Check email uniqueness
   SELECT id INTO v_existing FROM users WHERE email = p_email LIMIT 1;
   IF v_existing IS NOT NULL THEN
     RETURN json_build_object('error', 'An account with this email already exists');
   END IF;
 
-  -- Create user
   INSERT INTO users (email, password_hash, full_name, role)
   VALUES (p_email, p_password_hash, p_full_name, 'applicant')
   RETURNING id INTO v_user_id;
 
-  -- Create applicant profile
   INSERT INTO applicants (user_id, address)
   VALUES (v_user_id, p_address)
   RETURNING id INTO v_applicant_id;
 
-  -- Auto-create application
   INSERT INTO applications (applicant_id, status)
   VALUES (v_applicant_id, 'submitted');
 
-  -- Increment usage counter
   UPDATE registration_links
      SET times_used = times_used + 1
    WHERE id = v_link_id;
@@ -80,15 +64,10 @@ BEGIN
 END;
 $$;
 
--- ─── 2. bulk_validate_requirements ──────────────────────────
--- Bulk approve/reject all pending requirements for an application.
--- Also updates application status and writes a validation audit trail entry.
--- Returns: { affected_rows, new_app_status }
-
 CREATE OR REPLACE FUNCTION bulk_validate_requirements(
   p_application_id INT,
   p_validator_id   INT,
-  p_action         TEXT,  -- 'approved' or 'rejected'
+  p_action         TEXT,
   p_notes          TEXT DEFAULT NULL
 )
 RETURNS JSON
@@ -100,7 +79,6 @@ DECLARE
   v_new_status TEXT;
   v_remarks TEXT;
 BEGIN
-  -- Bulk update all pending submissions
   UPDATE requirement_submissions
      SET status = p_action::requirement_status,
          validated_by = p_validator_id,
@@ -111,7 +89,6 @@ BEGIN
 
   GET DIAGNOSTICS v_affected = ROW_COUNT;
 
-  -- Set application status
   IF p_action = 'approved' THEN
     v_new_status := 'approved';
     v_remarks := COALESCE(p_notes, 'All documents approved by staff');
@@ -125,7 +102,6 @@ BEGIN
          remarks = v_remarks
    WHERE id = p_application_id;
 
-  -- Audit trail
   INSERT INTO validations (application_id, validator_id, action, notes)
   VALUES (p_application_id, p_validator_id, p_action::validation_action, p_notes);
 
@@ -136,14 +112,10 @@ BEGIN
 END;
 $$;
 
--- ─── 3. validate_single_requirement ─────────────────────────
--- Validates a single requirement submission and auto-transitions application status.
--- Returns: { success, application_id, all_approved }
-
 CREATE OR REPLACE FUNCTION validate_single_requirement(
   p_submission_id  INT,
   p_validator_id   INT,
-  p_action         TEXT,  -- 'approved' or 'rejected'
+  p_action         TEXT,
   p_notes          TEXT DEFAULT NULL
 )
 RETURNS JSON
@@ -155,7 +127,6 @@ DECLARE
   v_total      INT;
   v_approved   INT;
 BEGIN
-  -- Get the application_id
   SELECT application_id INTO v_app_id
     FROM requirement_submissions
    WHERE id = p_submission_id;
@@ -164,7 +135,6 @@ BEGIN
     RETURN json_build_object('error', 'Submission not found');
   END IF;
 
-  -- Update submission
   UPDATE requirement_submissions
      SET status = p_action::requirement_status,
          validated_by = p_validator_id,
@@ -172,14 +142,12 @@ BEGIN
          validator_notes = p_notes
    WHERE id = p_submission_id;
 
-  -- Count totals for auto-transition
   SELECT COUNT(*),
          COUNT(*) FILTER (WHERE status = 'approved')
     INTO v_total, v_approved
     FROM requirement_submissions
    WHERE application_id = v_app_id;
 
-  -- Auto-transition if all approved
   IF v_total > 0 AND v_approved = v_total THEN
     UPDATE applications
        SET status = 'approved', remarks = 'All documents validated'

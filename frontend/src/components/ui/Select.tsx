@@ -2,8 +2,6 @@
 
 import React from "react";
 
-/* ======================== SELECT DROPDOWN ======================== */
-
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label: string;
   options: { label: string; value: string }[];

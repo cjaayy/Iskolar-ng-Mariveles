@@ -1,11 +1,5 @@
--- ============================================================
---  Migration: Add Basic Information fields to applicants table
---  Run this after the initial schema.sql
--- ============================================================
-
 USE scholarship_system;
 
--- Personal details
 ALTER TABLE applicants
   ADD COLUMN IF NOT EXISTS gender           ENUM('Male','Female')  NULL AFTER date_of_birth,
   ADD COLUMN IF NOT EXISTS blood_type       VARCHAR(5)             NULL AFTER gender,
@@ -21,7 +15,6 @@ ALTER TABLE applicants
   ADD COLUMN IF NOT EXISTS town             VARCHAR(100)           NULL AFTER house_street,
   ADD COLUMN IF NOT EXISTS barangay         VARCHAR(100)           NULL AFTER town;
 
--- Parent / Guardian details
 ALTER TABLE applicants
   ADD COLUMN IF NOT EXISTS father_name      VARCHAR(150)           NULL AFTER barangay,
   ADD COLUMN IF NOT EXISTS father_occupation VARCHAR(150)          NULL AFTER father_name,
@@ -33,7 +26,6 @@ ALTER TABLE applicants
   ADD COLUMN IF NOT EXISTS guardian_relation VARCHAR(60)           NULL AFTER guardian_name,
   ADD COLUMN IF NOT EXISTS guardian_contact VARCHAR(20)            NULL AFTER guardian_relation;
 
--- Education details
 ALTER TABLE applicants
   ADD COLUMN IF NOT EXISTS primary_school            VARCHAR(200)  NULL AFTER guardian_contact,
   ADD COLUMN IF NOT EXISTS primary_address            VARCHAR(255)  NULL AFTER primary_school,
@@ -46,7 +38,6 @@ ALTER TABLE applicants
   ADD COLUMN IF NOT EXISTS tertiary_year_graduated    YEAR          NULL AFTER tertiary_address,
   ADD COLUMN IF NOT EXISTS tertiary_program           VARCHAR(200)  NULL AFTER tertiary_year_graduated;
 
--- Others
 ALTER TABLE applicants
   ADD COLUMN IF NOT EXISTS skills            TEXT                  NULL AFTER tertiary_program,
   ADD COLUMN IF NOT EXISTS hobbies           TEXT                  NULL AFTER skills,

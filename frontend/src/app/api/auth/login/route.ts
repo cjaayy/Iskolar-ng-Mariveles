@@ -1,9 +1,3 @@
-/**
- * app/api/auth/login/route.ts
- *
- * POST /api/auth/login — authenticate user (applicant, validator, admin)
- * Returns user profile + role so the client can redirect accordingly.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 
@@ -32,7 +26,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Look up user by email
     const { data: user, error: userError } = await supabase
       .from("users")
       .select("*")
@@ -48,14 +41,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // In production, use bcrypt.compare(). For demo, accept known passwords.
-    // Simple check: allow any password for demo purposes (replace with bcrypt in prod)
     let bcrypt: typeof import("bcrypt") | null = null;
     try {
       bcrypt = await import("bcrypt");
-    } catch {
-      // bcrypt not available — skip hash check for demo
-    }
+    } catch {}
 
     if (bcrypt) {
       const valid = await bcrypt.compare(password, user.password_hash);
@@ -67,7 +56,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Build response based on role
     const response: Record<string, unknown> = {
       userId: user.id,
       email: user.email,
@@ -75,7 +63,6 @@ export async function POST(req: NextRequest) {
       role: user.role,
     };
 
-    // If applicant, also return applicant ID
     if (user.role === "applicant") {
       const { data: applicant } = await supabase
         .from("applicants")
@@ -86,7 +73,6 @@ export async function POST(req: NextRequest) {
 
       response.applicantId = applicant?.id ?? null;
 
-      // Check barangay access — applicants can only login when their barangay is open
       if (applicant) {
         const { data: applicantInfo } = await supabase
           .from("applicants")
@@ -96,7 +82,6 @@ export async function POST(req: NextRequest) {
           .single<{ address: string | null }>();
 
         const address = applicantInfo?.address || "";
-        // Extract barangay from address (format: "Brgy, Mariveles, Bataan" or "Street, Brgy, Mariveles, Bataan")
         const parts = address.split(",").map((p: string) => p.trim());
         const marivIdx = parts.findIndex((p: string) =>
           p.toLowerCase().includes("mariveles"),

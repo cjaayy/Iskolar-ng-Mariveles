@@ -1,10 +1,3 @@
-/**
- * app/api/admin/registered/[id]/route.ts
- *
- * GET /api/admin/registered/:id — fetch a single application with all
- * requirement submissions + validation history for admin review (read-only).
- * Returns the same shape as the admin applicants detail endpoint.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
@@ -40,7 +33,6 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "Invalid id" }, { status: 400 });
     }
 
-    // Application + applicant details + full basic info
     const { data: appRow, error: appError } = await supabase
       .from("applications")
       .select(
@@ -99,8 +91,10 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    // Flatten the joined data
-    const applicant = appRow.applicants as unknown as Record<string, unknown> & {
+    const applicant = appRow.applicants as unknown as Record<
+      string,
+      unknown
+    > & {
       users: { full_name: string; email: string };
     };
 
@@ -114,7 +108,6 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       ...applicantFields,
     };
 
-    // All requirement submissions for this application
     const { data: submissions, error: subError } = await supabase
       .from("requirement_submissions")
       .select(
@@ -128,7 +121,6 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
 
     if (subError) throw subError;
 
-    // Merge requirement configs with actual submissions
     const subMap = Object.fromEntries(
       (submissions ?? []).map((s: Record<string, unknown>) => [
         s.requirement_key,
@@ -156,7 +148,6 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       };
     });
 
-    // Validation history
     const { data: history, error: histError } = await supabase
       .from("validations")
       .select(

@@ -1,9 +1,3 @@
-/**
- * app/api/me/requirements/route.ts
- *
- * GET /api/me/requirements — returns requirements merged with DB submission statuses.
- * POST /api/me/requirements — submits (upserts) a requirement document.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
@@ -16,7 +10,6 @@ export async function GET(req: NextRequest) {
   const applicantId = Number(applicantIdHeader);
 
   try {
-    // Latest application for this applicant
     const { data: application, error: appError } = await supabase
       .from("applications")
       .select("id, status")
@@ -26,7 +19,6 @@ export async function GET(req: NextRequest) {
       .single();
 
     if (appError || !application) {
-      // No application yet — still show the requirement checklist (all "missing")
       const requirements = REQUIREMENT_CONFIGS.map((config, idx) => ({
         id: idx + 1,
         key: config.key,
@@ -48,7 +40,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ application: null, requirements });
     }
 
-    // All submission statuses for this application
     const { data: submissions, error: subError } = await supabase
       .from("requirement_submissions")
       .select(
@@ -61,14 +52,14 @@ export async function GET(req: NextRequest) {
     }
 
     const subMap = Object.fromEntries(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (submissions ?? []).map((s: Record<string, any>) => [s.requirement_key, s]),
+      (submissions ?? []).map((s: Record<string, any>) => [
+        s.requirement_key,
+        s,
+      ]),
     );
 
-    // Merge static config with DB submission data
     const requirements = REQUIREMENT_CONFIGS.map((config, idx) => {
       const sub = subMap[config.key] ?? null;
-      // Normalise DB enum "in_progress" -> "in-progress" for the UI
       const rawStatus = sub?.status ?? "missing";
       const status =
         rawStatus === "in_progress"
@@ -110,11 +101,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-/* -- POST /api/me/requirements ------------------------------------------------
-   Upserts a requirement submission for the applicant's latest application.
-   Body: { requirementKey: string, fileName?: string, notes?: string }
-   Sets status -> "pending" (awaiting review), progress -> 100.
------------------------------------------------------------------------------ */
 export async function POST(req: NextRequest) {
   const applicantIdHeader = req.headers.get("x-applicant-id");
   if (!applicantIdHeader) {
@@ -138,7 +124,6 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Check barangay access before allowing submission
     const { data: applicantInfo, error: applicantInfoError } = await supabase
       .from("applicants")
       .select("address")
@@ -172,7 +157,6 @@ export async function POST(req: NextRequest) {
         const today = new Date().toISOString().slice(0, 10);
 
         if (openDate || closeDate) {
-          // Dates are set — use date window regardless of is_open toggle
           if (openDate && today < openDate) {
             return NextResponse.json(
               {
@@ -190,7 +174,6 @@ export async function POST(req: NextRequest) {
             );
           }
         } else if (!isOpen) {
-          // No dates set and manually closed
           return NextResponse.json(
             {
               error: `Submissions for Barangay ${brgy} are currently closed. Please wait for your scheduled date.`,
@@ -198,11 +181,9 @@ export async function POST(req: NextRequest) {
             { status: 403 },
           );
         }
-        // If open with no dates -> allowed (no expiry)
       }
     }
 
-    // Get the applicant's latest application
     const { data: application, error: applicationError } = await supabase
       .from("applications")
       .select("id")
@@ -218,7 +199,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Upsert submission row — status becomes "pending" (under review), progress = 100
     const { error: upsertError } = await supabase
       .from("requirement_submissions")
       .upsert(
@@ -242,7 +222,6 @@ export async function POST(req: NextRequest) {
       throw upsertError;
     }
 
-    // Move application back to under_review so staff knows there's new docs to review
     const { error: statusError } = await supabase
       .from("applications")
       .update({ status: "under_review" })

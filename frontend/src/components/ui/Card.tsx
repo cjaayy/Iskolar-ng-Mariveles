@@ -2,8 +2,6 @@
 
 import React from "react";
 
-/* ======================== CARD ======================== */
-
 interface CardProps {
   children: React.ReactNode;
   className?: string;

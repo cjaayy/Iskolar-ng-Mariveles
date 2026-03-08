@@ -1,7 +1,3 @@
-/* ================================================================
-   APP SHELL LAYOUT — Sidebar + Header for authenticated pages
-   ================================================================ */
-
 "use client";
 
 import React, { useState } from "react";
@@ -22,15 +18,12 @@ import {
   LogOut,
 } from "lucide-react";
 
-/* -- Navigation items -- */
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/basic-info", label: "Basic Information", icon: FileUser },
   { href: "/requirements", label: "Requirements", icon: ClipboardList },
   { href: "/profile", label: "Profile", icon: User },
 ];
-
-/* ======================== SIDEBAR ======================== */
 
 export function Sidebar({
   open,
@@ -44,7 +37,6 @@ export function Sidebar({
 
   return (
     <>
-      {/* Mobile overlay */}
       {open && (
         <div
           className="fixed inset-0 bg-black/30 z-40 lg:hidden"
@@ -64,7 +56,6 @@ export function Sidebar({
         `}
         aria-label="Main navigation"
       >
-        {/* Logo / Brand */}
         <div className="p-6 flex items-center justify-between">
           <Link
             href="/dashboard"
@@ -96,7 +87,6 @@ export function Sidebar({
           </button>
         </div>
 
-        {/* Nav links */}
         <nav className="flex-1 px-3 py-2">
           <ul className="space-y-1">
             {navItems.map((item) => {
@@ -135,9 +125,7 @@ export function Sidebar({
           </ul>
         </nav>
 
-        {/* Bottom section */}
         <div className="p-4 border-t border-card-border space-y-2">
-          {/* Theme toggle */}
           <button
             onClick={toggleTheme}
             className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-body text-muted-fg hover:bg-muted hover:text-foreground transition-all"
@@ -151,7 +139,6 @@ export function Sidebar({
             {theme === "light" ? "Dark Mode" : "Light Mode"}
           </button>
 
-          {/* Logout */}
           <Link
             href="/"
             className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-body text-muted-fg hover:bg-coral-50 dark:hover:bg-coral-500/10 hover:text-coral-500 transition-all"
@@ -165,15 +152,12 @@ export function Sidebar({
   );
 }
 
-/* ======================== HEADER ======================== */
-
 export function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
   const { user } = useSession();
-  void user; // available for future use (avatar initials, etc.)
+  void user;
   return (
     <header className="sticky top-0 z-30 bg-card-bg/80 backdrop-blur-md border-b border-card-border px-4 lg:px-8 py-3">
       <div className="flex items-center justify-between">
-        {/* Mobile menu button */}
         <button
           onClick={onMenuToggle}
           className="lg:hidden p-2 -ml-2 rounded-xl text-muted-fg hover:bg-muted transition-colors"
@@ -187,8 +171,6 @@ export function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
     </header>
   );
 }
-
-/* ======================== APP SHELL ======================== */
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);

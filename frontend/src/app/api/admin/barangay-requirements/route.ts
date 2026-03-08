@@ -1,10 +1,3 @@
-/**
- * app/api/admin/barangay-requirements/route.ts
- *
- * GET /api/admin/barangay-requirements — per-barangay requirement submission summary.
- * Returns a list of applicants grouped by barangay with their requirement submission status.
- * Supports ?barangay= filter.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 
@@ -30,7 +23,6 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     const barangay = searchParams.get("barangay") || undefined;
 
-    // Fetch applicants with user info and application
     let q = supabase
       .from("applicants")
       .select(
@@ -50,7 +42,6 @@ export async function GET(req: NextRequest) {
     const { data: applicants, error: appError } = await q;
     if (appError) throw appError;
 
-    // Collect all application IDs
     const applicationIds: number[] = [];
     for (const applicant of applicants ?? []) {
       const apps = applicant.applications as unknown as
@@ -63,7 +54,6 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Fetch all requirement_submissions for those applications
     let submissions: { application_id: number; status: string }[] = [];
     if (applicationIds.length > 0) {
       const { data: subs, error: subError } = await supabase
@@ -74,7 +64,6 @@ export async function GET(req: NextRequest) {
       submissions = subs ?? [];
     }
 
-    // Compute counts per application_id
     const countsByApp: Record<
       number,
       { total: number; submitted: number; approved: number; pending: number }
@@ -97,8 +86,6 @@ export async function GET(req: NextRequest) {
       if (sub.status === "pending") c.pending++;
     }
 
-    // Build flat rows
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rows = (applicants ?? []).map((applicant: Record<string, any>) => {
       const user = applicant.users as unknown as {
         full_name: string;
@@ -124,15 +111,12 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    // Sort by address, then full_name
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     rows.sort((a: Record<string, any>, b: Record<string, any>) => {
       const addrCmp = (a.address || "").localeCompare(b.address || "");
       if (addrCmp !== 0) return addrCmp;
       return a.full_name.localeCompare(b.full_name);
     });
 
-    // Group by barangay
     const grouped: Record<string, typeof rows> = {};
     for (const row of rows) {
       const addr = row.address || "Unknown";

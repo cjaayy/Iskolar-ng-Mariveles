@@ -1,8 +1,3 @@
-/* ================================================================
-   BASIC INFORMATION PAGE
-   Multi-tab form: Personal Information, Parents, Education
-   ================================================================ */
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -22,13 +17,10 @@ import {
   getApplicantId,
 } from "@/components/providers/SessionProvider";
 
-/* ─── Sub-tab definitions ─── */
 const SUB_TABS = ["Personal Information", "Parents", "Education"] as const;
 type SubTab = (typeof SUB_TABS)[number];
 
-/* ─── Form data shape (mirrors API response) ─── */
 interface BasicInfoForm {
-  /* personal */
   date_of_birth: string;
   gender: string;
   blood_type: string;
@@ -44,7 +36,6 @@ interface BasicInfoForm {
   house_street: string;
   town: string;
   barangay: string;
-  /* parents */
   father_name: string;
   father_occupation: string;
   father_contact: string;
@@ -54,7 +45,6 @@ interface BasicInfoForm {
   guardian_name: string;
   guardian_relation: string;
   guardian_contact: string;
-  /* education (read-only from session, editable extras) */
   primary_school: string;
   primary_address: string;
   primary_year_graduated: string;
@@ -102,7 +92,6 @@ const emptyForm: BasicInfoForm = {
   shs_year_graduated: "",
 };
 
-/* ─── Select option data ─── */
 const GENDER_OPTIONS = [
   { label: "Male", value: "Male" },
   { label: "Female", value: "Female" },
@@ -164,13 +153,10 @@ const MARIVELES_BARANGAYS = [
   "Townsite",
 ].map((b) => ({ label: b, value: b }));
 
-/* ─── Animations ─── */
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
   show: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 };
-
-/* ======================== PAGE COMPONENT ======================== */
 
 export default function BasicInfoPage() {
   const { loading: sessionLoading } = useSession();
@@ -182,12 +168,10 @@ export default function BasicInfoPage() {
   const [saving, setSaving] = useState(false);
   const topRef = useRef<HTMLDivElement>(null);
 
-  /* ── Scroll to top of form ── */
   const scrollToTop = () => {
     topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  /* ── Load data from API ── */
   const loadData = useCallback(async () => {
     try {
       const applicantId = getApplicantId();
@@ -252,20 +236,16 @@ export default function BasicInfoPage() {
     loadData();
   }, [loadData]);
 
-  /* ── Field change helpers ── */
   const update = (field: keyof BasicInfoForm, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  /* ── Save handler ── */
   const handleSave = async () => {
     setSaving(true);
     try {
       const payload: Record<string, unknown> = { ...form };
-      // Convert numeric strings back to numbers
       if (payload.height_cm) payload.height_cm = Number(payload.height_cm);
       if (payload.weight_kg) payload.weight_kg = Number(payload.weight_kg);
 
-      // Map JHS/SHS form fields to database column names
       payload.secondary_school = payload.jhs_school;
       payload.secondary_address = payload.jhs_address;
       payload.secondary_year_graduated = payload.jhs_year_graduated;
@@ -304,7 +284,6 @@ export default function BasicInfoPage() {
     }
   };
 
-  /* ── Save and go to next tab ── */
   const handleSaveAndNext = async () => {
     const success = await handleSave();
     if (success) {
@@ -316,7 +295,6 @@ export default function BasicInfoPage() {
     }
   };
 
-  /* ── Go to previous tab ── */
   const handlePrevious = () => {
     const currentIndex = SUB_TABS.indexOf(activeTab);
     if (currentIndex > 0) {
@@ -328,7 +306,6 @@ export default function BasicInfoPage() {
   const isFirstTab = activeTab === SUB_TABS[0];
   const isLastTab = activeTab === SUB_TABS[SUB_TABS.length - 1];
 
-  /* ── Loading state ── */
   if (sessionLoading || loadingData) {
     return (
       <div className="max-w-5xl mx-auto space-y-6 px-4 py-8">
@@ -350,7 +327,6 @@ export default function BasicInfoPage() {
         show: { opacity: 1, transition: { staggerChildren: 0.06 } },
       }}
     >
-      {/* Breadcrumb */}
       <motion.div variants={fadeUp}>
         <Breadcrumb
           items={[
@@ -360,7 +336,6 @@ export default function BasicInfoPage() {
         />
       </motion.div>
 
-      {/* Title */}
       <motion.h1
         variants={fadeUp}
         className="font-heading text-2xl md:text-3xl font-bold text-foreground"
@@ -368,7 +343,6 @@ export default function BasicInfoPage() {
         Basic Information
       </motion.h1>
 
-      {/* Sub-tabs */}
       <motion.div variants={fadeUp}>
         <div className="flex gap-1 border-b border-card-border overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {SUB_TABS.map((tab) => (
@@ -397,7 +371,6 @@ export default function BasicInfoPage() {
         </div>
       </motion.div>
 
-      {/* Tab Content */}
       <motion.div variants={fadeUp}>
         <Card>
           {activeTab === "Personal Information" && (
@@ -410,7 +383,6 @@ export default function BasicInfoPage() {
             <EducationTab form={form} update={update} />
           )}
 
-          {/* Navigation buttons */}
           <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 sm:gap-4 mt-8 pt-4 border-t border-card-border">
             <div>
               {!isFirstTab && (
@@ -433,7 +405,7 @@ export default function BasicInfoPage() {
               rightIcon={<ChevronRight className="w-4 h-4" />}
               className="w-full sm:w-auto"
             >
-              {saving ? "Saving…" : isLastTab ? "Save" : "Save & Next"}
+              {saving ? "Saving\u2026" : isLastTab ? "Save" : "Save & Next"}
             </Button>
           </div>
         </Card>
@@ -442,14 +414,11 @@ export default function BasicInfoPage() {
   );
 }
 
-/* ======================== SUB-TAB COMPONENTS ======================== */
-
 interface TabProps {
   form: BasicInfoForm;
   update: (field: keyof BasicInfoForm, value: string) => void;
 }
 
-/* ── Personal Information ── */
 function PersonalInfoTab({ form, update }: TabProps) {
   const isSingle = form.civil_status === "Single";
   const isWidowedSeparatedAnnulled = [
@@ -458,7 +427,6 @@ function PersonalInfoTab({ form, update }: TabProps) {
     "Annulled",
   ].includes(form.civil_status);
 
-  // Hide maiden name & spouse fields when Single; hide occupation of spouse when Widowed/Separated/Annulled
   const showMaidenName = !isSingle;
   const showSpouseName = !isSingle;
   const showSpouseOccupation = !isSingle && !isWidowedSeparatedAnnulled;
@@ -476,7 +444,6 @@ function PersonalInfoTab({ form, update }: TabProps) {
 
   return (
     <div className="space-y-6">
-      {/* Row 1 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Input
           label="Birthdate"
@@ -504,7 +471,6 @@ function PersonalInfoTab({ form, update }: TabProps) {
         />
       </div>
 
-      {/* Row 2 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {showMaidenName && (
           <Input
@@ -538,7 +504,6 @@ function PersonalInfoTab({ form, update }: TabProps) {
         />
       </div>
 
-      {/* Row 3 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Input
           label="Height (cm)"
@@ -568,7 +533,6 @@ function PersonalInfoTab({ form, update }: TabProps) {
         />
       </div>
 
-      {/* Row 4 — Address */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Input
           label="House/Unit/Street"
@@ -593,11 +557,9 @@ function PersonalInfoTab({ form, update }: TabProps) {
   );
 }
 
-/* ── Parents / Guardian ── */
 function ParentsTab({ form, update }: TabProps) {
   return (
     <div className="space-y-8">
-      {/* Father */}
       <div>
         <h3 className="font-heading text-base font-semibold text-foreground mb-4">
           Father&rsquo;s Information
@@ -624,7 +586,6 @@ function ParentsTab({ form, update }: TabProps) {
         </div>
       </div>
 
-      {/* Mother */}
       <div>
         <h3 className="font-heading text-base font-semibold text-foreground mb-4">
           Mother&rsquo;s Information
@@ -651,7 +612,6 @@ function ParentsTab({ form, update }: TabProps) {
         </div>
       </div>
 
-      {/* Guardian */}
       <div>
         <h3 className="font-heading text-base font-semibold text-foreground mb-4">
           Guardian&rsquo;s Information (if applicable)
@@ -681,11 +641,9 @@ function ParentsTab({ form, update }: TabProps) {
   );
 }
 
-/* ── Education ── */
 function EducationTab({ form, update }: TabProps) {
   return (
     <div className="space-y-8">
-      {/* Primary */}
       <div>
         <h3 className="font-heading text-base font-semibold text-foreground mb-4">
           Primary
@@ -713,7 +671,6 @@ function EducationTab({ form, update }: TabProps) {
         </div>
       </div>
 
-      {/* Secondary — JHS */}
       <div>
         <h3 className="font-heading text-base font-semibold text-foreground mb-4">
           Junior High School (JHS)
@@ -741,7 +698,6 @@ function EducationTab({ form, update }: TabProps) {
         </div>
       </div>
 
-      {/* Secondary — SHS */}
       <div>
         <h3 className="font-heading text-base font-semibold text-foreground mb-4">
           Senior High School (SHS)

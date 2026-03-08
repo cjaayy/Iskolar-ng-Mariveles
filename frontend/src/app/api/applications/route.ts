@@ -1,9 +1,3 @@
-/**
- * app/api/applications/route.ts
- *
- * GET  /api/applications  — paginated list with optional filters
- * POST /api/applications  — submit a new application
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { checkEligibility } from "@db/eligibility";
@@ -12,8 +6,6 @@ import type {
   ApplicantRow,
   GetApplicationsQuery,
 } from "@db/types";
-
-// ── GET ─────────────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
   try {
@@ -27,12 +19,10 @@ export async function GET(req: NextRequest) {
       limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 20,
     };
 
-    // --- Validate pagination values -----------------------------------------
     const page = Math.max(1, params.page ?? 1);
     const limit = Math.min(100, Math.max(1, params.limit ?? 20));
     const offset = (page - 1) * limit;
 
-    // --- Fetch rows (JOIN via foreign key relations) ------------------------
     let dataQuery = supabase
       .from("applications")
       .select(
@@ -46,12 +36,10 @@ export async function GET(req: NextRequest) {
       .order("updated_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
-    // --- Count total for pagination -----------------------------------------
     let countQuery = supabase
       .from("applications")
       .select("*", { count: "exact", head: true });
 
-    // --- Apply filters ------------------------------------------------------
     if (params.status) {
       dataQuery = dataQuery.eq("status", params.status);
       countQuery = countQuery.eq("status", params.status);
@@ -65,7 +53,6 @@ export async function GET(req: NextRequest) {
     if (dataError) throw dataError;
     if (countError) throw countError;
 
-    // Flatten nested relations to match the original response shape
     const flatRows: ApplicationWithDetails[] = (rows ?? []).map(
       (row: Record<string, unknown>) => {
         const { applicants, ...rest } = row as Record<string, unknown> & {
@@ -98,18 +85,14 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// ── POST ────────────────────────────────────────────────────────────────────
-
 export async function POST(req: NextRequest) {
   try {
-    // --- Resolve applicant from header (simplified -- replace with real auth) --
     const applicantIdHeader = req.headers.get("x-applicant-id");
     if (!applicantIdHeader) {
       return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
     }
     const applicantId = Number(applicantIdHeader);
 
-    // --- Load applicant -----------------------------------------------------
     const { data: applicant, error: applicantError } = await supabase
       .from("applicants")
       .select("*")
@@ -124,7 +107,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // --- Eligibility check --------------------------------------------------
     const eligibility = checkEligibility(applicant as ApplicantRow);
     if (!eligibility.eligible) {
       return NextResponse.json(
@@ -133,7 +115,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // --- Prevent duplicate application --------------------------------------
     const { data: existing, error: existingError } = await supabase
       .from("applications")
       .select("id")
@@ -148,7 +129,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // --- Insert application -------------------------------------------------
     const { data: inserted, error: insertError } = await supabase
       .from("applications")
       .insert({

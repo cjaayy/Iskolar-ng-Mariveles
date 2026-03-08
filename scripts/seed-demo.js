@@ -1,10 +1,4 @@
-/**
- * scripts/seed-demo.js
- * Run once to populate demo applicant data:
- *   node scripts/seed-demo.js
- */
 const path = require("path");
-// Resolve modules from frontend/node_modules so the script works from any cwd
 module.paths.unshift(path.join(__dirname, "..", "frontend", "node_modules"));
 const mysql = require("mysql2/promise");
 const bcrypt = require("bcrypt");
@@ -17,7 +11,6 @@ async function run() {
     database: "scholarship_system",
   });
 
-  // 1. requirement_submissions table
   await pool.execute(`
     CREATE TABLE IF NOT EXISTS requirement_submissions (
       id              INT UNSIGNED  NOT NULL AUTO_INCREMENT,
@@ -43,37 +36,27 @@ async function run() {
   `);
   console.log("✓ requirement_submissions table ready");
 
-  // 1b. Add columns if they don't exist (for existing installs)
   try {
     await pool.execute(
       `ALTER TABLE requirement_submissions ADD COLUMN file_url VARCHAR(500) NULL AFTER file_name`,
     );
-  } catch {
-    /* column may already exist */
-  }
+  } catch {}
   try {
     await pool.execute(
       `ALTER TABLE requirement_submissions ADD COLUMN validated_by INT UNSIGNED NULL AFTER notes`,
     );
-  } catch {
-    /* column may already exist */
-  }
+  } catch {}
   try {
     await pool.execute(
       `ALTER TABLE requirement_submissions ADD COLUMN validated_at TIMESTAMP NULL AFTER validated_by`,
     );
-  } catch {
-    /* column may already exist */
-  }
+  } catch {}
   try {
     await pool.execute(
       `ALTER TABLE requirement_submissions ADD COLUMN validator_notes TEXT NULL AFTER validated_at`,
     );
-  } catch {
-    /* column may already exist */
-  }
+  } catch {}
 
-  // 2. Demo user
   const hash = await bcrypt.hash("Demo@1234", 10);
   await pool.execute(
     `INSERT INTO users (id, email, password_hash, full_name, role)
@@ -83,7 +66,6 @@ async function run() {
   );
   console.log("✓ Demo user (demo@iskolar.local / Demo@1234)");
 
-  // 3. Applicant profile
   await pool.execute(`
     INSERT IGNORE INTO applicants
       (id, user_id, date_of_birth, contact_number, address)
@@ -91,7 +73,6 @@ async function run() {
   `);
   console.log("✓ Applicant profile inserted (id=1)");
 
-  // 4. Application for Iskolar ng Mariveles
   await pool.execute(`
     INSERT IGNORE INTO applications
       (id, applicant_id, status,
@@ -100,13 +81,11 @@ async function run() {
   `);
   console.log("✓ Application inserted (id=1, CHED Study Now Pay Later)");
 
-  // 5. Clear any existing requirement submissions so they all start as "missing"
   await pool.execute(
     "DELETE FROM requirement_submissions WHERE application_id = 1",
   );
   console.log("✓ Requirement submissions cleared — all 8 start as missing");
 
-  // 6. Staff / Validator account
   const staffHash = await bcrypt.hash("Staff@1234", 10);
   await pool.execute(
     `INSERT INTO users (id, email, password_hash, full_name, role)

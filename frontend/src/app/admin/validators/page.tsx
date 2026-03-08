@@ -1,8 +1,3 @@
-/* ================================================================
-   ADMIN — VALIDATORS LIST
-   View, create, delete, deactivate and assign barangay to validators
-   ================================================================ */
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -75,7 +70,6 @@ export default function AdminValidatorsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
 
-  // Create form
   const [newEmail, setNewEmail] = useState("");
   const [newName, setNewName] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -84,7 +78,6 @@ export default function AdminValidatorsPage() {
   const [createError, setCreateError] = useState("");
   const [createSuccess, setCreateSuccess] = useState("");
 
-  // Action states
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [actionError, setActionError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -92,7 +85,6 @@ export default function AdminValidatorsPage() {
   const adminId =
     typeof window !== "undefined" ? localStorage.getItem("adminId") : null;
 
-  /* ─── Available barangays (not yet assigned to an active validator) ─── */
   const takenBarangays = validators
     .filter((v) => v.is_active && v.assigned_barangay)
     .map((v) => v.assigned_barangay!);
@@ -128,7 +120,6 @@ export default function AdminValidatorsPage() {
     return () => clearTimeout(timeout);
   }, [fetchData]);
 
-  /* ─── Create ─── */
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!adminId) return;
@@ -173,7 +164,6 @@ export default function AdminValidatorsPage() {
     }
   };
 
-  /* ─── Toggle Active / Deactivate ─── */
   const handleToggleActive = async (v: Validator) => {
     if (!adminId) return;
     setActionLoading(v.id);
@@ -205,7 +195,6 @@ export default function AdminValidatorsPage() {
     }
   };
 
-  /* ─── Delete ─── */
   const handleDelete = async (id: number) => {
     if (!adminId) return;
     setActionLoading(id);
@@ -231,7 +220,6 @@ export default function AdminValidatorsPage() {
     }
   };
 
-  /* ─── Assign Barangay ─── */
   const handleAssignBarangay = async (
     validatorId: number,
     barangay: string,
@@ -274,7 +262,6 @@ export default function AdminValidatorsPage() {
       animate="show"
       className="space-y-6"
     >
-      {/* Header */}
       <motion.div
         variants={fadeUp}
         className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
@@ -319,7 +306,6 @@ export default function AdminValidatorsPage() {
         </div>
       </motion.div>
 
-      {/* Action error toast */}
       <AnimatePresence>
         {actionError && (
           <motion.div
@@ -340,7 +326,6 @@ export default function AdminValidatorsPage() {
         )}
       </AnimatePresence>
 
-      {/* Create Form */}
       <AnimatePresence>
         {showCreate && (
           <motion.div
@@ -442,7 +427,6 @@ export default function AdminValidatorsPage() {
         )}
       </AnimatePresence>
 
-      {/* Search */}
       <motion.div variants={fadeUp}>
         <Card padding="md">
           <div className="relative">
@@ -458,7 +442,6 @@ export default function AdminValidatorsPage() {
         </Card>
       </motion.div>
 
-      {/* Validators List */}
       <motion.div variants={fadeUp}>
         {loading ? (
           <div className="space-y-4">
@@ -498,9 +481,7 @@ export default function AdminValidatorsPage() {
                 className={!v.is_active ? "opacity-60" : undefined}
               >
                 <div className="flex flex-col gap-4">
-                  {/* Top row: avatar + info + actions */}
                   <div className="flex flex-col md:flex-row md:items-center gap-4">
-                    {/* Avatar */}
                     <div
                       className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
                         v.is_active
@@ -515,7 +496,6 @@ export default function AdminValidatorsPage() {
                       />
                     </div>
 
-                    {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <h3 className="font-heading font-semibold text-foreground truncate">
@@ -546,9 +526,7 @@ export default function AdminValidatorsPage() {
                       </div>
                     </div>
 
-                    {/* Actions */}
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      {/* Assign / Change Barangay */}
                       <select
                         value={v.assigned_barangay || ""}
                         onChange={(e) => {
@@ -582,7 +560,6 @@ export default function AdminValidatorsPage() {
                         ))}
                       </select>
 
-                      {/* Toggle active */}
                       <button
                         onClick={() => handleToggleActive(v)}
                         disabled={actionLoading === v.id}
@@ -606,7 +583,6 @@ export default function AdminValidatorsPage() {
                         )}
                       </button>
 
-                      {/* Delete */}
                       {confirmDelete === v.id ? (
                         <div className="flex items-center gap-1">
                           <button
@@ -636,7 +612,6 @@ export default function AdminValidatorsPage() {
                     </div>
                   </div>
 
-                  {/* Footer: joined date */}
                   <div className="flex items-center justify-between border-t border-card-border pt-2">
                     <span className="text-xs font-body text-muted-fg">
                       Joined {new Date(v.created_at).toLocaleDateString()}

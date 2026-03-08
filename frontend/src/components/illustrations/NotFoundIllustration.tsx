@@ -1,6 +1,5 @@
 import React from "react";
 
-/* -- 404 Illustration -- */
 export function NotFoundIllustration({
   className = "",
 }: {
@@ -16,7 +15,6 @@ export function NotFoundIllustration({
       className={className}
       aria-hidden="true"
     >
-      {/* Big "404" */}
       <text
         x="40"
         y="130"
@@ -38,11 +36,9 @@ export function NotFoundIllustration({
         4
       </text>
 
-      {/* Confused owl in the middle (the "0") */}
       <circle cx="150" cy="100" r="42" fill="#E6B89C" />
       <circle cx="150" cy="102" r="34" fill="#FDF4F5" />
 
-      {/* Eyes - swirly/confused */}
       <circle
         cx="140"
         cy="90"
@@ -60,7 +56,6 @@ export function NotFoundIllustration({
         strokeWidth="1.5"
       />
 
-      {/* Spiral eyes for confusion */}
       <path
         d="M137 90 Q140 86, 143 90 Q140 94, 137 90"
         stroke="#14213D"
@@ -74,7 +69,6 @@ export function NotFoundIllustration({
         fill="none"
       />
 
-      {/* Beak */}
       <path
         d="M146 96 L150 102 L154 96"
         fill="#D4956E"
@@ -82,7 +76,6 @@ export function NotFoundIllustration({
         strokeWidth="1"
       />
 
-      {/* Confused question marks */}
       <text
         x="170"
         y="75"
@@ -104,14 +97,12 @@ export function NotFoundIllustration({
         ?
       </text>
 
-      {/* Small cap tilted */}
       <polygon
         points="150,56 130,66 150,72 170,66"
         fill="#14213D"
         transform="rotate(-15 150 64)"
       />
 
-      {/* Ground line - wavy */}
       <path
         d="M30 170 Q75 164, 120 170 Q165 176, 210 170 Q255 164, 280 170"
         stroke="#E2D6D8"
@@ -120,7 +111,6 @@ export function NotFoundIllustration({
         strokeLinecap="round"
       />
 
-      {/* Scattered papers */}
       <rect
         x="60"
         y="150"

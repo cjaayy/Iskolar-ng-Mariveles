@@ -1,11 +1,3 @@
--- ============================================================
---  Iskolar ng Mariveles — PostgreSQL Schema for Supabase
---  Run this in the Supabase SQL Editor.
---  Execute tables IN ORDER (foreign key dependencies).
--- ============================================================
-
--- ─── Custom ENUM Types ──────────────────────────────────────
-
 CREATE TYPE user_role AS ENUM ('admin', 'validator', 'applicant');
 
 CREATE TYPE application_status AS ENUM (
@@ -19,8 +11,6 @@ CREATE TYPE validation_action AS ENUM (
 CREATE TYPE requirement_status AS ENUM (
   'missing', 'in_progress', 'pending', 'approved', 'rejected'
 );
-
--- ─── 1. USERS ───────────────────────────────────────────────
 
 CREATE TABLE users (
   id                INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -43,15 +33,12 @@ CREATE POLICY "Deny all access to users"
   ON public.users FOR ALL TO anon, authenticated
   USING (false) WITH CHECK (false);
 
--- ─── 2. APPLICANTS ──────────────────────────────────────────
-
 CREATE TABLE applicants (
   id                     INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   user_id                INT            NOT NULL UNIQUE REFERENCES users (id) ON DELETE CASCADE,
   date_of_birth          DATE,
   contact_number         VARCHAR(20),
   address                TEXT,
-  -- Personal details (from migration-basic-info)
   gender                 VARCHAR(10),
   blood_type             VARCHAR(5),
   civil_status           VARCHAR(20),
@@ -65,7 +52,6 @@ CREATE TABLE applicants (
   house_street           VARCHAR(255),
   town                   VARCHAR(100),
   barangay               VARCHAR(100),
-  -- Parent / Guardian details
   father_name            VARCHAR(150),
   father_occupation      VARCHAR(150),
   father_contact         VARCHAR(20),
@@ -75,7 +61,6 @@ CREATE TABLE applicants (
   guardian_name          VARCHAR(150),
   guardian_relation       VARCHAR(60),
   guardian_contact        VARCHAR(20),
-  -- Education details
   primary_school         VARCHAR(200),
   primary_address        VARCHAR(255),
   primary_year_graduated SMALLINT,
@@ -86,7 +71,6 @@ CREATE TABLE applicants (
   tertiary_address       VARCHAR(255),
   tertiary_year_graduated  SMALLINT,
   tertiary_program       VARCHAR(200),
-  -- Timestamps
   created_at             TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
   updated_at             TIMESTAMPTZ    NOT NULL DEFAULT NOW()
 );
@@ -96,8 +80,6 @@ ALTER TABLE applicants ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Deny all access to applicants"
   ON public.applicants FOR ALL TO anon, authenticated
   USING (false) WITH CHECK (false);
-
--- ─── 3. APPLICATIONS ───────────────────────────────────────
 
 CREATE TABLE applications (
   id                    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -119,8 +101,6 @@ CREATE POLICY "Deny all access to applications"
   ON public.applications FOR ALL TO anon, authenticated
   USING (false) WITH CHECK (false);
 
--- ─── 4. VALIDATIONS ────────────────────────────────────────
-
 CREATE TABLE validations (
   id              INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   application_id  INT               NOT NULL REFERENCES applications (id) ON DELETE CASCADE,
@@ -139,8 +119,6 @@ ALTER TABLE validations ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Deny all access to validations"
   ON public.validations FOR ALL TO anon, authenticated
   USING (false) WITH CHECK (false);
-
--- ─── 5. REQUIREMENT_SUBMISSIONS ────────────────────────────
 
 CREATE TABLE requirement_submissions (
   id              INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -168,8 +146,6 @@ CREATE POLICY "Deny all access to requirement_submissions"
   ON public.requirement_submissions FOR ALL TO anon, authenticated
   USING (false) WITH CHECK (false);
 
--- ─── 6. REGISTRATION_LINKS ────────────────────────────────
-
 CREATE TABLE registration_links (
   id            INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   token         VARCHAR(64)   NOT NULL UNIQUE,
@@ -191,8 +167,6 @@ ALTER TABLE registration_links ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Deny all access to registration_links"
   ON public.registration_links FOR ALL TO anon, authenticated
   USING (false) WITH CHECK (false);
-
--- ─── 7. BARANGAY_ACCESS ───────────────────────────────────
 
 CREATE TABLE barangay_access (
   id                    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -223,10 +197,6 @@ CREATE POLICY "Deny delete access to barangay_access"
   ON public.barangay_access FOR DELETE TO anon, authenticated
   USING (false);
 
--- ============================================================
---  TRIGGER: Auto-update updated_at on row modification
--- ============================================================
-
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -254,11 +224,6 @@ CREATE TRIGGER trg_registration_links_updated_at
 CREATE TRIGGER trg_barangay_access_updated_at
   BEFORE UPDATE ON barangay_access FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
--- ============================================================
---  SEED DATA
--- ============================================================
-
--- Default admin account  (password: Admin@1234 — change in production!)
 INSERT INTO users (email, password_hash, full_name, role)
 VALUES (
   'admin@iskolar.local',
@@ -267,7 +232,6 @@ VALUES (
   'admin'
 );
 
--- Default demo applicant account  (password: Demo@1234)
 INSERT INTO users (email, password_hash, full_name, role)
 VALUES (
   'demo@iskolar.local',
@@ -276,7 +240,6 @@ VALUES (
   'applicant'
 );
 
--- Default validator / staff account  (password: Staff@1234)
 INSERT INTO users (email, password_hash, full_name, role)
 VALUES (
   'staff@iskolar.local',
@@ -285,15 +248,12 @@ VALUES (
   'validator'
 );
 
--- Demo applicant profile (linked to user id=2)
 INSERT INTO applicants (user_id, date_of_birth, contact_number)
 VALUES (2, '2004-06-15', '+63 917 123 4567');
 
--- Demo application
 INSERT INTO applications (applicant_id, status, income_at_submission, submitted_at)
 VALUES (1, 'under_review', 15000.00, NOW());
 
--- Barangay access (all 19 barangays of Mariveles, Bataan — closed by default)
 INSERT INTO barangay_access (barangay) VALUES
   ('Alas-asin'),
   ('Alion'),
@@ -314,9 +274,3 @@ INSERT INTO barangay_access (barangay) VALUES
   ('San Isidro'),
   ('Sisiman'),
   ('Townsite');
-
--- ============================================================
---  SUPABASE STORAGE BUCKET (run via Supabase Dashboard or SQL)
--- ============================================================
--- INSERT INTO storage.buckets (id, name, public)
--- VALUES ('uploads', 'uploads', true);

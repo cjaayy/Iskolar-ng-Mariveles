@@ -1,9 +1,3 @@
-/**
- * components/providers/AdminSessionProvider.tsx
- *
- * Provides the current admin session throughout admin pages.
- * Reads adminId from localStorage so the session persists across page loads.
- */
 "use client";
 
 import React, {

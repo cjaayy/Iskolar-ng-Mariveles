@@ -1,8 +1,3 @@
-/* ================================================================
-   STAFF VALIDATE LIST — Browse all applications pending validation
-   Filters by status, search by name/student number
-   ================================================================ */
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -23,7 +18,6 @@ import {
 import { Card, Badge, Skeleton, Button } from "@/components/ui";
 import { useStaffSession } from "@/components/providers/StaffSessionProvider";
 
-/* -- Types -- */
 interface Application {
   id: number;
   applicant_name: string;
@@ -34,7 +28,6 @@ interface Application {
   pending_requirements: number;
 }
 
-/* -- Status config -- */
 const statusConfig: Record<
   string,
   {
@@ -62,7 +55,6 @@ const filterOptions = [
   { value: "rejected", label: "Rejected" },
 ];
 
-/* -- Animations -- */
 const stagger = {
   hidden: { opacity: 0 },
   show: {
@@ -116,7 +108,7 @@ export default function StaffValidateListPage() {
 
   useEffect(() => {
     setLoading(true);
-    const timeout = setTimeout(fetchData, 300); // debounce search
+    const timeout = setTimeout(fetchData, 300);
     return () => clearTimeout(timeout);
   }, [fetchData]);
 
@@ -127,7 +119,6 @@ export default function StaffValidateListPage() {
       animate="show"
       className="space-y-6"
     >
-      {/* ── Header ─────────────────────────────────────────── */}
       <motion.div
         variants={fadeUp}
         className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
@@ -156,11 +147,9 @@ export default function StaffValidateListPage() {
         </Button>
       </motion.div>
 
-      {/* ── Filters ────────────────────────────────────────── */}
       <motion.div variants={fadeUp}>
         <Card padding="md">
           <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
               <input
@@ -172,7 +161,6 @@ export default function StaffValidateListPage() {
               />
             </div>
 
-            {/* Status filter */}
             <div className="flex items-center gap-2 flex-wrap">
               <Filter className="w-4 h-4 text-muted-fg" />
               {filterOptions.map((opt) => (
@@ -193,7 +181,6 @@ export default function StaffValidateListPage() {
         </Card>
       </motion.div>
 
-      {/* ── Applications List ──────────────────────────────── */}
       <motion.div variants={fadeUp}>
         {loading ? (
           <div className="space-y-4">
@@ -247,7 +234,6 @@ export default function StaffValidateListPage() {
                       href={`/staff/validate/${app.id}`}
                       className="flex flex-col md:flex-row md:items-center gap-4"
                     >
-                      {/* Applicant info */}
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-ocean-300 to-ocean-500 flex items-center justify-center flex-shrink-0">
                           <span className="text-white font-heading font-bold text-sm">
@@ -269,14 +255,12 @@ export default function StaffValidateListPage() {
                         </div>
                       </div>
 
-                      {/* Status */}
                       <div className="md:w-32 shrink-0">
                         <Badge variant={cfg.variant} dot>
                           {cfg.label}
                         </Badge>
                       </div>
 
-                      {/* Doc progress */}
                       <div className="md:w-28 shrink-0">
                         <div className="flex items-center gap-2">
                           <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
@@ -296,7 +280,6 @@ export default function StaffValidateListPage() {
                         )}
                       </div>
 
-                      {/* Arrow */}
                       <ArrowRight className="w-4 h-4 text-muted-fg shrink-0 hidden md:block" />
                     </Link>
                   </Card>

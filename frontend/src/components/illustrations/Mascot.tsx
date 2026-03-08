@@ -1,6 +1,5 @@
 import React from "react";
 
-/* -- Iskolar Mascot: A friendly owl with a graduation cap -- */
 export function Mascot({
   className = "",
   size = 120,
@@ -18,11 +17,9 @@ export function Mascot({
       className={className}
       aria-hidden="true"
     >
-      {/* Body */}
       <ellipse cx="60" cy="72" rx="34" ry="36" fill="#E6B89C" />
       <ellipse cx="60" cy="74" rx="28" ry="28" fill="#FDF4F5" />
 
-      {/* Belly pattern - hand-drawn feel */}
       <path
         d="M45 65 Q52 60, 60 65 Q68 60, 75 65"
         stroke="#F5D6CC"
@@ -38,7 +35,6 @@ export function Mascot({
         strokeLinecap="round"
       />
 
-      {/* Eyes */}
       <circle
         cx="48"
         cy="55"
@@ -60,7 +56,6 @@ export function Mascot({
       <circle cx="51.5" cy="52.5" r="1.5" fill="white" />
       <circle cx="75.5" cy="52.5" r="1.5" fill="white" />
 
-      {/* Beak */}
       <path
         d="M56 60 L60 67 L64 60"
         fill="#D4956E"
@@ -69,7 +64,6 @@ export function Mascot({
         strokeLinejoin="round"
       />
 
-      {/* Eyebrows - slightly uneven for personality */}
       <path
         d="M39 46 Q44 42, 50 44"
         stroke="#14213D"
@@ -85,7 +79,6 @@ export function Mascot({
         strokeLinecap="round"
       />
 
-      {/* Graduation cap */}
       <polygon points="60,18 30,32 60,40 90,32" fill="#14213D" />
       <rect x="57" y="18" width="6" height="4" rx="1" fill="#4A6FA5" />
       <line
@@ -106,7 +99,6 @@ export function Mascot({
         strokeWidth="1"
       />
 
-      {/* Feet */}
       <path
         d="M45 100 Q42 106, 38 104 Q42 108, 46 106 Q44 110, 48 108 L52 100"
         fill="#D4956E"
@@ -116,7 +108,6 @@ export function Mascot({
         fill="#D4956E"
       />
 
-      {/* Wings - slightly asymmetric for hand-drawn feel */}
       <path
         d="M26 65 Q22 72, 24 82 Q28 78, 30 70"
         fill="#E6B89C"
@@ -130,7 +121,6 @@ export function Mascot({
         strokeWidth="1"
       />
 
-      {/* Blush cheeks */}
       <ellipse cx="40" cy="62" rx="5" ry="3" fill="#FFD9B3" opacity="0.6" />
       <ellipse cx="80" cy="62" rx="5" ry="3" fill="#FFD9B3" opacity="0.6" />
     </svg>

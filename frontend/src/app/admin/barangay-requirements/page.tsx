@@ -1,8 +1,3 @@
-/* ================================================================
-   ADMIN — PER-BARANGAY REQUIREMENTS
-   View requirement submissions grouped by barangay
-   ================================================================ */
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -95,7 +90,6 @@ export default function BarangayRequirementsPage() {
 
   const sortedBarangays = Object.keys(grouped).sort();
 
-  // Summary stats
   const totalApplicants = Object.values(grouped).reduce(
     (sum, rows) => sum + rows.length,
     0,
@@ -106,7 +100,6 @@ export default function BarangayRequirementsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground flex items-center gap-2">
@@ -130,7 +123,6 @@ export default function BarangayRequirementsPage() {
         </Button>
       </div>
 
-      {/* Filter */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative">
           <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
@@ -148,7 +140,6 @@ export default function BarangayRequirementsPage() {
           </select>
         </div>
 
-        {/* Summary */}
         <div className="flex items-center gap-4 text-sm font-body text-muted-fg ml-auto">
           <span>
             <strong className="text-foreground">{totalApplicants}</strong>{" "}
@@ -161,7 +152,6 @@ export default function BarangayRequirementsPage() {
         </div>
       </div>
 
-      {/* Grouped List */}
       {loading ? (
         <div className="space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -189,7 +179,6 @@ export default function BarangayRequirementsPage() {
 
             return (
               <Card key={brgy} className="overflow-hidden">
-                {/* Barangay header */}
                 <button
                   onClick={() => toggleExpand(brgy)}
                   className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/50 transition-colors"
@@ -229,7 +218,6 @@ export default function BarangayRequirementsPage() {
                   </div>
                 </button>
 
-                {/* Expanded applicant list */}
                 <AnimatePresence>
                   {isExpanded && (
                     <motion.div
@@ -245,7 +233,6 @@ export default function BarangayRequirementsPage() {
                             key={r.applicant_id}
                             className="px-5 py-3 flex flex-col sm:flex-row sm:items-center gap-2"
                           >
-                            {/* Name & email */}
                             <div className="flex items-center gap-3 flex-1 min-w-0">
                               <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                                 <User className="w-4 h-4 text-muted-fg" />
@@ -260,14 +247,12 @@ export default function BarangayRequirementsPage() {
                               </div>
                             </div>
 
-                            {/* Scholarship */}
                             {r.application_id && (
                               <span className="text-xs font-body text-muted-fg hidden md:block">
                                 Iskolar ng Mariveles
                               </span>
                             )}
 
-                            {/* Requirement stats */}
                             <div className="flex items-center gap-2 text-xs font-body">
                               {r.application_id ? (
                                 <>

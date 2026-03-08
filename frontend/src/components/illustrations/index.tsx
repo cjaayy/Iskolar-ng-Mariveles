@@ -1,9 +1,3 @@
-/* ================================================================
-   CUSTOM SVG ILLUSTRATIONS — Barrel Exports
-   Each illustration lives in its own file for maintainability.
-   Import from "@/components/illustrations" as before.
-   ================================================================ */
-
 export { Mascot } from "./Mascot";
 export { BlobShape, BlobShape2 } from "./BlobShape";
 export { EmptyStateIllustration } from "./EmptyStateIllustration";

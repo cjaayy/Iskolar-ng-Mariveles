@@ -1,6 +1,5 @@
 import React from "react";
 
-/* -- Empty State Illustration -- */
 export function EmptyStateIllustration({
   className = "",
 }: {
@@ -16,7 +15,6 @@ export function EmptyStateIllustration({
       className={className}
       aria-hidden="true"
     >
-      {/* Paper stack */}
       <rect
         x="55"
         y="30"
@@ -46,7 +44,6 @@ export function EmptyStateIllustration({
         strokeWidth="1.5"
       />
 
-      {/* Lines on paper */}
       <line
         x1="68"
         y1="45"
@@ -84,7 +81,6 @@ export function EmptyStateIllustration({
         strokeLinecap="round"
       />
 
-      {/* Magnifying glass */}
       <circle
         cx="115"
         cy="100"
@@ -104,7 +100,6 @@ export function EmptyStateIllustration({
       />
       <circle cx="115" cy="100" r="12" fill="#4A6FA5" opacity="0.05" />
 
-      {/* Question mark */}
       <text
         x="110"
         y="106"
@@ -116,7 +111,6 @@ export function EmptyStateIllustration({
         ?
       </text>
 
-      {/* Decorative dots */}
       <circle cx="40" cy="40" r="3" fill="#E6B89C" opacity="0.5" />
       <circle cx="165" cy="50" r="2" fill="#4A6FA5" opacity="0.3" />
       <circle cx="35" cy="110" r="2" fill="#F5C026" opacity="0.4" />

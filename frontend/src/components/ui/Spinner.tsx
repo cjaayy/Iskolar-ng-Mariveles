@@ -1,7 +1,5 @@
 "use client";
 
-/* ======================== SPINNER ======================== */
-
 interface SpinnerProps {
   size?: "sm" | "md" | "lg";
   className?: string;

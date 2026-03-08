@@ -1,9 +1,3 @@
-/**
- * app/api/auth/register/validate/route.ts
- *
- * GET /api/auth/register/validate?token=xxx — check if a registration token is valid.
- * Public endpoint.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 

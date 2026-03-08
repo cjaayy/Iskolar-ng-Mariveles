@@ -1,10 +1,3 @@
-/**
- * app/api/staff/barangays/route.ts
- *
- * GET /api/staff/barangays — returns applicants grouped by barangay
- * that have applications needing validation (submitted/under_review status).
- * Supports ?barangay= filter.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
@@ -31,7 +24,6 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Look up this validator's assigned barangay
     const { data: validator, error: valError } = await supabase
       .from("users")
       .select("assigned_barangay")
@@ -46,7 +38,6 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     const barangayFilter = searchParams.get("barangay") || undefined;
 
-    // ── Build query ───────────────────────────────────────────────────────────
     let dataQuery = supabase
       .from("applications")
       .select(
@@ -65,7 +56,6 @@ export async function GET(req: NextRequest) {
       .neq("status", "draft")
       .order("updated_at", { ascending: false });
 
-    // Filter by assigned barangay or by query param
     if (assignedBarangay) {
       dataQuery = dataQuery.eq("applicants.barangay", assignedBarangay);
     } else if (barangayFilter) {
@@ -79,7 +69,6 @@ export async function GET(req: NextRequest) {
       (r: Record<string, unknown>) => r.id as number,
     );
 
-    // ── Fetch requirement submissions and compute counts in JS ────────────
     const submissionsByApp: Record<
       number,
       { submitted: number; approved: number; pending: number; rejected: number }
@@ -111,7 +100,6 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // ── Flatten and merge ─────────────────────────────────────────────────────
     const flatRows: ApplicantRow[] = (rows ?? []).map(
       (row: Record<string, unknown>) => {
         const applicants = row.applicants as {
@@ -144,7 +132,6 @@ export async function GET(req: NextRequest) {
       },
     );
 
-    // Group by barangay
     const grouped: Record<string, ApplicantRow[]> = {};
     for (const row of flatRows) {
       const brgy = row.barangay || "Unknown";
@@ -152,7 +139,6 @@ export async function GET(req: NextRequest) {
       grouped[brgy].push(row);
     }
 
-    // Summary
     const barangaySummary = Object.entries(grouped)
       .map(([barangay, applicants]) => ({
         barangay,

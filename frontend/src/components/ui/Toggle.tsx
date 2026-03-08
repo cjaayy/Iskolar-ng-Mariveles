@@ -1,7 +1,5 @@
 "use client";
 
-/* ======================== TOGGLE SWITCH ======================== */
-
 interface ToggleProps {
   checked: boolean;
   onChange: (checked: boolean) => void;

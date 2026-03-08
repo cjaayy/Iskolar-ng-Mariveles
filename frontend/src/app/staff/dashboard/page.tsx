@@ -1,15 +1,9 @@
-/* ================================================================
-   STAFF DASHBOARD
-   Personalized welcome with seal and program name
-   ================================================================ */
-
 "use client";
 
 import React from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 
-/* -- Stagger animation helpers -- */
 const container = {
   hidden: { opacity: 0 },
   show: {
@@ -26,8 +20,6 @@ const item = {
     transition: { duration: 0.4, ease: "easeOut" as const },
   },
 };
-
-/* ======================== DASHBOARD PAGE ======================== */
 
 export default function StaffDashboardPage() {
   return (

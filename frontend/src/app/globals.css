@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ========== Light Theme (Default) ========== */
 :root {
   --background: #fdf4f5;
   --foreground: #2d3748;
@@ -16,7 +15,6 @@
   --accent-fg: #ffffff;
 }
 
-/* ========== Dark Theme ========== */
 .dark {
   --background: #14181e;
   --foreground: #e8e2e3;
@@ -30,7 +28,6 @@
   --accent-fg: #0b1526;
 }
 
-/* ========== Base Styles ========== */
 @layer base {
   * {
     @apply border-card-border;
@@ -44,18 +41,15 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Custom selection color */
   ::selection {
     background-color: rgba(74, 111, 165, 0.2);
     color: var(--foreground);
   }
 
-  /* Focus styles for accessibility */
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-ocean-400;
   }
 
-  /* Scrollbar styling */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -73,25 +67,20 @@
   }
 }
 
-/* ========== Component Styles ========== */
 @layer components {
-  /* Hand-drawn border effect */
   .hand-drawn-border {
     border: 2px solid var(--card-border);
     border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
   }
 
-  /* Organic blob shape */
   .blob-shape {
     border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
   }
 
-  /* Subtle paper texture */
   .paper-texture {
     background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
   }
 
-  /* Dot pattern background */
   .dot-pattern {
     background-image: radial-gradient(
       circle,
@@ -101,13 +90,11 @@
     background-size: 24px 24px;
   }
 
-  /* Floating label input wrapper */
   .floating-label-wrapper input:focus ~ label,
   .floating-label-wrapper input:not(:placeholder-shown) ~ label {
     @apply -translate-y-6 scale-90 text-green-600;
   }
 
-  /* Floating label background mask – covers the border behind the label text */
   .floating-label {
     z-index: 1;
   }
@@ -126,19 +113,16 @@
     border-color: #16a34a;
   }
 
-  /* Gradient text */
   .gradient-text {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-ocean-400 to-peach-400;
   }
 }
 
-/* ========== Utility Styles ========== */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
 
-  /* Animation delay utilities */
   .animation-delay-100 {
     animation-delay: 100ms;
   }

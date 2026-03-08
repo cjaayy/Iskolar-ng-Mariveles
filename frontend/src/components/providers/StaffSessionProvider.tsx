@@ -1,9 +1,3 @@
-/**
- * components/providers/StaffSessionProvider.tsx
- *
- * Provides the current staff/validator session throughout the staff pages.
- * Reads from localStorage so the session persists across page loads.
- */
 "use client";
 
 import React, {
@@ -46,7 +40,6 @@ export function StaffSessionProvider({
 
   const load = useCallback(async () => {
     try {
-      // Read staff ID from localStorage (set during login)
       const staffId =
         typeof window !== "undefined" ? localStorage.getItem("staffId") : null;
 
@@ -63,7 +56,6 @@ export function StaffSessionProvider({
         const data = await res.json();
         setUser(data.user);
       } else {
-        // Invalid session, clear
         localStorage.removeItem("staffId");
       }
     } catch (e) {

@@ -1,8 +1,3 @@
-/* ================================================================
-   CUSTOM 404 PAGE
-   Friendly not-found with the owl mascot looking confused
-   ================================================================ */
-
 import Link from "next/link";
 import { NotFoundIllustration } from "@/components/illustrations";
 
@@ -46,7 +41,6 @@ export default function NotFound() {
           </Link>
         </div>
 
-        {/* Decorative wavy line */}
         <svg
           className="mx-auto mt-12 text-muted-fg opacity-20"
           width="160"

@@ -1,8 +1,3 @@
-/* ================================================================
-   LOGIN PAGE
-   A warm, welcoming login with organic shapes and mascot
-   ================================================================ */
-
 "use client";
 
 import React, { useState } from "react";
@@ -51,15 +46,12 @@ export default function LoginPage() {
         const data = await res.json();
 
         if (data.role === "admin") {
-          // Admin login — store admin ID and redirect to admin dashboard
           localStorage.setItem("adminId", String(data.userId));
           window.location.href = "/admin/dashboard";
         } else if (data.role === "validator") {
-          // Staff / validator login — store staff ID and redirect to staff dashboard
           localStorage.setItem("staffId", String(data.userId));
           window.location.href = "/staff/dashboard";
         } else {
-          // Applicant login — store applicant ID and redirect to student dashboard
           if (data.applicantId) {
             localStorage.setItem("applicantId", String(data.applicantId));
           }
@@ -71,7 +63,6 @@ export default function LoginPage() {
         setIsLoading(false);
       }
     } catch {
-      // Fallback: simulate login for demo
       await new Promise((res) => setTimeout(res, 1500));
       setIsLoading(false);
       window.location.href = "/dashboard";
@@ -80,7 +71,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
-      {/* Background image */}
       <Image
         src="/image.png"
         alt=""
@@ -90,10 +80,8 @@ export default function LoginPage() {
         aria-hidden="true"
       />
 
-      {/* Dark overlay for readability */}
       <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
 
-      {/* Theme hover dropdown */}
       <div className="absolute top-4 right-4 z-10 group">
         <button
           className="p-2.5 rounded-xl bg-card-bg/80 backdrop-blur border border-white/20 text-muted-fg hover:text-foreground transition-all hover:scale-105 shadow-soft"
@@ -133,7 +121,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Login Card */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -141,7 +128,6 @@ export default function LoginPage() {
         className="relative w-full max-w-md"
       >
         <div className="bg-transparent border border-white/20 rounded-3xl p-8 md:p-10">
-          {/* Logo + Header */}
           <div className="text-center mb-8">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
@@ -169,7 +155,6 @@ export default function LoginPage() {
             </motion.div>
           </div>
 
-          {/* Login Form */}
           <motion.form
             onSubmit={handleSubmit}
             initial={{ opacity: 0 }}
@@ -178,7 +163,6 @@ export default function LoginPage() {
             className="space-y-5"
             noValidate
           >
-            {/* Email */}
             <div className="pt-5">
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg pointer-events-none" />
@@ -225,7 +209,6 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Password */}
             <div className="pt-5">
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg pointer-events-none" />
@@ -286,7 +269,6 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Forgot password */}
             <div className="flex items-center justify-center">
               <a
                 href="#"
@@ -296,7 +278,6 @@ export default function LoginPage() {
               </a>
             </div>
 
-            {/* Submit */}
             <Button
               type="submit"
               className="w-full !bg-green-600 hover:!bg-green-700 text-white"
@@ -308,7 +289,6 @@ export default function LoginPage() {
           </motion.form>
         </div>
 
-        {/* Hand-drawn decorative element under the card */}
         <svg
           className="mx-auto mt-4 text-muted-fg opacity-20"
           width="120"

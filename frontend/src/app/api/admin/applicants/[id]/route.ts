@@ -1,10 +1,3 @@
-/**
- * app/api/admin/applicants/[id]/route.ts
- *
- * GET /api/admin/applicants/:id — fetch a single application with all
- * requirement submissions + validation history for admin review (read-only).
- * Returns the same shape as the staff detail endpoint so the UI can be shared.
- */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
@@ -40,7 +33,6 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "Invalid id" }, { status: 400 });
     }
 
-    // Application + applicant details
     const { data: appRow, error: appError } = await supabase
       .from("applications")
       .select(
@@ -67,7 +59,6 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    // Flatten the joined data
     const applicant = appRow.applicants as unknown as {
       contact_number: string | null;
       address: string | null;
@@ -85,7 +76,6 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       barangay: applicant.barangay,
     };
 
-    // All requirement submissions for this application
     const { data: submissions, error: subError } = await supabase
       .from("requirement_submissions")
       .select(
@@ -99,7 +89,6 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
 
     if (subError) throw subError;
 
-    // Merge requirement configs with actual submissions
     const subMap = Object.fromEntries(
       (submissions ?? []).map((s: Record<string, unknown>) => [
         s.requirement_key,
@@ -127,7 +116,6 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       };
     });
 
-    // Validation history
     const { data: history, error: histError } = await supabase
       .from("validations")
       .select(

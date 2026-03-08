@@ -3,8 +3,6 @@
 import React from "react";
 import { Spinner } from "./Spinner";
 
-/* ======================== BUTTON ======================== */
-
 type ButtonVariant =
   | "primary"
   | "secondary"

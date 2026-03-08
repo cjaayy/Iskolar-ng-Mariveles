@@ -1,9 +1,3 @@
-/**
- * components/providers/SessionProvider.tsx
- *
- * Provides the current applicant session throughout the app.
- * Reads applicantId from localStorage (set at login).
- */
 "use client";
 
 import React, {
@@ -14,7 +8,6 @@ import React, {
   useCallback,
 } from "react";
 
-/** Read the logged-in applicant ID from localStorage */
 export function getApplicantId(): number | null {
   if (typeof window === "undefined") return null;
   const raw = localStorage.getItem("applicantId");

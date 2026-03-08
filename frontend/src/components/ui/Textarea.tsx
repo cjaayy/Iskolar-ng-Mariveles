@@ -2,8 +2,6 @@
 
 import React from "react";
 
-/* ======================== TEXTAREA ======================== */
-
 interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label: string;
   error?: string;
