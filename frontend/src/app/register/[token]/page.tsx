@@ -62,6 +62,8 @@ export default function RegisterPage({
     password: string;
   } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
+  const [copiedPassword, setCopiedPassword] = useState(false);
 
   useEffect(() => {
     async function validateToken() {
@@ -145,6 +147,20 @@ export default function RegisterPage({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const copyEmail = async () => {
+    if (!credentials) return;
+    await navigator.clipboard.writeText(credentials.email);
+    setCopiedEmail(true);
+    setTimeout(() => setCopiedEmail(false), 2000);
+  };
+
+  const copyPassword = async () => {
+    if (!credentials) return;
+    await navigator.clipboard.writeText(credentials.password);
+    setCopiedPassword(true);
+    setTimeout(() => setCopiedPassword(false), 2000);
+  };
+
   if (validating) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -206,34 +222,60 @@ export default function RegisterPage({
           animate={{ opacity: 1, scale: 1 }}
           className="relative w-full max-w-md"
         >
-          <div className="bg-card-bg/95 backdrop-blur border border-card-border rounded-3xl p-8 md:p-10 shadow-xl text-center">
-            <div className="w-16 h-16 rounded-full bg-sage-50 dark:bg-sage-400/10 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle2 className="w-8 h-8 text-sage-500" />
+          <div className="bg-transparent border border-white/20 rounded-3xl p-8 md:p-10 text-center">
+            <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-8 h-8 text-green-400" />
             </div>
-            <h1 className="font-heading text-2xl font-bold text-foreground mb-2">
+            <h1 className="font-heading text-2xl font-bold text-white mb-2">
               Registration Successful!
             </h1>
-            <p className="font-body text-muted-fg mb-6">
+            <p className="font-body text-white/70 mb-6">
               Your account has been created. Below are your login credentials.
               Please save them.
             </p>
 
-            <div className="bg-muted rounded-2xl p-5 text-left mb-6 space-y-3">
-              <div>
-                <p className="text-xs font-body text-muted-fg mb-0.5">
-                  Email (Username)
-                </p>
-                <p className="text-sm font-mono font-semibold text-foreground break-all">
-                  {credentials.email}
-                </p>
+            <div className="bg-white/10 backdrop-blur rounded-2xl p-5 text-left mb-6 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="text-xs font-body text-white/50 mb-0.5">
+                    Email (Username)
+                  </p>
+                  <p className="text-sm font-mono font-semibold text-white break-all">
+                    {credentials.email}
+                  </p>
+                </div>
+                <button
+                  onClick={copyEmail}
+                  className="ml-3 flex-shrink-0 p-2 rounded-lg hover:bg-white/10 transition-colors"
+                  aria-label="Copy email"
+                >
+                  {copiedEmail ? (
+                    <Check className="w-4 h-4 text-green-400" />
+                  ) : (
+                    <Copy className="w-4 h-4 text-white/50" />
+                  )}
+                </button>
               </div>
-              <div>
-                <p className="text-xs font-body text-muted-fg mb-0.5">
-                  Password
-                </p>
-                <p className="text-sm font-mono font-semibold text-foreground">
-                  {credentials.password}
-                </p>
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="text-xs font-body text-white/50 mb-0.5">
+                    Password
+                  </p>
+                  <p className="text-sm font-mono font-semibold text-white">
+                    {credentials.password}
+                  </p>
+                </div>
+                <button
+                  onClick={copyPassword}
+                  className="ml-3 flex-shrink-0 p-2 rounded-lg hover:bg-white/10 transition-colors"
+                  aria-label="Copy password"
+                >
+                  {copiedPassword ? (
+                    <Check className="w-4 h-4 text-green-400" />
+                  ) : (
+                    <Copy className="w-4 h-4 text-white/50" />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -251,19 +293,19 @@ export default function RegisterPage({
                 ) : (
                   <>
                     <Copy className="w-4 h-4 mr-2" />
-                    Copy Credentials
+                    Copy All Credentials
                   </>
                 )}
               </Button>
               <Button
                 onClick={() => (window.location.href = "/")}
-                className="w-full"
+                className="w-full !bg-green-600 hover:!bg-green-700 text-white"
               >
                 Go to Login
               </Button>
             </div>
 
-            <p className="text-xs font-body text-muted-fg mt-4">
+            <p className="text-xs font-body text-white/50 mt-4">
               You can change your password after logging in.
             </p>
           </div>
