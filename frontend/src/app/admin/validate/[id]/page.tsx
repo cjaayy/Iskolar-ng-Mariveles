@@ -738,6 +738,7 @@ export default function AdminValidateDetailPage() {
               <div className="flex-1 overflow-auto bg-muted/30">
                 {previewDoc.file_url.match(/\.(png|jpg|jpeg|gif|webp)$/i) ? (
                   <div className="flex items-center justify-center p-6 min-h-[400px]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={previewDoc.file_url}
                       alt={previewDoc.file_name ?? "Document preview"}

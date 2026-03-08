@@ -436,6 +436,7 @@ export function DocumentUploadModal({
                       >
                         {preview && (
                           <div className="relative rounded-xl overflow-hidden border border-card-border">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={preview}
                               alt="Preview of uploaded document"

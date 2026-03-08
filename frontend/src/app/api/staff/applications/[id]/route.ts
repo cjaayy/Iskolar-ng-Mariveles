@@ -147,7 +147,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
 
     if (histError) throw histError;
 
-    const flatHistory = (history ?? []).map((h: Record<string, unknown>) => {
+    const flatHistory = (history ?? []).map((h: Record<string, any>) => {
       const val = h.validator as { full_name: string } | null;
       const { validator: _unused, ...rest } = h;
       return {

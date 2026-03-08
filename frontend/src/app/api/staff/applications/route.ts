@@ -106,7 +106,7 @@ export async function GET(req: NextRequest) {
     if (summaryError) throw summaryError;
 
     const applicationIds = (rows ?? []).map(
-      (r: Record<string, unknown>) => r.id as number,
+      (r: Record<string, any>) => r.id as number,
     );
 
     const approvedMap: Record<number, number> = {};
@@ -130,7 +130,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const data = (rows ?? []).map((row: Record<string, unknown>) => {
+    const data = (rows ?? []).map((row: Record<string, any>) => {
       const applicants = row.applicants as {
         barangay: string | null;
         users: { full_name: string };
@@ -164,7 +164,7 @@ export async function GET(req: NextRequest) {
 
     const summary: Record<string, number> = {};
     for (const row of summaryRows ?? []) {
-      const s = (row as Record<string, unknown>).status as string;
+      const s = (row as Record<string, any>).status as string;
       summary[s] = (summary[s] ?? 0) + 1;
     }
 
