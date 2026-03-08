@@ -37,6 +37,12 @@ CREATE TABLE users (
 CREATE INDEX idx_users_email ON users (email);
 CREATE INDEX idx_users_role  ON users (role);
 
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Deny all access to users"
+  ON public.users FOR ALL TO anon, authenticated
+  USING (false) WITH CHECK (false);
+
 -- ─── 2. APPLICANTS ──────────────────────────────────────────
 
 CREATE TABLE applicants (
@@ -85,6 +91,12 @@ CREATE TABLE applicants (
   updated_at             TIMESTAMPTZ    NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE applicants ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Deny all access to applicants"
+  ON public.applicants FOR ALL TO anon, authenticated
+  USING (false) WITH CHECK (false);
+
 -- ─── 3. APPLICATIONS ───────────────────────────────────────
 
 CREATE TABLE applications (
@@ -101,6 +113,12 @@ CREATE TABLE applications (
 
 CREATE INDEX idx_applications_status ON applications (status);
 
+ALTER TABLE applications ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Deny all access to applications"
+  ON public.applications FOR ALL TO anon, authenticated
+  USING (false) WITH CHECK (false);
+
 -- ─── 4. VALIDATIONS ────────────────────────────────────────
 
 CREATE TABLE validations (
@@ -115,6 +133,12 @@ CREATE TABLE validations (
 
 CREATE INDEX idx_validations_application ON validations (application_id);
 CREATE INDEX idx_validations_validator   ON validations (validator_id);
+
+ALTER TABLE validations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Deny all access to validations"
+  ON public.validations FOR ALL TO anon, authenticated
+  USING (false) WITH CHECK (false);
 
 -- ─── 5. REQUIREMENT_SUBMISSIONS ────────────────────────────
 
@@ -138,6 +162,12 @@ CREATE TABLE requirement_submissions (
 
 CREATE INDEX idx_req_sub_status ON requirement_submissions (status);
 
+ALTER TABLE requirement_submissions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Deny all access to requirement_submissions"
+  ON public.requirement_submissions FOR ALL TO anon, authenticated
+  USING (false) WITH CHECK (false);
+
 -- ─── 6. REGISTRATION_LINKS ────────────────────────────────
 
 CREATE TABLE registration_links (
@@ -156,6 +186,12 @@ CREATE TABLE registration_links (
 CREATE INDEX idx_reg_links_token  ON registration_links (token);
 CREATE INDEX idx_reg_links_active ON registration_links (is_active);
 
+ALTER TABLE registration_links ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Deny all access to registration_links"
+  ON public.registration_links FOR ALL TO anon, authenticated
+  USING (false) WITH CHECK (false);
+
 -- ─── 7. BARANGAY_ACCESS ───────────────────────────────────
 
 CREATE TABLE barangay_access (
@@ -169,6 +205,24 @@ CREATE TABLE barangay_access (
   updated_at            TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE barangay_access ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read access to barangay_access"
+  ON public.barangay_access FOR SELECT TO anon, authenticated
+  USING (true);
+
+CREATE POLICY "Deny write access to barangay_access"
+  ON public.barangay_access FOR INSERT TO anon, authenticated
+  WITH CHECK (false);
+
+CREATE POLICY "Deny update access to barangay_access"
+  ON public.barangay_access FOR UPDATE TO anon, authenticated
+  USING (false) WITH CHECK (false);
+
+CREATE POLICY "Deny delete access to barangay_access"
+  ON public.barangay_access FOR DELETE TO anon, authenticated
+  USING (false);
+
 -- ============================================================
 --  TRIGGER: Auto-update updated_at on row modification
 -- ============================================================
@@ -179,7 +233,8 @@ BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql
+SET search_path = public;
 
 CREATE TRIGGER trg_users_updated_at
   BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at();

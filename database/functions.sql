@@ -17,6 +17,7 @@ CREATE OR REPLACE FUNCTION register_applicant(
 )
 RETURNS JSON
 LANGUAGE plpgsql
+SET search_path = public
 AS $$
 DECLARE
   v_link_id     INT;
@@ -92,6 +93,7 @@ CREATE OR REPLACE FUNCTION bulk_validate_requirements(
 )
 RETURNS JSON
 LANGUAGE plpgsql
+SET search_path = public
 AS $$
 DECLARE
   v_affected INT;
@@ -146,6 +148,7 @@ CREATE OR REPLACE FUNCTION validate_single_requirement(
 )
 RETURNS JSON
 LANGUAGE plpgsql
+SET search_path = public
 AS $$
 DECLARE
   v_app_id     INT;
