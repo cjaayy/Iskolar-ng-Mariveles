@@ -31,6 +31,19 @@ ALTER TABLE public.barangay_access ENABLE ROW LEVEL SECURITY;
 --   - Allow anon to call register_applicant RPC (which runs as SECURITY INVOKER
 --     but the function itself uses the caller's context — service_role handles this)
 
+-- ── Drop existing policies (safe to re-run) ───────────────
+
+DROP POLICY IF EXISTS "Deny all access to users" ON public.users;
+DROP POLICY IF EXISTS "Deny all access to applicants" ON public.applicants;
+DROP POLICY IF EXISTS "Deny all access to applications" ON public.applications;
+DROP POLICY IF EXISTS "Deny all access to validations" ON public.validations;
+DROP POLICY IF EXISTS "Deny all access to requirement_submissions" ON public.requirement_submissions;
+DROP POLICY IF EXISTS "Deny all access to registration_links" ON public.registration_links;
+DROP POLICY IF EXISTS "Allow public read access to barangay_access" ON public.barangay_access;
+DROP POLICY IF EXISTS "Deny write access to barangay_access" ON public.barangay_access;
+DROP POLICY IF EXISTS "Deny update access to barangay_access" ON public.barangay_access;
+DROP POLICY IF EXISTS "Deny delete access to barangay_access" ON public.barangay_access;
+
 -- ── users: no direct access via anon/authenticated ──────────
 
 CREATE POLICY "Deny all access to users"
@@ -131,3 +144,29 @@ ALTER FUNCTION public.update_updated_at()
 
 ALTER FUNCTION public.validate_single_requirement(INT, INT, TEXT, TEXT)
   SET search_path = public;
+
+-- ─── 4. SEED BARANGAY ACCESS DATA ─────────────────────────────
+-- All 19 barangays of Mariveles, Bataan — closed by default.
+-- Uses ON CONFLICT to skip any that already exist.
+
+INSERT INTO public.barangay_access (barangay) VALUES
+  ('Alas-asin'),
+  ('Alion'),
+  ('Balon-Anito'),
+  ('Baseco Country (Bataan Shipyard)'),
+  ('Batangas II'),
+  ('Biaan'),
+  ('Cabcaben'),
+  ('Camaya'),
+  ('Casili (Cataning)'),
+  ('Ipag'),
+  ('Lucanin'),
+  ('Malaya'),
+  ('Maligaya'),
+  ('Mt. View'),
+  ('Poblacion'),
+  ('San Carlos'),
+  ('San Isidro'),
+  ('Sisiman'),
+  ('Townsite')
+ON CONFLICT (barangay) DO NOTHING;

@@ -293,6 +293,28 @@ VALUES (2, '2004-06-15', '+63 917 123 4567');
 INSERT INTO applications (applicant_id, status, income_at_submission, submitted_at)
 VALUES (1, 'under_review', 15000.00, NOW());
 
+-- Barangay access (all 19 barangays of Mariveles, Bataan — closed by default)
+INSERT INTO barangay_access (barangay) VALUES
+  ('Alas-asin'),
+  ('Alion'),
+  ('Balon-Anito'),
+  ('Baseco Country (Bataan Shipyard)'),
+  ('Batangas II'),
+  ('Biaan'),
+  ('Cabcaben'),
+  ('Camaya'),
+  ('Casili (Cataning)'),
+  ('Ipag'),
+  ('Lucanin'),
+  ('Malaya'),
+  ('Maligaya'),
+  ('Mt. View'),
+  ('Poblacion'),
+  ('San Carlos'),
+  ('San Isidro'),
+  ('Sisiman'),
+  ('Townsite');
+
 -- ============================================================
 --  SUPABASE STORAGE BUCKET (run via Supabase Dashboard or SQL)
 -- ============================================================
