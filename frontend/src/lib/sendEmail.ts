@@ -1,12 +1,14 @@
 import nodemailer from "nodemailer";
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
+function getTransporter() {
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  });
+}
 
 export async function sendCredentialsEmail(
   to: string,
@@ -51,7 +53,7 @@ export async function sendCredentialsEmail(
     </div>
   `;
 
-  await transporter.sendMail({
+  await getTransporter().sendMail({
     from: `"Iskolar ng Mariveles" <${process.env.GMAIL_USER}>`,
     to,
     subject: "Your Iskolar ng Mariveles Account Credentials",
@@ -94,7 +96,7 @@ export async function sendPasswordResetEmail(
     </div>
   `;
 
-  await transporter.sendMail({
+  await getTransporter().sendMail({
     from: `"Iskolar ng Mariveles" <${process.env.GMAIL_USER}>`,
     to,
     subject: "Reset Your Password — Iskolar ng Mariveles",
