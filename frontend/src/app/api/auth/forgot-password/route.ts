@@ -51,10 +51,12 @@ export async function POST(req: NextRequest) {
 
     try {
       await sendPasswordResetEmail(user.email, user.full_name, resetLink);
-    } catch (emailErr) {
+    } catch (emailErr: unknown) {
+      const msg =
+        emailErr instanceof Error ? emailErr.message : String(emailErr);
       console.error("[POST /api/auth/forgot-password] Email error:", emailErr);
       return NextResponse.json(
-        { error: "Failed to send email. Please try again." },
+        { error: `Failed to send email: ${msg}` },
         { status: 500 },
       );
     }
