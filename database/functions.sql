@@ -3,7 +3,8 @@ CREATE OR REPLACE FUNCTION register_applicant(
   p_email       TEXT,
   p_full_name   TEXT,
   p_address     TEXT,
-  p_password_hash TEXT
+  p_password_hash TEXT,
+  p_barangay    TEXT DEFAULT NULL
 )
 RETURNS JSON
 LANGUAGE plpgsql
@@ -45,8 +46,8 @@ BEGIN
   VALUES (p_email, p_password_hash, p_full_name, 'applicant')
   RETURNING id INTO v_user_id;
 
-  INSERT INTO applicants (user_id, address)
-  VALUES (v_user_id, p_address)
+  INSERT INTO applicants (user_id, address, barangay)
+  VALUES (v_user_id, p_address, p_barangay)
   RETURNING id INTO v_applicant_id;
 
   INSERT INTO applications (applicant_id, status)

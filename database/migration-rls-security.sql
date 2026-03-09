@@ -84,7 +84,7 @@ CREATE POLICY "Deny delete access to barangay_access"
   TO anon, authenticated
   USING (false);
 
-ALTER FUNCTION public.register_applicant(TEXT, TEXT, TEXT, TEXT, TEXT)
+ALTER FUNCTION public.register_applicant(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT)
   SET search_path = public;
 
 ALTER FUNCTION public.bulk_validate_requirements(INT, INT, TEXT, TEXT)

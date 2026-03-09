@@ -118,6 +118,7 @@ export default function RegisterPage({
           email,
           fullName,
           address,
+          barangay,
         }),
       });
 
