@@ -111,7 +111,7 @@ function AdminSidebar({
             />
             <div>
               <h1 className="font-heading text-lg font-bold text-foreground leading-tight">
-                Iskolar
+                Iskolar Ng Mariveles
               </h1>
               <p className="text-[10px] font-body text-muted-fg -mt-0.5">
                 Admin Panel

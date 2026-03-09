@@ -43,7 +43,7 @@ export default function AdminDashboardPage() {
         />
         <div className="text-center">
           <h1 className="font-heading text-3xl md:text-4xl font-bold text-foreground">
-            Admin Dashboard
+            Iskolar ng Mariveles
           </h1>
         </div>
       </motion.div>
