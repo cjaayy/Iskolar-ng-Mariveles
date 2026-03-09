@@ -54,6 +54,28 @@ interface RequirementSummary {
   status: string;
 }
 
+const MARIVELES_BARANGAYS = [
+  "Alas-asin",
+  "Alion",
+  "Balon-Anito",
+  "Baseco Country (Bataan Shipyard)",
+  "Batangas II",
+  "Biaan",
+  "Cabcaben",
+  "Camaya",
+  "Casili (Cataning)",
+  "Ipag",
+  "Lucanin",
+  "Malaya",
+  "Maligaya",
+  "Mt. View",
+  "Poblacion",
+  "San Carlos",
+  "San Isidro",
+  "Sisiman",
+  "Townsite",
+];
+
 const stagger = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.04 } },
@@ -95,6 +117,7 @@ export default function StaffBarangaysPage() {
   const [allApplicants, setAllApplicants] = useState<ApplicantRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [barangayFilter, setBarangayFilter] = useState("");
 
   const [modalApplicant, setModalApplicant] = useState<ApplicantRow | null>(
     null,
@@ -114,7 +137,9 @@ export default function StaffBarangaysPage() {
     if (!staffId) return;
     setLoading(true);
     try {
-      const res = await fetch("/api/staff/barangays", {
+      const params = new URLSearchParams();
+      if (barangayFilter) params.set("barangay", barangayFilter);
+      const res = await fetch(`/api/staff/barangays?${params.toString()}`, {
         headers: { "x-validator-id": staffId },
       });
       if (res.ok) {
@@ -128,7 +153,7 @@ export default function StaffBarangaysPage() {
     } finally {
       setLoading(false);
     }
-  }, [staffId]);
+  }, [staffId, barangayFilter]);
 
   useEffect(() => {
     load();
@@ -230,15 +255,35 @@ export default function StaffBarangaysPage() {
       </div>
 
       <Card padding="md">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search applicant by name or email..."
-            className="w-full bg-muted border-0 rounded-xl pl-10 pr-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-fg focus:outline-none focus:ring-2 focus:ring-ocean-400/20 transition-all"
-          />
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search applicant by name or email..."
+              className="w-full bg-muted border-0 rounded-xl pl-10 pr-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-fg focus:outline-none focus:ring-2 focus:ring-ocean-400/20 transition-all"
+            />
+          </div>
+
+          {!assignedBarangay && (
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-muted-fg" />
+              <select
+                value={barangayFilter}
+                onChange={(e) => setBarangayFilter(e.target.value)}
+                className="bg-muted border-0 rounded-xl px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-2 focus:ring-ocean-400/20 transition-all"
+              >
+                <option value="">All Barangays</option>
+                {MARIVELES_BARANGAYS.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </Card>
 

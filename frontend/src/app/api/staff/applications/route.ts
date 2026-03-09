@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     const status = searchParams.get("status") || undefined;
     const search = searchParams.get("search") || undefined;
+    const barangayFilter = searchParams.get("barangay") || undefined;
     const page = Math.max(1, Number(searchParams.get("page") || 1));
     const limit = Math.min(
       100,
@@ -76,6 +77,10 @@ export async function GET(req: NextRequest) {
       dataQuery = dataQuery.eq("applicants.barangay", assignedBarangay);
       countQuery = countQuery.eq("applicants.barangay", assignedBarangay);
       summaryQuery = summaryQuery.eq("applicants.barangay", assignedBarangay);
+    } else if (barangayFilter) {
+      dataQuery = dataQuery.eq("applicants.barangay", barangayFilter);
+      countQuery = countQuery.eq("applicants.barangay", barangayFilter);
+      summaryQuery = summaryQuery.eq("applicants.barangay", barangayFilter);
     }
 
     if (status && status !== "all") {
@@ -146,6 +151,7 @@ export async function GET(req: NextRequest) {
         updated_at: row.updated_at,
         remarks: row.remarks,
         applicant_name: applicants?.users?.full_name ?? "",
+        barangay: applicants?.barangay ?? null,
         total_requirements: REQUIREMENT_CONFIGS.length,
         approved_requirements: approvedMap[appId] ?? 0,
         pending_requirements: pendingMap[appId] ?? 0,

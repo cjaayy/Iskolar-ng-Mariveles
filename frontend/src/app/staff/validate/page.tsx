@@ -14,6 +14,7 @@ import {
   ArrowRight,
   Users,
   RefreshCw,
+  MapPin,
 } from "lucide-react";
 import { Card, Badge, Skeleton, Button } from "@/components/ui";
 import { useStaffSession } from "@/components/providers/StaffSessionProvider";
@@ -26,7 +27,30 @@ interface Application {
   total_requirements: number;
   approved_requirements: number;
   pending_requirements: number;
+  barangay: string | null;
 }
+
+const MARIVELES_BARANGAYS = [
+  "Alas-asin",
+  "Alion",
+  "Balon-Anito",
+  "Baseco Country (Bataan Shipyard)",
+  "Batangas II",
+  "Biaan",
+  "Cabcaben",
+  "Camaya",
+  "Casili (Cataning)",
+  "Ipag",
+  "Lucanin",
+  "Malaya",
+  "Maligaya",
+  "Mt. View",
+  "Poblacion",
+  "San Carlos",
+  "San Isidro",
+  "Sisiman",
+  "Townsite",
+];
 
 const statusConfig: Record<
   string,
@@ -75,6 +99,7 @@ export default function StaffValidateListPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [barangayFilter, setBarangayFilter] = useState("");
   const [search, setSearch] = useState("");
   const [refreshing, setRefreshing] = useState(false);
 
@@ -90,6 +115,7 @@ export default function StaffValidateListPage() {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
       if (search.trim()) params.set("search", search.trim());
+      if (barangayFilter) params.set("barangay", barangayFilter);
 
       const res = await fetch(`/api/staff/applications?${params.toString()}`, {
         headers: { "x-validator-id": staffId },
@@ -104,7 +130,7 @@ export default function StaffValidateListPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [staffId, statusFilter, search]);
+  }, [staffId, statusFilter, search, barangayFilter]);
 
   useEffect(() => {
     setLoading(true);
@@ -160,6 +186,24 @@ export default function StaffValidateListPage() {
                 className="w-full bg-muted border-0 rounded-xl pl-10 pr-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-fg focus:outline-none focus:ring-2 focus:ring-ocean-400/20 transition-all"
               />
             </div>
+
+            {!assignedBarangay && (
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-muted-fg" />
+                <select
+                  value={barangayFilter}
+                  onChange={(e) => setBarangayFilter(e.target.value)}
+                  className="bg-muted border-0 rounded-xl px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-2 focus:ring-ocean-400/20 transition-all"
+                >
+                  <option value="">All Barangays</option>
+                  {MARIVELES_BARANGAYS.map((b) => (
+                    <option key={b} value={b}>
+                      {b}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="flex items-center gap-2 flex-wrap">
               <Filter className="w-4 h-4 text-muted-fg" />
@@ -253,6 +297,13 @@ export default function StaffValidateListPage() {
                             Iskolar ng Mariveles
                           </p>
                         </div>
+                      </div>
+
+                      <div className="md:w-36 shrink-0">
+                        <span className="inline-flex items-center gap-1 text-xs font-body text-muted-fg">
+                          <MapPin className="w-3 h-3" />
+                          {app.barangay || "Unknown"}
+                        </span>
                       </div>
 
                       <div className="md:w-32 shrink-0">
