@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 
+type EducationLevel = "elementary" | "high_school" | "senior_high";
+
 async function verifyAdmin(adminId: string): Promise<boolean> {
   const { data, error } = await supabase
     .from("users")
@@ -28,11 +30,52 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { isActive } = body as { isActive?: boolean };
+    const { isActive, label, educationLevel, description, maxUses, expiresAt } =
+      body as {
+        isActive?: boolean;
+        label?: string;
+        educationLevel?: EducationLevel;
+        description?: string;
+        maxUses?: number;
+        expiresAt?: string | null;
+      };
+
+    const updateData: Record<string, unknown> = {};
+
+    if (typeof isActive === "boolean") {
+      updateData.is_active = isActive;
+    }
+    if (label !== undefined) {
+      updateData.label = label || null;
+    }
+    if (educationLevel !== undefined) {
+      if (
+        !["elementary", "high_school", "senior_high"].includes(educationLevel)
+      ) {
+        return NextResponse.json(
+          { error: "Invalid education level" },
+          { status: 400 },
+        );
+      }
+      updateData.education_level = educationLevel;
+    }
+    if (description !== undefined) {
+      updateData.description = description || null;
+    }
+    if (maxUses !== undefined) {
+      updateData.max_uses = maxUses;
+    }
+    if (expiresAt !== undefined) {
+      updateData.expires_at = expiresAt || null;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ message: "No changes to update" });
+    }
 
     const { error } = await supabase
       .from("registration_links")
-      .update({ is_active: !!isActive })
+      .update(updateData)
       .eq("id", Number(id));
 
     if (error) throw error;

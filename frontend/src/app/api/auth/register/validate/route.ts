@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 
+type EducationLevel = "elementary" | "high_school" | "senior_high";
+
 interface TokenRow {
   id: number;
   label: string | null;
+  education_level: EducationLevel;
   max_uses: number;
   times_used: number;
   expires_at: string | null;
@@ -22,7 +25,9 @@ export async function GET(req: NextRequest) {
   try {
     const { data: link, error } = await supabase
       .from("registration_links")
-      .select("id, label, max_uses, times_used, expires_at, is_active")
+      .select(
+        "id, label, education_level, max_uses, times_used, expires_at, is_active",
+      )
       .eq("token", token)
       .limit(1)
       .single<TokenRow>();
@@ -58,6 +63,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       valid: true,
       label: link.label,
+      educationLevel: link.education_level,
     });
   } catch (err) {
     console.error("[GET /api/auth/register/validate]", err);

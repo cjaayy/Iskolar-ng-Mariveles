@@ -11,8 +11,37 @@ import {
   Lock,
   Copy,
   Check,
+  BookOpen,
+  School,
+  GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui";
+
+type EducationLevel = "elementary" | "high_school" | "senior_high";
+
+const EDUCATION_LEVEL_CONFIG: Record<
+  EducationLevel,
+  { label: string; color: string; bgColor: string; icon: React.ReactNode }
+> = {
+  elementary: {
+    label: "Elementary",
+    color: "text-emerald-400",
+    bgColor: "bg-emerald-500/20",
+    icon: <BookOpen className="w-3.5 h-3.5" />,
+  },
+  high_school: {
+    label: "High School",
+    color: "text-blue-400",
+    bgColor: "bg-blue-500/20",
+    icon: <School className="w-3.5 h-3.5" />,
+  },
+  senior_high: {
+    label: "Senior High",
+    color: "text-purple-400",
+    bgColor: "bg-purple-500/20",
+    icon: <GraduationCap className="w-3.5 h-3.5" />,
+  },
+};
 
 const MARIVELES_BARANGAYS = [
   "Alas-asin",
@@ -47,6 +76,7 @@ export default function RegisterPage({
   const [tokenValid, setTokenValid] = useState(false);
   const [tokenError, setTokenError] = useState("");
   const [linkLabel, setLinkLabel] = useState("");
+  const [educationLevel, setEducationLevel] = useState<EducationLevel | null>(null);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -76,6 +106,7 @@ export default function RegisterPage({
         if (data.valid) {
           setTokenValid(true);
           setLinkLabel(data.label || "");
+          setEducationLevel(data.educationLevel || null);
         } else {
           setTokenError(data.error || "Invalid registration link");
         }
@@ -346,6 +377,14 @@ export default function RegisterPage({
             <h1 className="font-heading text-2xl font-bold text-white mb-1">
               Online Registration
             </h1>
+            {educationLevel && (
+              <div className="flex justify-center mb-2">
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${EDUCATION_LEVEL_CONFIG[educationLevel].bgColor} ${EDUCATION_LEVEL_CONFIG[educationLevel].color}`}>
+                  {EDUCATION_LEVEL_CONFIG[educationLevel].icon}
+                  {EDUCATION_LEVEL_CONFIG[educationLevel].label}
+                </span>
+              </div>
+            )}
             {linkLabel && (
               <p className="text-sm font-body text-ocean-400">{linkLabel}</p>
             )}

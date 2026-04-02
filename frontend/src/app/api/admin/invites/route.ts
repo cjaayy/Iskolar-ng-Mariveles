@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import crypto from "crypto";
 
+type EducationLevel = "elementary" | "high_school" | "senior_high";
+
 async function verifyAdmin(adminId: string): Promise<boolean> {
   const { data, error } = await supabase
     .from("users")
@@ -24,13 +26,20 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const { data: rows, error } = await supabase
+    const { searchParams } = new URL(req.url);
+    const educationLevel = searchParams.get(
+      "educationLevel",
+    ) as EducationLevel | null;
+
+    let query = supabase
       .from("registration_links")
       .select(
         `
         id,
         token,
         label,
+        education_level,
+        description,
         max_uses,
         times_used,
         expires_at,
@@ -42,6 +51,12 @@ export async function GET(req: NextRequest) {
       )
       .order("created_at", { ascending: false });
 
+    if (educationLevel) {
+      query = query.eq("education_level", educationLevel);
+    }
+
+    const { data: rows, error } = await query;
+
     if (error) throw error;
 
     const data = (rows ?? []).map((row: Record<string, unknown>) => {
@@ -50,6 +65,8 @@ export async function GET(req: NextRequest) {
         id: row.id,
         token: row.token,
         label: row.label,
+        education_level: row.education_level,
+        description: row.description,
         max_uses: row.max_uses,
         times_used: row.times_used,
         expires_at: row.expires_at,
@@ -81,11 +98,23 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { label, maxUses, expiresAt } = body as {
+    const { label, educationLevel, description, maxUses, expiresAt } = body as {
       label?: string;
+      educationLevel?: EducationLevel;
+      description?: string;
       maxUses?: number;
       expiresAt?: string;
     };
+
+    if (
+      !educationLevel ||
+      !["elementary", "high_school", "senior_high"].includes(educationLevel)
+    ) {
+      return NextResponse.json(
+        { error: "Valid education level is required" },
+        { status: 400 },
+      );
+    }
 
     const token = crypto.randomBytes(32).toString("hex");
 
@@ -94,7 +123,9 @@ export async function POST(req: NextRequest) {
       .insert({
         token,
         label: label || null,
-        max_uses: maxUses ?? 1,
+        education_level: educationLevel,
+        description: description || null,
+        max_uses: maxUses ?? 0,
         expires_at: expiresAt || null,
         created_by: Number(adminId),
       })

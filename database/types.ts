@@ -21,6 +21,8 @@ export type RequirementSubmissionStatus =
   | "approved"
   | "rejected";
 
+export type EducationLevel = "elementary" | "high_school" | "senior_high";
+
 export interface UserRow {
   id: number;
   email: string;
@@ -118,6 +120,8 @@ export interface RegistrationLinkRow {
   id: number;
   token: string;
   label: string | null;
+  education_level: EducationLevel;
+  description: string | null;
   max_uses: number;
   times_used: number;
   expires_at: string | null;

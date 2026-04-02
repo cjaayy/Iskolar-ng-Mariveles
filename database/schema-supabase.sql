@@ -146,10 +146,14 @@ CREATE POLICY "Deny all access to requirement_submissions"
   ON public.requirement_submissions FOR ALL TO anon, authenticated
   USING (false) WITH CHECK (false);
 
+CREATE TYPE education_level AS ENUM ('elementary', 'high_school', 'senior_high');
+
 CREATE TABLE registration_links (
   id            INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  token         VARCHAR(64)   NOT NULL UNIQUE,
+  token         VARCHAR(64)     NOT NULL UNIQUE,
   label         VARCHAR(150),
+  education_level education_level NOT NULL DEFAULT 'senior_high',
+  description   TEXT,
   max_uses      INT           NOT NULL DEFAULT 1,
   times_used    INT           NOT NULL DEFAULT 0,
   expires_at    TIMESTAMPTZ,
@@ -161,6 +165,7 @@ CREATE TABLE registration_links (
 
 CREATE INDEX idx_reg_links_token  ON registration_links (token);
 CREATE INDEX idx_reg_links_active ON registration_links (is_active);
+CREATE INDEX idx_reg_links_education_level ON registration_links (education_level);
 
 ALTER TABLE registration_links ENABLE ROW LEVEL SECURITY;
 
