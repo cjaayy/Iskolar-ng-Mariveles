@@ -14,12 +14,22 @@ function generatePassword(): string {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { token, email, fullName, address, barangay } = body as {
+    const {
+      token,
+      email,
+      fullName,
+      address,
+      barangay,
+      currentSchool,
+      yearLevel,
+    } = body as {
       token: string;
       email: string;
       fullName: string;
       address: string;
       barangay?: string;
+      currentSchool?: string;
+      yearLevel?: string;
     };
 
     if (!token || !email || !fullName || !address) {
@@ -46,6 +56,8 @@ export async function POST(req: NextRequest) {
         p_address: address,
         p_password_hash: hash,
         p_barangay: barangay || null,
+        p_current_school: currentSchool || null,
+        p_year_level: yearLevel || null,
       },
     );
 

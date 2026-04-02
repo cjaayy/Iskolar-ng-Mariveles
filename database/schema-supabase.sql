@@ -52,6 +52,8 @@ CREATE TABLE applicants (
   house_street           VARCHAR(255),
   town                   VARCHAR(100),
   barangay               VARCHAR(100),
+  current_school         VARCHAR(255),
+  year_level             VARCHAR(50),
   father_name            VARCHAR(150),
   father_occupation      VARCHAR(150),
   father_contact         VARCHAR(20),

@@ -54,6 +54,8 @@ export interface ApplicantRow {
   house_street: string | null;
   town: string | null;
   barangay: string | null;
+  current_school: string | null;
+  year_level: string | null;
   father_name: string | null;
   father_occupation: string | null;
   father_contact: string | null;

@@ -14,6 +14,7 @@ import {
   BookOpen,
   School,
   GraduationCap,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 
@@ -41,6 +42,102 @@ const EDUCATION_LEVEL_CONFIG: Record<
     bgColor: "bg-purple-500/20",
     icon: <GraduationCap className="w-3.5 h-3.5" />,
   },
+};
+
+const YEAR_LEVELS: Record<EducationLevel, string[]> = {
+  elementary: [
+    "Grade 1",
+    "Grade 2", 
+    "Grade 3",
+    "Grade 4",
+    "Grade 5",
+    "Grade 6",
+  ],
+  high_school: [
+    "Grade 7",
+    "Grade 8",
+    "Grade 9",
+    "Grade 10",
+  ],
+  senior_high: [
+    "Grade 11",
+    "Grade 12",
+  ],
+};
+
+const SCHOOLS_BY_LEVEL: Record<EducationLevel, string[]> = {
+  elementary: [
+    // Public Elementary Schools
+    "A.G. Llamas Elementary School",
+    "Alasasin Elementary School",
+    "Balon Elementary School",
+    "Baseco Elementary School",
+    "Batangas II Elementary School",
+    "Bayview Elementary School",
+    "Bepz Elementary School",
+    "Biaan Aeta School",
+    "Cabcaben Elementary School",
+    "Gonzales Elementary School",
+    "Ipag Elementary School",
+    "Lucanin Elementary School",
+    "Marina Bay Elementary School",
+    "Mountain View Elementary School",
+    "New Alion Elementary School",
+    "Old Alion Elementary School",
+    "Renato L. Cayetano Memorial School",
+    "San Isidro Primary School",
+    "Sisiman Elementary School",
+    "Sto. Niño Biaan Elementary School",
+    "Townsite Elementary School",
+    // Private Schools (K-12)
+    "Sunny Hillside School of Bataan, Inc.",
+    "Saint Nicholas Catholic School of Mariveles",
+    "Santa Mariana De Jesus Academy, Inc.",
+    "Bataan GN Christian School, Inc.",
+    "Christian Community School of Mariveles, Inc.",
+    "Blessed Regina Protmann Catholic School",
+    "BEPZ Multinational School, Inc.",
+    "Biaan Integrated School",
+    "Other (Please specify)",
+  ],
+  high_school: [
+    // Public Junior High Schools (MNHS Network)
+    "MNHS - Poblacion (Main Campus)",
+    "MNHS - Alasasin",
+    "MNHS - Alion",
+    "MNHS - Baseco",
+    "MNHS - Batangas II",
+    "MNHS - Cabcaben",
+    "MNHS - Malaya",
+    // Other Public High Schools
+    "Ipag National High School",
+    "Lamao National High School",
+    "Biaan Integrated School",
+    // Private Schools (K-12)
+    "Sunny Hillside School of Bataan, Inc.",
+    "Saint Nicholas Catholic School of Mariveles",
+    "Santa Mariana De Jesus Academy, Inc.",
+    "Bataan GN Christian School, Inc.",
+    "Christian Community School of Mariveles, Inc.",
+    "Blessed Regina Protmann Catholic School",
+    "BEPZ Multinational School, Inc.",
+    "Other (Please specify)",
+  ],
+  senior_high: [
+    // Public Senior High Schools
+    "MNHS - Poblacion (Main Campus)",
+    "MNHS - Camaya Campus",
+    "Mariveles Senior High School - Sitio Mabuhay",
+    "Biaan Integrated School",
+    // Private Schools
+    "Sunny Hillside School of Bataan, Inc.",
+    "Saint Nicholas Catholic School of Mariveles",
+    "Santa Mariana De Jesus Academy, Inc.",
+    "Softnet Information Technology Center",
+    "Blessed Regina Protmann Catholic School",
+    "BEPZ Multinational School, Inc.",
+    "Other (Please specify)",
+  ],
 };
 
 const MARIVELES_BARANGAYS = [
@@ -84,6 +181,9 @@ export default function RegisterPage({
   const [email, setEmail] = useState("");
   const [barangay, setBarangay] = useState("");
   const [street, setStreet] = useState("");
+  const [currentSchool, setCurrentSchool] = useState("");
+  const [otherSchool, setOtherSchool] = useState("");
+  const [yearLevel, setYearLevel] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -129,6 +229,13 @@ export default function RegisterPage({
     else if (!/\S+@\S+\.\S+/.test(email))
       newErrors.email = "Invalid email format";
     if (!barangay) newErrors.barangay = "Please select your barangay";
+    if (educationLevel) {
+      if (!currentSchool) newErrors.currentSchool = "Please select your school";
+      if (currentSchool === "Other (Please specify)" && !otherSchool.trim()) {
+        newErrors.otherSchool = "Please specify your school name";
+      }
+      if (!yearLevel) newErrors.yearLevel = "Please select your year level";
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -142,6 +249,10 @@ export default function RegisterPage({
       ? `${street.trim()}, ${barangay}, Mariveles, Bataan`
       : `${barangay}, Mariveles, Bataan`;
 
+    const schoolName = currentSchool === "Other (Please specify)" 
+      ? otherSchool.trim() 
+      : currentSchool;
+
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
@@ -152,6 +263,8 @@ export default function RegisterPage({
           fullName,
           address,
           barangay,
+          currentSchool: schoolName || null,
+          yearLevel: yearLevel || null,
         }),
       });
 
@@ -498,6 +611,103 @@ export default function RegisterPage({
                 />
               </div>
             </div>
+
+            {educationLevel && (
+              <>
+                <div>
+                  <label className="block text-xs font-body text-muted-fg mb-1">
+                    Current School
+                  </label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
+                    <select
+                      value={currentSchool}
+                      onChange={(e) => {
+                        setCurrentSchool(e.target.value);
+                        setErrors((p) => ({ ...p, currentSchool: "", otherSchool: "" }));
+                        if (e.target.value !== "Other (Please specify)") {
+                          setOtherSchool("");
+                        }
+                      }}
+                      className={`w-full bg-muted border-2 rounded-xl pl-10 pr-4 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-2 transition-all appearance-none ${
+                        errors.currentSchool
+                          ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20"
+                          : "border-transparent focus:border-ocean-400 focus:ring-ocean-400/20"
+                      } ${!currentSchool ? "text-muted-fg" : ""}`}
+                    >
+                      <option value="">Select your school</option>
+                      {SCHOOLS_BY_LEVEL[educationLevel].map((school) => (
+                        <option key={school} value={school}>
+                          {school}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {errors.currentSchool && (
+                    <p className="text-xs text-coral-400 mt-1">{errors.currentSchool}</p>
+                  )}
+                </div>
+
+                {currentSchool === "Other (Please specify)" && (
+                  <div>
+                    <label className="block text-xs font-body text-muted-fg mb-1">
+                      School Name
+                    </label>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
+                      <input
+                        type="text"
+                        value={otherSchool}
+                        onChange={(e) => {
+                          setOtherSchool(e.target.value);
+                          setErrors((p) => ({ ...p, otherSchool: "" }));
+                        }}
+                        placeholder="Enter your school name"
+                        className={`w-full bg-muted border-2 rounded-xl pl-10 pr-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-fg focus:outline-none focus:ring-2 transition-all ${
+                          errors.otherSchool
+                            ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20"
+                            : "border-transparent focus:border-ocean-400 focus:ring-ocean-400/20"
+                        }`}
+                      />
+                    </div>
+                    {errors.otherSchool && (
+                      <p className="text-xs text-coral-400 mt-1">{errors.otherSchool}</p>
+                    )}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-body text-muted-fg mb-1">
+                    Year Level
+                  </label>
+                  <div className="relative">
+                    <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
+                    <select
+                      value={yearLevel}
+                      onChange={(e) => {
+                        setYearLevel(e.target.value);
+                        setErrors((p) => ({ ...p, yearLevel: "" }));
+                      }}
+                      className={`w-full bg-muted border-2 rounded-xl pl-10 pr-4 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-2 transition-all appearance-none ${
+                        errors.yearLevel
+                          ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20"
+                          : "border-transparent focus:border-ocean-400 focus:ring-ocean-400/20"
+                      } ${!yearLevel ? "text-muted-fg" : ""}`}
+                    >
+                      <option value="">Select your year level</option>
+                      {YEAR_LEVELS[educationLevel].map((level) => (
+                        <option key={level} value={level}>
+                          {level}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {errors.yearLevel && (
+                    <p className="text-xs text-coral-400 mt-1">{errors.yearLevel}</p>
+                  )}
+                </div>
+              </>
+            )}
 
             {errors.submit && (
               <div className="bg-coral-50 dark:bg-coral-500/10 border border-coral-200 dark:border-coral-500/20 rounded-xl px-4 py-3">
