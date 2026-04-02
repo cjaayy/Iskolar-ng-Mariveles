@@ -76,7 +76,9 @@ export default function RegisterPage({
   const [tokenValid, setTokenValid] = useState(false);
   const [tokenError, setTokenError] = useState("");
   const [linkLabel, setLinkLabel] = useState("");
-  const [educationLevel, setEducationLevel] = useState<EducationLevel | null>(null);
+  const [educationLevel, setEducationLevel] = useState<EducationLevel | null>(
+    null,
+  );
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -379,7 +381,9 @@ export default function RegisterPage({
             </h1>
             {educationLevel && (
               <div className="flex justify-center mb-2">
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${EDUCATION_LEVEL_CONFIG[educationLevel].bgColor} ${EDUCATION_LEVEL_CONFIG[educationLevel].color}`}>
+                <span
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${EDUCATION_LEVEL_CONFIG[educationLevel].bgColor} ${EDUCATION_LEVEL_CONFIG[educationLevel].color}`}
+                >
                   {EDUCATION_LEVEL_CONFIG[educationLevel].icon}
                   {EDUCATION_LEVEL_CONFIG[educationLevel].label}
                 </span>
