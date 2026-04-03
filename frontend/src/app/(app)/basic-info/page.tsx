@@ -216,6 +216,9 @@ export default function BasicInfoPage() {
       if (payload.height_cm) payload.height_cm = Number(payload.height_cm);
       if (payload.weight_kg) payload.weight_kg = Number(payload.weight_kg);
 
+      // Set town to Mariveles (fixed value)
+      payload.town = "Mariveles";
+
       // Don't update current_school and year_level - they're read-only from registration
       delete payload.current_school;
       delete payload.year_level;
