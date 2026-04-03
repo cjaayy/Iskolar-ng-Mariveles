@@ -31,7 +31,6 @@ interface ProfileData {
   birthplace: string;
   contact_number: string;
   house_street: string;
-  town: string;
   barangay: string;
   father_name: string;
   father_occupation: string;
@@ -42,16 +41,8 @@ interface ProfileData {
   guardian_name: string;
   guardian_relation: string;
   guardian_contact: string;
-  primary_school: string;
-  primary_address: string;
-  primary_year_graduated: string;
-  secondary_school: string;
-  secondary_address: string;
-  secondary_year_graduated: string;
-  tertiary_school: string;
-  tertiary_address: string;
-  tertiary_year_graduated: string;
-  tertiary_program: string;
+  current_school: string;
+  year_level: string;
 }
 
 const stagger = {
@@ -97,7 +88,6 @@ export default function ProfilePage() {
         birthplace: d.birthplace ?? "",
         contact_number: d.contact_number ?? "",
         house_street: d.house_street ?? "",
-        town: d.town ?? "",
         barangay: d.barangay ?? "",
         father_name: d.father_name ?? "",
         father_occupation: d.father_occupation ?? "",
@@ -108,25 +98,8 @@ export default function ProfilePage() {
         guardian_name: d.guardian_name ?? "",
         guardian_relation: d.guardian_relation ?? "",
         guardian_contact: d.guardian_contact ?? "",
-        primary_school: d.primary_school ?? "",
-        primary_address: d.primary_address ?? "",
-        primary_year_graduated:
-          d.primary_year_graduated != null
-            ? String(d.primary_year_graduated)
-            : "",
-        secondary_school: d.secondary_school ?? "",
-        secondary_address: d.secondary_address ?? "",
-        secondary_year_graduated:
-          d.secondary_year_graduated != null
-            ? String(d.secondary_year_graduated)
-            : "",
-        tertiary_school: d.tertiary_school ?? "",
-        tertiary_address: d.tertiary_address ?? "",
-        tertiary_year_graduated:
-          d.tertiary_year_graduated != null
-            ? String(d.tertiary_year_graduated)
-            : "",
-        tertiary_program: d.tertiary_program ?? "",
+        current_school: d.current_school ?? "",
+        year_level: d.year_level ?? "",
       });
     } catch {
       addToast("Failed to load profile data", "error");
@@ -272,10 +245,11 @@ function PersonalTab({ data }: { data: ProfileData }) {
       </div>
 
       <SectionTitle>Address</SectionTitle>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-        <InfoRow label="House/Unit/Street" value={data.house_street} />
-        <InfoRow label="Town" value={data.town} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
+        <InfoRow label="Street / Purok / Sitio" value={data.house_street} />
         <InfoRow label="Barangay" value={data.barangay} />
+        <InfoRow label="Town" value="Mariveles" />
+        <InfoRow label="Province" value="Bataan" />
       </div>
     </div>
   );
@@ -311,27 +285,17 @@ function ParentsTab({ data }: { data: ProfileData }) {
 function EducationTab({ data }: { data: ProfileData }) {
   return (
     <div className="space-y-6">
-      <SectionTitle>Primary</SectionTitle>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-        <InfoRow label="School Name" value={data.primary_school} />
-        <InfoRow label="Address" value={data.primary_address} />
-        <InfoRow label="Year Graduated" value={data.primary_year_graduated} />
-      </div>
-
-      <SectionTitle>Secondary</SectionTitle>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-        <InfoRow label="School Name" value={data.secondary_school} />
-        <InfoRow label="Address" value={data.secondary_address} />
-        <InfoRow label="Year Graduated" value={data.secondary_year_graduated} />
-      </div>
-
-      <SectionTitle>Tertiary (Post-Secondary)</SectionTitle>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-        <InfoRow label="School Name" value={data.tertiary_school} />
-        <InfoRow label="Program" value={data.tertiary_program} />
-        <InfoRow label="Address" value={data.tertiary_address} />
-        <InfoRow label="Year Graduated" value={data.tertiary_year_graduated} />
-      </div>
+      <SectionTitle>Registered School</SectionTitle>
+      {data.current_school ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+          <InfoRow label="Current School" value={data.current_school} />
+          <InfoRow label="Year Level" value={data.year_level} />
+        </div>
+      ) : (
+        <p className="text-sm font-body text-muted-fg">
+          No school information was provided during registration.
+        </p>
+      )}
     </div>
   );
 }
