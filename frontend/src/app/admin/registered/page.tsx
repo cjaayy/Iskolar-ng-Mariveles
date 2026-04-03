@@ -102,6 +102,8 @@ interface ApplicationDetail {
   guardian_relation: string | null;
   guardian_contact: string | null;
 
+  current_school: string | null;
+  year_level: string | null;
   primary_school: string | null;
   primary_address: string | null;
   primary_year_graduated: string | null;
@@ -161,7 +163,9 @@ export default function RegisteredApplicantsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterSchool, setFilterSchool] = useState("");
-  const [filterEducationLevel, setFilterEducationLevel] = useState<EducationLevel | "">("");
+  const [filterEducationLevel, setFilterEducationLevel] = useState<
+    EducationLevel | ""
+  >("");
   const [availableSchools, setAvailableSchools] = useState<string[]>([]);
 
   const [modalApplicant, setModalApplicant] = useState<ApplicantRow | null>(
@@ -184,7 +188,8 @@ export default function RegisteredApplicantsPage() {
     try {
       const params = new URLSearchParams();
       if (filterSchool) params.set("school", filterSchool);
-      if (filterEducationLevel) params.set("educationLevel", filterEducationLevel);
+      if (filterEducationLevel)
+        params.set("educationLevel", filterEducationLevel);
 
       const res = await fetch(`/api/admin/registered?${params.toString()}`, {
         headers: { "x-admin-id": adminId },
@@ -194,7 +199,7 @@ export default function RegisteredApplicantsPage() {
         const grouped: Record<string, ApplicantRow[]> = data.grouped || {};
         const flat: ApplicantRow[] = Object.values(grouped).flat();
         setAllApplicants(flat);
-        
+
         // Extract unique schools for the filter dropdown
         const schools = new Set<string>();
         for (const applicant of flat) {
@@ -274,12 +279,21 @@ export default function RegisteredApplicantsPage() {
   }
 
   // Helper to determine education level from year_level
-  const getEducationLevel = (yearLevel: string | null): EducationLevel | null => {
+  const getEducationLevel = (
+    yearLevel: string | null,
+  ): EducationLevel | null => {
     if (!yearLevel) return null;
-    const elementaryGrades = ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"];
+    const elementaryGrades = [
+      "Grade 1",
+      "Grade 2",
+      "Grade 3",
+      "Grade 4",
+      "Grade 5",
+      "Grade 6",
+    ];
     const highSchoolGrades = ["Grade 7", "Grade 8", "Grade 9", "Grade 10"];
     const seniorHighGrades = ["Grade 11", "Grade 12"];
-    
+
     if (elementaryGrades.includes(yearLevel)) return "elementary";
     if (highSchoolGrades.includes(yearLevel)) return "high_school";
     if (seniorHighGrades.includes(yearLevel)) return "senior_high";
@@ -349,7 +363,9 @@ export default function RegisteredApplicantsPage() {
           <button
             key={level.value}
             onClick={() =>
-              setFilterEducationLevel(filterEducationLevel === level.value ? "" : level.value)
+              setFilterEducationLevel(
+                filterEducationLevel === level.value ? "" : level.value,
+              )
             }
             className={`px-3 py-1.5 rounded-full text-xs font-body font-medium transition-colors ${
               filterEducationLevel === level.value
@@ -476,7 +492,9 @@ export default function RegisteredApplicantsPage() {
                               const config = getLevelConfig(level);
                               if (config) {
                                 return (
-                                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${config.bgColor} ${config.color}`}>
+                                  <span
+                                    className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${config.bgColor} ${config.color}`}
+                                  >
                                     {config.label}
                                   </span>
                                 );
@@ -485,7 +503,9 @@ export default function RegisteredApplicantsPage() {
                             })()}
                           </div>
                           <div className="flex items-center gap-2 text-xs text-muted-fg font-body flex-wrap">
-                            <span className="truncate max-w-[180px]">{a.email}</span>
+                            <span className="truncate max-w-[180px]">
+                              {a.email}
+                            </span>
                             {a.current_school && (
                               <>
                                 <span>&middot;</span>
@@ -825,55 +845,15 @@ export default function RegisteredApplicantsPage() {
 
                       {activeInfoTab === "education" && (
                         <div className="space-y-4">
-                          <ModalSectionTitle>Primary</ModalSectionTitle>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-3">
-                            <ModalInfoRow
-                              label="School Name"
-                              value={detail.app.primary_school}
-                            />
-                            <ModalInfoRow
-                              label="Address"
-                              value={detail.app.primary_address}
-                            />
-                            <ModalInfoRow
-                              label="Year Graduated"
-                              value={detail.app.primary_year_graduated}
-                            />
-                          </div>
-                          <ModalSectionTitle>Secondary</ModalSectionTitle>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-3">
-                            <ModalInfoRow
-                              label="School Name"
-                              value={detail.app.secondary_school}
-                            />
-                            <ModalInfoRow
-                              label="Address"
-                              value={detail.app.secondary_address}
-                            />
-                            <ModalInfoRow
-                              label="Year Graduated"
-                              value={detail.app.secondary_year_graduated}
-                            />
-                          </div>
-                          <ModalSectionTitle>
-                            Tertiary (Post-Secondary)
-                          </ModalSectionTitle>
+                          <ModalSectionTitle>Current School</ModalSectionTitle>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                             <ModalInfoRow
                               label="School Name"
-                              value={detail.app.tertiary_school}
+                              value={detail.app.current_school}
                             />
                             <ModalInfoRow
-                              label="Program"
-                              value={detail.app.tertiary_program}
-                            />
-                            <ModalInfoRow
-                              label="Address"
-                              value={detail.app.tertiary_address}
-                            />
-                            <ModalInfoRow
-                              label="Year Graduated"
-                              value={detail.app.tertiary_year_graduated}
+                              label="Year Level"
+                              value={detail.app.year_level}
                             />
                           </div>
                         </div>

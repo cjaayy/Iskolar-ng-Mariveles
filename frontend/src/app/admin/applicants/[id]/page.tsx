@@ -23,6 +23,8 @@ import {
   Mail,
   Phone,
   MapPin,
+  Heart,
+  GraduationCap,
 } from "lucide-react";
 import { Card, Badge, Button, Skeleton } from "@/components/ui";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
@@ -38,6 +40,39 @@ interface ApplicationDetail {
   applicant_email: string;
   contact_number: string | null;
   address: string | null;
+  date_of_birth: string | null;
+  gender: string | null;
+  blood_type: string | null;
+  civil_status: string | null;
+  maiden_name: string | null;
+  spouse_name: string | null;
+  spouse_occupation: string | null;
+  religion: string | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+  birthplace: string | null;
+  house_street: string | null;
+  town: string | null;
+  barangay: string | null;
+  father_name: string | null;
+  father_occupation: string | null;
+  father_contact: string | null;
+  mother_name: string | null;
+  mother_occupation: string | null;
+  mother_contact: string | null;
+  guardian_name: string | null;
+  guardian_relation: string | null;
+  guardian_contact: string | null;
+  primary_school: string | null;
+  primary_address: string | null;
+  primary_year_graduated: string | null;
+  secondary_school: string | null;
+  secondary_address: string | null;
+  secondary_year_graduated: string | null;
+  tertiary_school: string | null;
+  tertiary_address: string | null;
+  tertiary_year_graduated: string | null;
+  tertiary_program: string | null;
 }
 
 interface RequirementSubmission {
@@ -120,6 +155,9 @@ export default function AdminApplicationDetailPage() {
   const [previewDoc, setPreviewDoc] = useState<RequirementSubmission | null>(
     null,
   );
+  const [activeInfoTab, setActiveInfoTab] = useState<
+    "personal" | "parents" | "education"
+  >("personal");
 
   const adminId =
     typeof window !== "undefined" ? localStorage.getItem("adminId") : null;
@@ -422,64 +460,206 @@ export default function AdminApplicationDetailPage() {
 
         <div className="space-y-4">
           <Card padding="md">
-            <h3 className="font-heading text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
-              <User className="w-4 h-4 text-muted-fg" />
-              Applicant Information
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <p className="text-xs font-body text-muted-fg mb-0.5">
-                  Full Name
-                </p>
-                <p className="text-sm font-body font-medium text-foreground">
-                  {application.applicant_name}
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="text-xs font-body text-muted-fg mb-0.5 flex items-center gap-1">
-                    <Mail className="w-3 h-3" />
-                    Email
-                  </p>
-                  <p className="text-sm font-body text-foreground">
-                    {application.applicant_email}
-                  </p>
-                </div>
-              </div>
-              {application.contact_number && (
-                <div>
-                  <p className="text-xs font-body text-muted-fg mb-0.5 flex items-center gap-1">
-                    <Phone className="w-3 h-3" />
-                    Contact
-                  </p>
-                  <p className="text-sm font-body text-foreground">
-                    {application.contact_number}
-                  </p>
-                </div>
-              )}
-              {application.address && (
-                <div>
-                  <p className="text-xs font-body text-muted-fg mb-0.5 flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    Address
-                  </p>
-                  <p className="text-sm font-body text-foreground">
-                    {application.address}
-                  </p>
-                </div>
-              )}
+            <h2 className="font-heading text-lg font-semibold text-foreground mb-4">
+              Basic Information
+            </h2>
 
-              {application.submitted_at && (
-                <div className="pt-2 border-t border-card-border">
-                  <p className="text-xs font-body text-muted-fg mb-0.5">
-                    Submitted
-                  </p>
-                  <p className="text-sm font-body text-foreground">
-                    {new Date(application.submitted_at).toLocaleDateString()}
-                  </p>
-                </div>
-              )}
+            <div className="flex gap-1 border-b border-card-border mb-5">
+              {[
+                {
+                  key: "personal" as const,
+                  label: "Personal",
+                  icon: User,
+                },
+                { key: "parents" as const, label: "Parents", icon: Heart },
+                {
+                  key: "education" as const,
+                  label: "Education",
+                  icon: GraduationCap,
+                },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveInfoTab(tab.key)}
+                  className={`
+                    px-3 py-2 text-sm font-body font-medium transition-colors relative flex items-center gap-1.5
+                    ${
+                      activeInfoTab === tab.key
+                        ? "text-foreground"
+                        : "text-ocean-400 hover:text-ocean-500"
+                    }
+                  `}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                  {activeInfoTab === tab.key && (
+                    <motion.div
+                      layoutId="admin-applicant-info-tab-underline"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-ocean-400"
+                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                </button>
+              ))}
             </div>
+
+            {activeInfoTab === "personal" && (
+              <div className="space-y-6">
+                <SectionTitle>Basic Details</SectionTitle>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                  <InfoRow label="Full Name" value={application.applicant_name} />
+                  <InfoRow label="Email" value={application.applicant_email} />
+                  <InfoRow
+                    label="Birthdate"
+                    value={formatDate(application.date_of_birth)}
+                  />
+                  <InfoRow label="Gender" value={application.gender} />
+                  <InfoRow label="Blood Type" value={application.blood_type} />
+                  <InfoRow
+                    label="Civil Status"
+                    value={application.civil_status}
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                  <InfoRow label="Maiden Name" value={application.maiden_name} />
+                  <InfoRow label="Spouse Name" value={application.spouse_name} />
+                  <InfoRow
+                    label="Spouse Occupation"
+                    value={application.spouse_occupation}
+                  />
+                  <InfoRow label="Religion" value={application.religion} />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                  <InfoRow
+                    label="Height"
+                    value={
+                      application.height_cm != null
+                        ? `${application.height_cm} cm`
+                        : null
+                    }
+                  />
+                  <InfoRow
+                    label="Weight"
+                    value={
+                      application.weight_kg != null
+                        ? `${application.weight_kg} kg`
+                        : null
+                    }
+                  />
+                  <InfoRow label="Birthplace" value={application.birthplace} />
+                  <InfoRow
+                    label="Contact Number"
+                    value={application.contact_number}
+                  />
+                </div>
+                <SectionTitle>Address</SectionTitle>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
+                  <InfoRow
+                    label="House/Unit/Street"
+                    value={application.house_street}
+                  />
+                  <InfoRow label="Town" value={application.town} />
+                  <InfoRow label="Barangay" value={application.barangay} />
+                </div>
+              </div>
+            )}
+
+            {activeInfoTab === "parents" && (
+              <div className="space-y-6">
+                <SectionTitle>Father&rsquo;s Information</SectionTitle>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
+                  <InfoRow label="Full Name" value={application.father_name} />
+                  <InfoRow
+                    label="Occupation"
+                    value={application.father_occupation}
+                  />
+                  <InfoRow
+                    label="Contact Number"
+                    value={application.father_contact}
+                  />
+                </div>
+                <SectionTitle>Mother&rsquo;s Information</SectionTitle>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
+                  <InfoRow label="Full Name" value={application.mother_name} />
+                  <InfoRow
+                    label="Occupation"
+                    value={application.mother_occupation}
+                  />
+                  <InfoRow
+                    label="Contact Number"
+                    value={application.mother_contact}
+                  />
+                </div>
+                <SectionTitle>Guardian&rsquo;s Information</SectionTitle>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
+                  <InfoRow label="Full Name" value={application.guardian_name} />
+                  <InfoRow
+                    label="Relationship"
+                    value={application.guardian_relation}
+                  />
+                  <InfoRow
+                    label="Contact Number"
+                    value={application.guardian_contact}
+                  />
+                </div>
+              </div>
+            )}
+
+            {activeInfoTab === "education" && (
+              <div className="space-y-6">
+                <SectionTitle>Primary</SectionTitle>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
+                  <InfoRow
+                    label="School Name"
+                    value={application.primary_school}
+                  />
+                  <InfoRow label="Address" value={application.primary_address} />
+                  <InfoRow
+                    label="Year Graduated"
+                    value={application.primary_year_graduated}
+                  />
+                </div>
+                <SectionTitle>Secondary</SectionTitle>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
+                  <InfoRow
+                    label="School Name"
+                    value={application.secondary_school}
+                  />
+                  <InfoRow
+                    label="Address"
+                    value={application.secondary_address}
+                  />
+                  <InfoRow
+                    label="Year Graduated"
+                    value={application.secondary_year_graduated}
+                  />
+                </div>
+                <SectionTitle>Tertiary (Post-Secondary)</SectionTitle>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                  <InfoRow
+                    label="School Name"
+                    value={application.tertiary_school}
+                  />
+                  <InfoRow label="Program" value={application.tertiary_program} />
+                  <InfoRow label="Address" value={application.tertiary_address} />
+                  <InfoRow
+                    label="Year Graduated"
+                    value={application.tertiary_year_graduated}
+                  />
+                </div>
+              </div>
+            )}
+
+            {application.submitted_at && (
+              <div className="pt-4 mt-4 border-t border-card-border">
+                <p className="text-xs font-body text-muted-fg mb-0.5">
+                  Submitted
+                </p>
+                <p className="text-sm font-body text-foreground">
+                  {new Date(application.submitted_at).toLocaleDateString()}
+                </p>
+              </div>
+            )}
           </Card>
 
           {history.length > 0 && (
@@ -649,5 +829,39 @@ export default function AdminApplicationDetailPage() {
         )}
       </AnimatePresence>
     </motion.div>
+  );
+}
+
+function formatDate(d: string | null | undefined): string {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="font-heading text-base font-semibold text-foreground border-b border-card-border pb-2">
+      {children}
+    </h3>
+  );
+}
+
+function InfoRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | null | undefined;
+}) {
+  return (
+    <div>
+      <p className="text-xs font-body text-muted-fg">{label}</p>
+      <p className="text-sm font-body font-medium text-foreground mt-0.5">
+        {value || "—"}
+      </p>
+    </div>
   );
 }

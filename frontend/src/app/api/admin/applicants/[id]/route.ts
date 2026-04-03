@@ -41,7 +41,39 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
         applicants!inner(
           contact_number,
           address,
+          date_of_birth,
+          gender,
+          blood_type,
+          civil_status,
+          maiden_name,
+          spouse_name,
+          spouse_occupation,
+          religion,
+          height_cm,
+          weight_kg,
+          birthplace,
+          house_street,
+          town,
           barangay,
+          father_name,
+          father_occupation,
+          father_contact,
+          mother_name,
+          mother_occupation,
+          mother_contact,
+          guardian_name,
+          guardian_relation,
+          guardian_contact,
+          primary_school,
+          primary_address,
+          primary_year_graduated,
+          secondary_school,
+          secondary_address,
+          secondary_year_graduated,
+          tertiary_school,
+          tertiary_address,
+          tertiary_year_graduated,
+          tertiary_program,
           users!inner(full_name, email)
         )
       `,
@@ -59,21 +91,21 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    const applicant = appRow.applicants as unknown as {
-      contact_number: string | null;
-      address: string | null;
-      barangay: string | null;
+    const applicant = appRow.applicants as unknown as Record<
+      string,
+      unknown
+    > & {
       users: { full_name: string; email: string };
     };
+
+    const { users: userInfo, ...applicantFields } = applicant;
 
     const application = {
       ...appRow,
       applicants: undefined,
-      applicant_name: applicant.users.full_name,
-      applicant_email: applicant.users.email,
-      contact_number: applicant.contact_number,
-      address: applicant.address,
-      barangay: applicant.barangay,
+      applicant_name: userInfo.full_name,
+      applicant_email: userInfo.email,
+      ...applicantFields,
     };
 
     const { data: submissions, error: subError } = await supabase
