@@ -26,12 +26,6 @@ const BASIC_INFO_COLUMNS = [
   "guardian_name",
   "guardian_relation",
   "guardian_contact",
-  "primary_school",
-  "primary_year_level",
-  "secondary_school",
-  "secondary_year_level",
-  "tertiary_school",
-  "tertiary_year_level",
   "current_school",
   "year_level",
 ] as const;
