@@ -117,8 +117,6 @@ const RELIGION_OPTIONS = [
   { label: "Others", value: "Others" },
 ];
 
-const TOWN_OPTIONS = [{ label: "Mariveles", value: "Mariveles" }];
-
 const MARIVELES_BARANGAYS = [
   "Alas-asin",
   "Alion",
@@ -495,24 +493,33 @@ function PersonalInfoTab({ form, update }: TabProps) {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input
-          label="House/Unit/Street"
-          placeholder="Enter Location"
+          label="Street / Purok / Sitio (optional)"
+          placeholder="e.g. Purok 3, Sampaguita St."
           value={form.house_street}
           onChange={(e) => update("house_street", e.target.value)}
         />
         <Select
-          label="Town"
-          options={TOWN_OPTIONS}
-          value={form.town}
-          onChange={(e) => update("town", e.target.value)}
-        />
-        <Select
-          label="Barangay"
+          label="Barangay (Mariveles, Bataan)"
           options={MARIVELES_BARANGAYS}
           value={form.barangay}
           onChange={(e) => update("barangay", e.target.value)}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Input
+          label="Town"
+          value="Mariveles"
+          disabled
+          className="bg-muted/50"
+        />
+        <Input
+          label="Province"
+          value="Bataan"
+          disabled
+          className="bg-muted/50"
         />
       </div>
     </div>
