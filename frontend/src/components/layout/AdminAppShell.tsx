@@ -10,7 +10,7 @@ import {
   Users,
   ShieldCheck,
   LinkIcon,
-  MapPin,
+  School,
   ClipboardCheck,
   Sun,
   Moon,
@@ -49,7 +49,7 @@ const adminToolItems = [
     icon: ShieldCheck,
   },
   { href: "/admin/invites", label: "Registration Links", icon: LinkIcon },
-  { href: "/admin/barangay-access", label: "Barangay Access", icon: MapPin },
+  { href: "/admin/school-access", label: "School Access", icon: School },
 ];
 
 function AdminSidebar({

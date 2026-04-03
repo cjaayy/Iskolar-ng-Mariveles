@@ -13,31 +13,60 @@ import {
   Trash2,
   Power,
   PowerOff,
-  MapPin,
+  GraduationCap,
   AlertTriangle,
+  School,
 } from "lucide-react";
 import { Card, Badge, Skeleton, Button } from "@/components/ui";
 
-const MARIVELES_BARANGAYS = [
-  "Alas-asin",
-  "Alion",
-  "Balon-Anito",
-  "Baseco Country (Bataan Shipyard)",
-  "Batangas II",
-  "Biaan",
-  "Cabcaben",
-  "Camaya",
-  "Casili (Cataning)",
-  "Ipag",
-  "Lucanin",
-  "Malaya",
-  "Maligaya",
-  "Mt. View",
-  "Poblacion",
-  "San Carlos",
-  "San Isidro",
-  "Sisiman",
-  "Townsite",
+type EducationLevel = "elementary" | "high_school" | "senior_high";
+
+// Schools list - same as in registration form
+const ALL_SCHOOLS = [
+  // Public Elementary Schools
+  "A.G. Llamas Elementary School",
+  "Alasasin Elementary School",
+  "Balon Elementary School",
+  "Baseco Elementary School",
+  "Batangas II Elementary School",
+  "Bayview Elementary School",
+  "Bepz Elementary School",
+  "Biaan Aeta School",
+  "Cabcaben Elementary School",
+  "Gonzales Elementary School",
+  "Ipag Elementary School",
+  "Lucanin Elementary School",
+  "Marina Bay Elementary School",
+  "Mountain View Elementary School",
+  "New Alion Elementary School",
+  "Old Alion Elementary School",
+  "Renato L. Cayetano Memorial School",
+  "San Isidro Primary School",
+  "Sisiman Elementary School",
+  "Sto. Niño Biaan Elementary School",
+  "Townsite Elementary School",
+  // Public Junior & Senior High Schools
+  "MNHS - Poblacion",
+  "MNHS - Alasasin",
+  "MNHS - Alion",
+  "MNHS - Baseco",
+  "MNHS - Batangas II",
+  "MNHS - Cabcaben",
+  "MNHS - Malaya",
+  "MNHS - Camaya Campus",
+  "Mariveles Senior High School - Sitio Mabuhay",
+  "Ipag National High School",
+  "Lamao National High School",
+  "Biaan Integrated School",
+  // Private Schools
+  "Sunny Hillside School of Bataan, Inc.",
+  "Saint Nicholas Catholic School of Mariveles",
+  "Santa Mariana De Jesus Academy, Inc.",
+  "Bataan GN Christian School, Inc.",
+  "Christian Community School of Mariveles, Inc.",
+  "Softnet Information Technology Center",
+  "Blessed Regina Protmann Catholic School",
+  "BEPZ Multinational School, Inc.",
 ];
 
 interface Validator {
@@ -45,7 +74,7 @@ interface Validator {
   email: string;
   full_name: string;
   is_active: boolean;
-  assigned_barangay: string | null;
+  assigned_school: string | null;
   created_at: string;
   total_validations: number;
 }
@@ -73,7 +102,7 @@ export default function AdminValidatorsPage() {
   const [newEmail, setNewEmail] = useState("");
   const [newName, setNewName] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [newBarangay, setNewBarangay] = useState("");
+  const [newSchool, setNewSchool] = useState("");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const [createSuccess, setCreateSuccess] = useState("");
@@ -85,12 +114,12 @@ export default function AdminValidatorsPage() {
   const adminId =
     typeof window !== "undefined" ? localStorage.getItem("adminId") : null;
 
-  const takenBarangays = validators
-    .filter((v) => v.is_active && v.assigned_barangay)
-    .map((v) => v.assigned_barangay!);
+  const takenSchools = validators
+    .filter((v) => v.is_active && v.assigned_school)
+    .map((v) => v.assigned_school!);
 
-  const availableBarangays = MARIVELES_BARANGAYS.filter(
-    (b) => !takenBarangays.includes(b),
+  const availableSchools = ALL_SCHOOLS.filter(
+    (s) => !takenSchools.includes(s)
   );
 
   const fetchData = useCallback(async () => {
@@ -138,7 +167,7 @@ export default function AdminValidatorsPage() {
           email: newEmail,
           fullName: newName,
           password: newPassword,
-          assignedBarangay: newBarangay,
+          assignedSchool: newSchool,
         }),
       });
 
@@ -147,7 +176,7 @@ export default function AdminValidatorsPage() {
         setNewEmail("");
         setNewName("");
         setNewPassword("");
-        setNewBarangay("");
+        setNewSchool("");
         fetchData();
         setTimeout(() => {
           setShowCreate(false);
@@ -220,9 +249,9 @@ export default function AdminValidatorsPage() {
     }
   };
 
-  const handleAssignBarangay = async (
+  const handleAssignSchool = async (
     validatorId: number,
-    barangay: string,
+    school: string,
   ) => {
     if (!adminId) return;
     setActionLoading(validatorId);
@@ -237,8 +266,8 @@ export default function AdminValidatorsPage() {
         },
         body: JSON.stringify({
           id: validatorId,
-          action: "assign_barangay",
-          assignedBarangay: barangay,
+          action: "assign_school",
+          assignedSchool: school,
         }),
       });
 
@@ -246,7 +275,7 @@ export default function AdminValidatorsPage() {
         fetchData();
       } else {
         const err = await res.json().catch(() => ({}));
-        setActionError(err.error || "Failed to assign barangay");
+        setActionError(err.error || "Failed to assign school");
       }
     } catch {
       setActionError("An error occurred");
@@ -381,24 +410,24 @@ export default function AdminValidatorsPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-body text-muted-fg mb-1">
-                      Assigned Barangay
+                      Assigned School
                     </label>
                     <select
-                      value={newBarangay}
-                      onChange={(e) => setNewBarangay(e.target.value)}
+                      value={newSchool}
+                      onChange={(e) => setNewSchool(e.target.value)}
                       required
                       className="w-full bg-muted border-0 rounded-xl px-4 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-2 focus:ring-ocean-400/20 transition-all"
                     >
-                      <option value="">Select a barangay...</option>
-                      {availableBarangays.map((b) => (
-                        <option key={b} value={b}>
-                          {b}
+                      <option value="">Select a school...</option>
+                      {availableSchools.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
                         </option>
                       ))}
                     </select>
-                    {availableBarangays.length === 0 && (
+                    {availableSchools.length === 0 && (
                       <p className="text-xs text-coral-400 mt-1 font-body">
-                        All barangays have active validators assigned
+                        All schools have active validators assigned
                       </p>
                     )}
                   </div>
@@ -417,7 +446,7 @@ export default function AdminValidatorsPage() {
                   type="submit"
                   isLoading={creating}
                   size="sm"
-                  disabled={!newBarangay}
+                  disabled={!newSchool}
                 >
                   Create Validator
                 </Button>
@@ -516,10 +545,10 @@ export default function AdminValidatorsPage() {
                           {v.total_validations !== 1 ? "s" : ""}
                         </span>
                         <span className="flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5" />
-                          {v.assigned_barangay || (
+                          <GraduationCap className="w-3.5 h-3.5" />
+                          {v.assigned_school || (
                             <span className="italic text-coral-400">
-                              No barangay
+                              No school
                             </span>
                           )}
                         </span>
@@ -528,34 +557,34 @@ export default function AdminValidatorsPage() {
 
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <select
-                        value={v.assigned_barangay || ""}
+                        value={v.assigned_school || ""}
                         onChange={(e) => {
                           if (e.target.value) {
-                            handleAssignBarangay(v.id, e.target.value);
+                            handleAssignSchool(v.id, e.target.value);
                           }
                         }}
                         disabled={actionLoading === v.id}
-                        className="bg-muted border-0 rounded-lg px-2 py-1.5 text-xs font-body text-foreground focus:outline-none focus:ring-2 focus:ring-ocean-400/20 max-w-[160px]"
-                        title="Assign barangay"
+                        className="bg-muted border-0 rounded-lg px-2 py-1.5 text-xs font-body text-foreground focus:outline-none focus:ring-2 focus:ring-ocean-400/20 max-w-[200px]"
+                        title="Assign school"
                       >
                         <option value="">
-                          {v.assigned_barangay
-                            ? v.assigned_barangay
-                            : "Assign barangay..."}
+                          {v.assigned_school
+                            ? v.assigned_school
+                            : "Assign school..."}
                         </option>
-                        {MARIVELES_BARANGAYS.filter(
-                          (b) =>
-                            b === v.assigned_barangay ||
-                            !takenBarangays.includes(b) ||
+                        {ALL_SCHOOLS.filter(
+                          (s) =>
+                            s === v.assigned_school ||
+                            !takenSchools.includes(s) ||
                             !validators.find(
                               (vx) =>
                                 vx.id !== v.id &&
-                                vx.assigned_barangay === b &&
+                                vx.assigned_school === s &&
                                 vx.is_active,
                             ),
-                        ).map((b) => (
-                          <option key={b} value={b}>
-                            {b}
+                        ).map((s) => (
+                          <option key={s} value={s}>
+                            {s}
                           </option>
                         ))}
                       </select>
@@ -616,10 +645,10 @@ export default function AdminValidatorsPage() {
                     <span className="text-xs font-body text-muted-fg">
                       Joined {new Date(v.created_at).toLocaleDateString()}
                     </span>
-                    {v.assigned_barangay && (
+                    {v.assigned_school && (
                       <Badge variant="info">
-                        <MapPin className="w-3 h-3 mr-1 inline" />
-                        {v.assigned_barangay}
+                        <School className="w-3 h-3 mr-1 inline" />
+                        {v.assigned_school}
                       </Badge>
                     )}
                   </div>

@@ -20,6 +20,7 @@ CREATE TABLE users (
   role              user_role      NOT NULL DEFAULT 'applicant',
   is_active         BOOLEAN        NOT NULL DEFAULT true,
   assigned_barangay VARCHAR(100)   DEFAULT NULL,
+  assigned_school   VARCHAR(255)   DEFAULT NULL,
   created_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
   updated_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW()
 );
@@ -204,6 +205,39 @@ CREATE POLICY "Deny delete access to barangay_access"
   ON public.barangay_access FOR DELETE TO anon, authenticated
   USING (false);
 
+CREATE TABLE school_access (
+  id                    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  school_name           VARCHAR(255) NOT NULL UNIQUE,
+  education_level       education_level NOT NULL,
+  is_open               BOOLEAN      NOT NULL DEFAULT false,
+  submission_open_date  DATE,
+  submission_close_date DATE,
+  updated_by            INT          REFERENCES users (id),
+  created_at            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at            TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_school_access_level ON school_access (education_level);
+CREATE INDEX idx_school_access_open ON school_access (is_open);
+
+ALTER TABLE school_access ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read access to school_access"
+  ON public.school_access FOR SELECT TO anon, authenticated
+  USING (true);
+
+CREATE POLICY "Deny write access to school_access"
+  ON public.school_access FOR INSERT TO anon, authenticated
+  WITH CHECK (false);
+
+CREATE POLICY "Deny update access to school_access"
+  ON public.school_access FOR UPDATE TO anon, authenticated
+  USING (false) WITH CHECK (false);
+
+CREATE POLICY "Deny delete access to school_access"
+  ON public.school_access FOR DELETE TO anon, authenticated
+  USING (false);
+
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -230,6 +264,9 @@ CREATE TRIGGER trg_registration_links_updated_at
 
 CREATE TRIGGER trg_barangay_access_updated_at
   BEFORE UPDATE ON barangay_access FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER trg_school_access_updated_at
+  BEFORE UPDATE ON school_access FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 INSERT INTO users (email, password_hash, full_name, role)
 VALUES (

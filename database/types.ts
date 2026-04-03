@@ -31,6 +31,7 @@ export interface UserRow {
   role: UserRole;
   is_active: boolean;
   assigned_barangay: string | null;
+  assigned_school: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -136,6 +137,18 @@ export interface RegistrationLinkRow {
 export interface BarangayAccessRow {
   id: number;
   barangay: string;
+  is_open: boolean;
+  submission_open_date: string | null;
+  submission_close_date: string | null;
+  updated_by: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SchoolAccessRow {
+  id: number;
+  school_name: string;
+  education_level: EducationLevel;
   is_open: boolean;
   submission_open_date: string | null;
   submission_close_date: string | null;

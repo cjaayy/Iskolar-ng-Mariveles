@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 
     let q = supabase
       .from("users")
-      .select("id, email, full_name, is_active, assigned_barangay, created_at")
+      .select("id, email, full_name, is_active, assigned_school, created_at")
       .eq("role", "validator")
       .order("created_at", { ascending: false });
 
@@ -87,11 +87,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { email, fullName, password, assignedBarangay } = body as {
+    const { email, fullName, password, assignedSchool } = body as {
       email?: string;
       fullName?: string;
       password?: string;
-      assignedBarangay?: string;
+      assignedSchool?: string;
     };
 
     if (!email || !fullName || !password) {
@@ -101,9 +101,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!assignedBarangay) {
+    if (!assignedSchool) {
       return NextResponse.json(
-        { error: "Assigned barangay is required" },
+        { error: "Assigned school is required" },
         { status: 400 },
       );
     }
@@ -122,19 +122,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { data: barangayTaken } = await supabase
+    const { data: schoolTaken } = await supabase
       .from("users")
       .select("id, full_name")
       .eq("role", "validator")
-      .eq("assigned_barangay", assignedBarangay)
+      .eq("assigned_school", assignedSchool)
       .eq("is_active", true)
       .limit(1)
       .maybeSingle();
 
-    if (barangayTaken) {
+    if (schoolTaken) {
       return NextResponse.json(
         {
-          error: `Barangay ${assignedBarangay} is already assigned to ${barangayTaken.full_name}`,
+          error: `School "${assignedSchool}" is already assigned to ${schoolTaken.full_name}`,
         },
         { status: 409 },
       );
@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
         password_hash: hash,
         full_name: fullName,
         role: "validator",
-        assigned_barangay: assignedBarangay,
+        assigned_school: assignedSchool,
       })
       .select("id")
       .single();
@@ -184,10 +184,10 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { id, action, assignedBarangay } = body as {
+    const { id, action, assignedSchool } = body as {
       id?: number;
-      action?: "activate" | "deactivate" | "assign_barangay";
-      assignedBarangay?: string;
+      action?: "activate" | "deactivate" | "assign_school";
+      assignedSchool?: string;
     };
 
     if (!id || !action) {
@@ -230,10 +230,10 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ message: "Validator deactivated" });
     }
 
-    if (action === "assign_barangay") {
-      if (!assignedBarangay) {
+    if (action === "assign_school") {
+      if (!assignedSchool) {
         return NextResponse.json(
-          { error: "assignedBarangay is required" },
+          { error: "assignedSchool is required" },
           { status: 400 },
         );
       }
@@ -241,7 +241,7 @@ export async function PATCH(req: NextRequest) {
         .from("users")
         .select("id, full_name")
         .eq("role", "validator")
-        .eq("assigned_barangay", assignedBarangay)
+        .eq("assigned_school", assignedSchool)
         .eq("is_active", true)
         .neq("id", id)
         .limit(1)
@@ -250,7 +250,7 @@ export async function PATCH(req: NextRequest) {
       if (taken) {
         return NextResponse.json(
           {
-            error: `Barangay ${assignedBarangay} is already assigned to ${taken.full_name}`,
+            error: `School "${assignedSchool}" is already assigned to ${taken.full_name}`,
           },
           { status: 409 },
         );
@@ -258,10 +258,10 @@ export async function PATCH(req: NextRequest) {
 
       const { error } = await supabase
         .from("users")
-        .update({ assigned_barangay: assignedBarangay })
+        .update({ assigned_school: assignedSchool })
         .eq("id", id);
       if (error) throw error;
-      return NextResponse.json({ message: "Barangay assigned" });
+      return NextResponse.json({ message: "School assigned" });
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });

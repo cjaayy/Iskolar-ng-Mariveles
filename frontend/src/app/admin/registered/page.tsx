@@ -23,26 +23,32 @@ import {
 } from "lucide-react";
 import { Card, Badge, Skeleton, Button } from "@/components/ui";
 
-const MARIVELES_BARANGAYS = [
-  "Alas-asin",
-  "Alion",
-  "Balon-Anito",
-  "Baseco Country (Bataan Shipyard)",
-  "Batangas II",
-  "Biaan",
-  "Cabcaben",
-  "Camaya",
-  "Casili (Cataning)",
-  "Ipag",
-  "Lucanin",
-  "Malaya",
-  "Maligaya",
-  "Mt. View",
-  "Poblacion",
-  "San Carlos",
-  "San Isidro",
-  "Sisiman",
-  "Townsite",
+type EducationLevel = "elementary" | "high_school" | "senior_high";
+
+const EDUCATION_LEVELS: {
+  value: EducationLevel;
+  label: string;
+  color: string;
+  bgColor: string;
+}[] = [
+  {
+    value: "elementary",
+    label: "Elementary",
+    color: "text-emerald-600 dark:text-emerald-400",
+    bgColor: "bg-emerald-50 dark:bg-emerald-400/10",
+  },
+  {
+    value: "high_school",
+    label: "High School",
+    color: "text-blue-600 dark:text-blue-400",
+    bgColor: "bg-blue-50 dark:bg-blue-400/10",
+  },
+  {
+    value: "senior_high",
+    label: "Senior High",
+    color: "text-purple-600 dark:text-purple-400",
+    bgColor: "bg-purple-50 dark:bg-purple-400/10",
+  },
 ];
 
 interface ApplicantRow {
@@ -51,6 +57,8 @@ interface ApplicantRow {
   applicant_name: string;
   email: string;
   barangay: string | null;
+  current_school: string | null;
+  year_level: string | null;
   status: string;
   submitted_at: string | null;
   total_requirements: number;
@@ -153,7 +161,9 @@ export default function RegisteredApplicantsPage() {
   const [allApplicants, setAllApplicants] = useState<ApplicantRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filterBarangay, setFilterBarangay] = useState("");
+  const [filterSchool, setFilterSchool] = useState("");
+  const [filterEducationLevel, setFilterEducationLevel] = useState<EducationLevel | "">("");
+  const [availableSchools, setAvailableSchools] = useState<string[]>([]);
 
   const [modalApplicant, setModalApplicant] = useState<ApplicantRow | null>(
     null,
@@ -174,7 +184,8 @@ export default function RegisteredApplicantsPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (filterBarangay) params.set("barangay", filterBarangay);
+      if (filterSchool) params.set("school", filterSchool);
+      if (filterEducationLevel) params.set("educationLevel", filterEducationLevel);
 
       const res = await fetch(`/api/admin/registered?${params.toString()}`, {
         headers: { "x-admin-id": adminId },
@@ -184,13 +195,22 @@ export default function RegisteredApplicantsPage() {
         const grouped: Record<string, ApplicantRow[]> = data.grouped || {};
         const flat: ApplicantRow[] = Object.values(grouped).flat();
         setAllApplicants(flat);
+        
+        // Extract unique schools for the filter dropdown
+        const schools = new Set<string>();
+        for (const applicant of flat) {
+          if (applicant.current_school) {
+            schools.add(applicant.current_school);
+          }
+        }
+        setAvailableSchools(Array.from(schools).sort());
       }
     } catch (e) {
       console.error("[AdminRegistered] Failed to load", e);
     } finally {
       setLoading(false);
     }
-  }, [adminId, filterBarangay]);
+  }, [adminId, filterSchool, filterEducationLevel]);
 
   useEffect(() => {
     load();
@@ -247,11 +267,29 @@ export default function RegisteredApplicantsPage() {
     (a) => a.pending_requirements > 0 || a.submitted_requirements === 0,
   ).length;
 
-  const barangayCounts: Record<string, number> = {};
+  // Count by school instead of barangay
+  const schoolCounts: Record<string, number> = {};
   for (const a of allApplicants) {
-    const brgy = a.barangay || "Unknown";
-    barangayCounts[brgy] = (barangayCounts[brgy] || 0) + 1;
+    const school = a.current_school || "Unknown School";
+    schoolCounts[school] = (schoolCounts[school] || 0) + 1;
   }
+
+  // Helper to determine education level from year_level
+  const getEducationLevel = (yearLevel: string | null): EducationLevel | null => {
+    if (!yearLevel) return null;
+    const elementaryGrades = ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"];
+    const highSchoolGrades = ["Grade 7", "Grade 8", "Grade 9", "Grade 10"];
+    const seniorHighGrades = ["Grade 11", "Grade 12"];
+    
+    if (elementaryGrades.includes(yearLevel)) return "elementary";
+    if (highSchoolGrades.includes(yearLevel)) return "high_school";
+    if (seniorHighGrades.includes(yearLevel)) return "senior_high";
+    return null;
+  };
+
+  const getLevelConfig = (level: EducationLevel | null) => {
+    return EDUCATION_LEVELS.find((l) => l.value === level) || null;
+  };
 
   const detail = modalApplicant
     ? detailCache[modalApplicant.application_id]
@@ -270,7 +308,7 @@ export default function RegisteredApplicantsPage() {
           </h1>
           <p className="font-body text-sm text-muted-fg mt-1">
             {allApplicants.length} applicant
-            {allApplicants.length !== 1 ? "s" : ""} across all barangays
+            {allApplicants.length !== 1 ? "s" : ""} across all schools
             {pendingCount > 0 && (
               <span className="text-amber-500 font-medium">
                 {" "}
@@ -292,6 +330,39 @@ export default function RegisteredApplicantsPage() {
         </Button>
       </div>
 
+      {/* Education Level Filter */}
+      <Card padding="md" className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <GraduationCap className="w-4 h-4 text-muted-fg" />
+          <span className="text-sm font-body text-muted-fg">Level:</span>
+        </div>
+        <button
+          onClick={() => setFilterEducationLevel("")}
+          className={`px-3 py-1.5 rounded-full text-xs font-body font-medium transition-colors ${
+            filterEducationLevel === ""
+              ? "bg-ocean-100 dark:bg-ocean-400/20 text-ocean-600 dark:text-ocean-400"
+              : "bg-muted hover:bg-muted/80 text-muted-fg"
+          }`}
+        >
+          All Levels
+        </button>
+        {EDUCATION_LEVELS.map((level) => (
+          <button
+            key={level.value}
+            onClick={() =>
+              setFilterEducationLevel(filterEducationLevel === level.value ? "" : level.value)
+            }
+            className={`px-3 py-1.5 rounded-full text-xs font-body font-medium transition-colors ${
+              filterEducationLevel === level.value
+                ? `${level.bgColor} ${level.color}`
+                : "bg-muted hover:bg-muted/80 text-muted-fg"
+            }`}
+          >
+            {level.label}
+          </button>
+        ))}
+      </Card>
+
       <div className="flex flex-col sm:flex-row gap-3">
         <Card padding="md" className="flex-1">
           <div className="relative">
@@ -308,35 +379,41 @@ export default function RegisteredApplicantsPage() {
         <div className="relative">
           <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg z-10" />
           <select
-            value={filterBarangay}
-            onChange={(e) => setFilterBarangay(e.target.value)}
-            className="bg-card-bg border border-card-border rounded-xl pl-10 pr-8 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-2 focus:ring-ocean-400/20 focus:border-ocean-400 transition-all appearance-none h-full"
+            value={filterSchool}
+            onChange={(e) => setFilterSchool(e.target.value)}
+            className="bg-card-bg border border-card-border rounded-xl pl-10 pr-8 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-2 focus:ring-ocean-400/20 focus:border-ocean-400 transition-all appearance-none h-full min-w-[200px]"
           >
-            <option value="">All Barangays</option>
-            {MARIVELES_BARANGAYS.map((b) => (
-              <option key={b} value={b}>
-                {b}
+            <option value="">All Schools</option>
+            {availableSchools.map((s) => (
+              <option key={s} value={s}>
+                {s}
               </option>
             ))}
           </select>
         </div>
       </div>
 
-      {!filterBarangay && Object.keys(barangayCounts).length > 0 && (
+      {!filterSchool && Object.keys(schoolCounts).length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {Object.entries(barangayCounts)
+          {Object.entries(schoolCounts)
             .sort(([a], [b]) => a.localeCompare(b))
-            .map(([brgy, count]) => (
+            .slice(0, 10)
+            .map(([school, count]) => (
               <button
-                key={brgy}
-                onClick={() => setFilterBarangay(brgy)}
+                key={school}
+                onClick={() => setFilterSchool(school)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-ocean-50 dark:bg-ocean-400/10 text-ocean-500 dark:text-ocean-400 text-xs font-body font-medium hover:bg-ocean-100 dark:hover:bg-ocean-400/20 transition-colors"
               >
-                <MapPin className="w-3 h-3" />
-                {brgy}
+                <GraduationCap className="w-3 h-3" />
+                <span className="max-w-[150px] truncate">{school}</span>
                 <span className="font-bold">{count}</span>
               </button>
             ))}
+          {Object.keys(schoolCounts).length > 10 && (
+            <span className="text-xs text-muted-fg self-center">
+              +{Object.keys(schoolCounts).length - 10} more schools
+            </span>
+          )}
         </div>
       )}
 
@@ -390,19 +467,39 @@ export default function RegisteredApplicantsPage() {
                   <Card hover padding="md">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="min-w-0">
-                          <p className="text-sm font-body font-semibold text-foreground truncate">
-                            {idx + 1}. {a.applicant_name}
-                          </p>
-                          <div className="flex items-center gap-2 text-xs text-muted-fg font-body">
-                            <span className="truncate">{a.email}</span>
-                            {a.barangay && (
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <p className="text-sm font-body font-semibold text-foreground truncate">
+                              {idx + 1}. {a.applicant_name}
+                            </p>
+                            {(() => {
+                              const level = getEducationLevel(a.year_level);
+                              const config = getLevelConfig(level);
+                              if (config) {
+                                return (
+                                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${config.bgColor} ${config.color}`}>
+                                    {config.label}
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-fg font-body flex-wrap">
+                            <span className="truncate max-w-[180px]">{a.email}</span>
+                            {a.current_school && (
                               <>
                                 <span>&middot;</span>
-                                <span className="inline-flex items-center gap-0.5">
-                                  <MapPin className="w-3 h-3" />
-                                  {a.barangay}
+                                <span className="inline-flex items-center gap-0.5 truncate max-w-[180px]">
+                                  <GraduationCap className="w-3 h-3 shrink-0" />
+                                  {a.current_school}
                                 </span>
+                              </>
+                            )}
+                            {a.year_level && (
+                              <>
+                                <span>&middot;</span>
+                                <span>{a.year_level}</span>
                               </>
                             )}
                           </div>

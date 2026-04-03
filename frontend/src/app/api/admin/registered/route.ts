@@ -20,6 +20,8 @@ interface ApplicantRow {
   applicant_name: string;
   email: string;
   barangay: string | null;
+  current_school: string | null;
+  year_level: string | null;
   status: string;
   submitted_at: string | null;
   total_requirements: number;
@@ -38,7 +40,8 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = req.nextUrl;
     const search = searchParams.get("search") || undefined;
-    const barangay = searchParams.get("barangay") || undefined;
+    const school = searchParams.get("school") || undefined;
+    const educationLevel = searchParams.get("educationLevel") || undefined;
 
     let q = supabase
       .from("applications")
@@ -51,6 +54,8 @@ export async function GET(req: NextRequest) {
         applicants!inner(
           id,
           barangay,
+          current_school,
+          year_level,
           users!inner(full_name, email)
         )
       `,
@@ -58,8 +63,8 @@ export async function GET(req: NextRequest) {
       .neq("status", "draft")
       .order("updated_at", { ascending: false });
 
-    if (barangay) {
-      q = q.eq("applicants.barangay", barangay);
+    if (school) {
+      q = q.eq("applicants.current_school", school);
     }
     if (search) {
       q = q.or(
@@ -71,7 +76,9 @@ export async function GET(req: NextRequest) {
     const { data: appRows, error: appError } = await q;
     if (appError) throw appError;
 
-    const appIds = (appRows ?? []).map((r: Record<string, any>) => r.id);
+    const appIds = (appRows ?? []).map(
+      (r: Record<string, unknown>) => r.id as number,
+    );
     let submissions: { application_id: number; status: string }[] = [];
     if (appIds.length > 0) {
       const { data: subs, error: subError } = await supabase
@@ -108,26 +115,30 @@ export async function GET(req: NextRequest) {
     }
 
     const rows: ApplicantRow[] = (appRows ?? []).map(
-      (r: Record<string, any>) => {
+      (r: Record<string, unknown>) => {
         const applicant = r.applicants as unknown as {
           id: number;
           barangay: string | null;
+          current_school: string | null;
+          year_level: string | null;
           users: { full_name: string; email: string };
         };
-        const counts = countsByApp[r.id] || {
+        const counts = countsByApp[r.id as number] || {
           submitted: 0,
           approved: 0,
           pending: 0,
           rejected: 0,
         };
         return {
-          application_id: r.id,
+          application_id: r.id as number,
           applicant_id: applicant.id,
           applicant_name: applicant.users.full_name,
           email: applicant.users.email,
           barangay: applicant.barangay,
-          status: r.status,
-          submitted_at: r.submitted_at,
+          current_school: applicant.current_school,
+          year_level: applicant.year_level,
+          status: r.status as string,
+          submitted_at: r.submitted_at as string | null,
           total_requirements: REQUIREMENT_CONFIGS.length,
           submitted_requirements: counts.submitted,
           approved_requirements: counts.approved,
@@ -137,27 +148,57 @@ export async function GET(req: NextRequest) {
       },
     );
 
-    const grouped: Record<string, ApplicantRow[]> = {};
-    for (const row of rows) {
-      const brgy = row.barangay || "Unknown";
-      if (!grouped[brgy]) grouped[brgy] = [];
-      grouped[brgy].push(row);
+    // Filter by education level if specified (based on year_level)
+    let filteredRows = rows;
+    if (educationLevel) {
+      const elementaryGrades = [
+        "Grade 1",
+        "Grade 2",
+        "Grade 3",
+        "Grade 4",
+        "Grade 5",
+        "Grade 6",
+      ];
+      const highSchoolGrades = ["Grade 7", "Grade 8", "Grade 9", "Grade 10"];
+      const seniorHighGrades = ["Grade 11", "Grade 12"];
+
+      filteredRows = rows.filter((row) => {
+        if (!row.year_level) return false;
+        if (educationLevel === "elementary") {
+          return elementaryGrades.includes(row.year_level);
+        }
+        if (educationLevel === "high_school") {
+          return highSchoolGrades.includes(row.year_level);
+        }
+        if (educationLevel === "senior_high") {
+          return seniorHighGrades.includes(row.year_level);
+        }
+        return true;
+      });
     }
 
-    const barangaySummary = Object.entries(grouped)
-      .map(([barangayName, applicants]) => ({
-        barangay: barangayName,
+    // Group by school instead of barangay
+    const grouped: Record<string, ApplicantRow[]> = {};
+    for (const row of filteredRows) {
+      const schoolName = row.current_school || "Unknown School";
+      if (!grouped[schoolName]) grouped[schoolName] = [];
+      grouped[schoolName].push(row);
+    }
+
+    const schoolSummary = Object.entries(grouped)
+      .map(([schoolName, applicants]) => ({
+        school: schoolName,
         totalApplicants: applicants.length,
         pendingValidation: applicants.filter(
           (a) => a.pending_requirements > 0 || a.submitted_requirements === 0,
         ).length,
       }))
-      .sort((a, b) => a.barangay.localeCompare(b.barangay));
+      .sort((a, b) => a.school.localeCompare(b.school));
 
     return NextResponse.json({
       grouped,
-      summary: barangaySummary,
-      total: rows.length,
+      summary: schoolSummary,
+      total: filteredRows.length,
     });
   } catch (err) {
     console.error("[GET /api/admin/registered]", err);
