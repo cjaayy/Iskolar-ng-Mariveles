@@ -20,9 +20,6 @@ import {
   ExternalLink,
   Image as ImageIcon,
   User,
-  Mail,
-  Phone,
-  MapPin,
   Heart,
   GraduationCap,
 } from "lucide-react";
@@ -496,7 +493,11 @@ export default function AdminApplicationDetailPage() {
                     <motion.div
                       layoutId="admin-applicant-info-tab-underline"
                       className="absolute bottom-0 left-0 right-0 h-0.5 bg-ocean-400"
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 30,
+                      }}
                     />
                   )}
                 </button>
@@ -507,7 +508,10 @@ export default function AdminApplicationDetailPage() {
               <div className="space-y-6">
                 <SectionTitle>Basic Details</SectionTitle>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-                  <InfoRow label="Full Name" value={application.applicant_name} />
+                  <InfoRow
+                    label="Full Name"
+                    value={application.applicant_name}
+                  />
                   <InfoRow label="Email" value={application.applicant_email} />
                   <InfoRow
                     label="Birthdate"
@@ -521,8 +525,14 @@ export default function AdminApplicationDetailPage() {
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-                  <InfoRow label="Maiden Name" value={application.maiden_name} />
-                  <InfoRow label="Spouse Name" value={application.spouse_name} />
+                  <InfoRow
+                    label="Maiden Name"
+                    value={application.maiden_name}
+                  />
+                  <InfoRow
+                    label="Spouse Name"
+                    value={application.spouse_name}
+                  />
                   <InfoRow
                     label="Spouse Occupation"
                     value={application.spouse_occupation}
@@ -592,7 +602,10 @@ export default function AdminApplicationDetailPage() {
                 </div>
                 <SectionTitle>Guardian&rsquo;s Information</SectionTitle>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-                  <InfoRow label="Full Name" value={application.guardian_name} />
+                  <InfoRow
+                    label="Full Name"
+                    value={application.guardian_name}
+                  />
                   <InfoRow
                     label="Relationship"
                     value={application.guardian_relation}
@@ -613,7 +626,10 @@ export default function AdminApplicationDetailPage() {
                     label="School Name"
                     value={application.primary_school}
                   />
-                  <InfoRow label="Address" value={application.primary_address} />
+                  <InfoRow
+                    label="Address"
+                    value={application.primary_address}
+                  />
                   <InfoRow
                     label="Year Graduated"
                     value={application.primary_year_graduated}
@@ -640,8 +656,14 @@ export default function AdminApplicationDetailPage() {
                     label="School Name"
                     value={application.tertiary_school}
                   />
-                  <InfoRow label="Program" value={application.tertiary_program} />
-                  <InfoRow label="Address" value={application.tertiary_address} />
+                  <InfoRow
+                    label="Program"
+                    value={application.tertiary_program}
+                  />
+                  <InfoRow
+                    label="Address"
+                    value={application.tertiary_address}
+                  />
                   <InfoRow
                     label="Year Graduated"
                     value={application.tertiary_year_graduated}
