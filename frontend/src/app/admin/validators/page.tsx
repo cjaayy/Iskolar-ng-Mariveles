@@ -19,8 +19,6 @@ import {
 } from "lucide-react";
 import { Card, Badge, Skeleton, Button } from "@/components/ui";
 
-type EducationLevel = "elementary" | "high_school" | "senior_high";
-
 // Schools list - same as in registration form
 const ALL_SCHOOLS = [
   // Public Elementary Schools
