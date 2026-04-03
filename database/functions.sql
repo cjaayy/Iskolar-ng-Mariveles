@@ -48,8 +48,8 @@ BEGIN
   VALUES (p_email, p_password_hash, p_full_name, 'applicant')
   RETURNING id INTO v_user_id;
 
-  INSERT INTO applicants (user_id, address, barangay, current_school, year_level)
-  VALUES (v_user_id, p_address, p_barangay, p_current_school, p_year_level)
+  INSERT INTO applicants (user_id, house_street, town, barangay, current_school, year_level)
+  VALUES (v_user_id, p_address, 'Mariveles', p_barangay, p_current_school, p_year_level)
   RETURNING id INTO v_applicant_id;
 
   INSERT INTO applications (applicant_id, status)
