@@ -47,22 +47,14 @@ const EDUCATION_LEVEL_CONFIG: Record<
 const YEAR_LEVELS: Record<EducationLevel, string[]> = {
   elementary: [
     "Grade 1",
-    "Grade 2", 
+    "Grade 2",
     "Grade 3",
     "Grade 4",
     "Grade 5",
     "Grade 6",
   ],
-  high_school: [
-    "Grade 7",
-    "Grade 8",
-    "Grade 9",
-    "Grade 10",
-  ],
-  senior_high: [
-    "Grade 11",
-    "Grade 12",
-  ],
+  high_school: ["Grade 7", "Grade 8", "Grade 9", "Grade 10"],
+  senior_high: ["Grade 11", "Grade 12"],
 };
 
 const SCHOOLS_BY_LEVEL: Record<EducationLevel, string[]> = {
@@ -177,7 +169,9 @@ export default function RegisterPage({
     null,
   );
 
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [barangay, setBarangay] = useState("");
   const [street, setStreet] = useState("");
@@ -224,7 +218,8 @@ export default function RegisterPage({
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!fullName.trim()) newErrors.fullName = "Full name is required";
+    if (!firstName.trim()) newErrors.firstName = "First name is required";
+    if (!lastName.trim()) newErrors.lastName = "Last name is required";
     if (!email.trim()) newErrors.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(email))
       newErrors.email = "Invalid email format";
@@ -249,9 +244,15 @@ export default function RegisterPage({
       ? `${street.trim()}, ${barangay}, Mariveles, Bataan`
       : `${barangay}, Mariveles, Bataan`;
 
-    const schoolName = currentSchool === "Other (Please specify)" 
-      ? otherSchool.trim() 
-      : currentSchool;
+    // Combine name parts: "LastName, FirstName MiddleName" or "LastName, FirstName"
+    const fullName = middleName.trim()
+      ? `${lastName.trim()}, ${firstName.trim()} ${middleName.trim()}`
+      : `${lastName.trim()}, ${firstName.trim()}`;
+
+    const schoolName =
+      currentSchool === "Other (Please specify)"
+        ? otherSchool.trim()
+        : currentSchool;
 
     try {
       const res = await fetch("/api/auth/register", {
@@ -511,29 +512,74 @@ export default function RegisterPage({
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            {/* First Name */}
             <div>
               <label className="block text-xs font-body text-muted-fg mb-1">
-                Full Name
+                First Name
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
                 <input
                   type="text"
-                  value={fullName}
+                  value={firstName}
                   onChange={(e) => {
-                    setFullName(e.target.value);
-                    setErrors((p) => ({ ...p, fullName: "" }));
+                    setFirstName(e.target.value);
+                    setErrors((p) => ({ ...p, firstName: "" }));
                   }}
-                  placeholder="Juan Dela Cruz"
+                  placeholder="Juan"
                   className={`w-full bg-muted border-2 rounded-xl pl-10 pr-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-fg focus:outline-none focus:ring-2 transition-all ${
-                    errors.fullName
+                    errors.firstName
                       ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20"
                       : "border-transparent focus:border-ocean-400 focus:ring-ocean-400/20"
                   }`}
                 />
               </div>
-              {errors.fullName && (
-                <p className="text-xs text-coral-400 mt-1">{errors.fullName}</p>
+              {errors.firstName && (
+                <p className="text-xs text-coral-400 mt-1">{errors.firstName}</p>
+              )}
+            </div>
+
+            {/* Middle Name (Optional) */}
+            <div>
+              <label className="block text-xs font-body text-muted-fg mb-1">
+                Middle Name <span className="text-white/50">(Optional)</span>
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
+                <input
+                  type="text"
+                  value={middleName}
+                  onChange={(e) => setMiddleName(e.target.value)}
+                  placeholder="Santos"
+                  className="w-full bg-muted border-2 rounded-xl pl-10 pr-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-fg focus:outline-none focus:ring-2 transition-all border-transparent focus:border-ocean-400 focus:ring-ocean-400/20"
+                />
+              </div>
+            </div>
+
+            {/* Last Name */}
+            <div>
+              <label className="block text-xs font-body text-muted-fg mb-1">
+                Last Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg" />
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => {
+                    setLastName(e.target.value);
+                    setErrors((p) => ({ ...p, lastName: "" }));
+                  }}
+                  placeholder="Dela Cruz"
+                  className={`w-full bg-muted border-2 rounded-xl pl-10 pr-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-fg focus:outline-none focus:ring-2 transition-all ${
+                    errors.lastName
+                      ? "border-coral-400 focus:border-coral-400 focus:ring-coral-400/20"
+                      : "border-transparent focus:border-ocean-400 focus:ring-ocean-400/20"
+                  }`}
+                />
+              </div>
+              {errors.lastName && (
+                <p className="text-xs text-coral-400 mt-1">{errors.lastName}</p>
               )}
             </div>
 
@@ -624,7 +670,11 @@ export default function RegisterPage({
                       value={currentSchool}
                       onChange={(e) => {
                         setCurrentSchool(e.target.value);
-                        setErrors((p) => ({ ...p, currentSchool: "", otherSchool: "" }));
+                        setErrors((p) => ({
+                          ...p,
+                          currentSchool: "",
+                          otherSchool: "",
+                        }));
                         if (e.target.value !== "Other (Please specify)") {
                           setOtherSchool("");
                         }
@@ -644,7 +694,9 @@ export default function RegisterPage({
                     </select>
                   </div>
                   {errors.currentSchool && (
-                    <p className="text-xs text-coral-400 mt-1">{errors.currentSchool}</p>
+                    <p className="text-xs text-coral-400 mt-1">
+                      {errors.currentSchool}
+                    </p>
                   )}
                 </div>
 
@@ -671,7 +723,9 @@ export default function RegisterPage({
                       />
                     </div>
                     {errors.otherSchool && (
-                      <p className="text-xs text-coral-400 mt-1">{errors.otherSchool}</p>
+                      <p className="text-xs text-coral-400 mt-1">
+                        {errors.otherSchool}
+                      </p>
                     )}
                   </div>
                 )}
@@ -703,7 +757,9 @@ export default function RegisterPage({
                     </select>
                   </div>
                   {errors.yearLevel && (
-                    <p className="text-xs text-coral-400 mt-1">{errors.yearLevel}</p>
+                    <p className="text-xs text-coral-400 mt-1">
+                      {errors.yearLevel}
+                    </p>
                   )}
                 </div>
               </>
