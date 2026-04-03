@@ -46,14 +46,13 @@ interface BasicInfoForm {
   guardian_relation: string;
   guardian_contact: string;
   primary_school: string;
-  primary_address: string;
-  primary_year_graduated: string;
+  primary_year_level: string;
   jhs_school: string;
-  jhs_address: string;
-  jhs_year_graduated: string;
+  jhs_year_level: string;
   shs_school: string;
-  shs_address: string;
-  shs_year_graduated: string;
+  shs_year_level: string;
+  current_school: string;
+  year_level: string;
 }
 
 const emptyForm: BasicInfoForm = {
@@ -82,14 +81,13 @@ const emptyForm: BasicInfoForm = {
   guardian_relation: "",
   guardian_contact: "",
   primary_school: "",
-  primary_address: "",
-  primary_year_graduated: "",
+  primary_year_level: "",
   jhs_school: "",
-  jhs_address: "",
-  jhs_year_graduated: "",
+  jhs_year_level: "",
   shs_school: "",
-  shs_address: "",
-  shs_year_graduated: "",
+  shs_year_level: "",
+  current_school: "",
+  year_level: "",
 };
 
 const GENDER_OPTIONS = [
@@ -209,23 +207,13 @@ export default function BasicInfoPage() {
         guardian_relation: data.guardian_relation ?? "",
         guardian_contact: data.guardian_contact ?? "",
         primary_school: data.primary_school ?? "",
-        primary_address: data.primary_address ?? "",
-        primary_year_graduated:
-          data.primary_year_graduated != null
-            ? String(data.primary_year_graduated)
-            : "",
+        primary_year_level: data.primary_year_level ?? "",
         jhs_school: data.secondary_school ?? "",
-        jhs_address: data.secondary_address ?? "",
-        jhs_year_graduated:
-          data.secondary_year_graduated != null
-            ? String(data.secondary_year_graduated)
-            : "",
+        jhs_year_level: data.secondary_year_level ?? "",
         shs_school: data.tertiary_school ?? "",
-        shs_address: data.tertiary_address ?? "",
-        shs_year_graduated:
-          data.tertiary_year_graduated != null
-            ? String(data.tertiary_year_graduated)
-            : "",
+        shs_year_level: data.tertiary_year_level ?? "",
+        current_school: data.current_school ?? "",
+        year_level: data.year_level ?? "",
       });
     } catch {
       addToast("Failed to load basic information", "error");
@@ -249,18 +237,14 @@ export default function BasicInfoPage() {
       if (payload.weight_kg) payload.weight_kg = Number(payload.weight_kg);
 
       payload.secondary_school = payload.jhs_school;
-      payload.secondary_address = payload.jhs_address;
-      payload.secondary_year_graduated = payload.jhs_year_graduated;
+      payload.secondary_year_level = payload.jhs_year_level;
       delete payload.jhs_school;
-      delete payload.jhs_address;
-      delete payload.jhs_year_graduated;
+      delete payload.jhs_year_level;
 
       payload.tertiary_school = payload.shs_school;
-      payload.tertiary_address = payload.shs_address;
-      payload.tertiary_year_graduated = payload.shs_year_graduated;
+      payload.tertiary_year_level = payload.shs_year_level;
       delete payload.shs_school;
-      delete payload.shs_address;
-      delete payload.shs_year_graduated;
+      delete payload.shs_year_level;
 
       const res = await fetch("/api/me/basic-info", {
         method: "PUT",
@@ -644,31 +628,68 @@ function ParentsTab({ form, update }: TabProps) {
 }
 
 function EducationTab({ form, update }: TabProps) {
+  const PRIMARY_YEAR_LEVELS = [
+    { label: "Grade 1", value: "Grade 1" },
+    { label: "Grade 2", value: "Grade 2" },
+    { label: "Grade 3", value: "Grade 3" },
+    { label: "Grade 4", value: "Grade 4" },
+    { label: "Grade 5", value: "Grade 5" },
+    { label: "Grade 6", value: "Grade 6" },
+  ];
+
+  const JHS_YEAR_LEVELS = [
+    { label: "Grade 7", value: "Grade 7" },
+    { label: "Grade 8", value: "Grade 8" },
+    { label: "Grade 9", value: "Grade 9" },
+    { label: "Grade 10", value: "Grade 10" },
+  ];
+
+  const SHS_YEAR_LEVELS = [
+    { label: "Grade 11", value: "Grade 11" },
+    { label: "Grade 12", value: "Grade 12" },
+  ];
+
   return (
     <div className="space-y-8">
+      {/* Current School from Registration - Read Only */}
+      {form.current_school && (
+        <div className="p-4 rounded-xl bg-ocean-50 dark:bg-ocean-500/10 border border-ocean-200 dark:border-ocean-500/20">
+          <h3 className="font-heading text-base font-semibold text-ocean-700 dark:text-ocean-400 mb-3">
+            Registered School
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Current School"
+              value={form.current_school}
+              disabled
+              className="bg-white/50 dark:bg-white/5"
+            />
+            <Input
+              label="Year Level"
+              value={form.year_level}
+              disabled
+              className="bg-white/50 dark:bg-white/5"
+            />
+          </div>
+        </div>
+      )}
+
       <div>
         <h3 className="font-heading text-base font-semibold text-foreground mb-4">
           Primary
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
             label="Name of School"
             placeholder="Enter Primary School Name"
             value={form.primary_school}
             onChange={(e) => update("primary_school", e.target.value)}
           />
-          <Input
-            label="Address"
-            placeholder="Enter School Address"
-            value={form.primary_address}
-            onChange={(e) => update("primary_address", e.target.value)}
-          />
-          <Input
-            label="Year Graduated"
-            placeholder="e.g. 2018"
-            type="number"
-            value={form.primary_year_graduated}
-            onChange={(e) => update("primary_year_graduated", e.target.value)}
+          <Select
+            label="Year Level"
+            options={PRIMARY_YEAR_LEVELS}
+            value={form.primary_year_level}
+            onChange={(e) => update("primary_year_level", e.target.value)}
           />
         </div>
       </div>
@@ -677,25 +698,18 @@ function EducationTab({ form, update }: TabProps) {
         <h3 className="font-heading text-base font-semibold text-foreground mb-4">
           Junior High School (JHS)
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
             label="Name of School"
             placeholder="Enter JHS School Name"
             value={form.jhs_school}
             onChange={(e) => update("jhs_school", e.target.value)}
           />
-          <Input
-            label="Address"
-            placeholder="Enter School Address"
-            value={form.jhs_address}
-            onChange={(e) => update("jhs_address", e.target.value)}
-          />
-          <Input
-            label="Year Graduated"
-            placeholder="e.g. 2020"
-            type="number"
-            value={form.jhs_year_graduated}
-            onChange={(e) => update("jhs_year_graduated", e.target.value)}
+          <Select
+            label="Year Level"
+            options={JHS_YEAR_LEVELS}
+            value={form.jhs_year_level}
+            onChange={(e) => update("jhs_year_level", e.target.value)}
           />
         </div>
       </div>
@@ -704,25 +718,18 @@ function EducationTab({ form, update }: TabProps) {
         <h3 className="font-heading text-base font-semibold text-foreground mb-4">
           Senior High School (SHS)
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
             label="Name of School"
             placeholder="Enter SHS School Name"
             value={form.shs_school}
             onChange={(e) => update("shs_school", e.target.value)}
           />
-          <Input
-            label="Address"
-            placeholder="Enter School Address"
-            value={form.shs_address}
-            onChange={(e) => update("shs_address", e.target.value)}
-          />
-          <Input
-            label="Year Graduated"
-            placeholder="e.g. 2022"
-            type="number"
-            value={form.shs_year_graduated}
-            onChange={(e) => update("shs_year_graduated", e.target.value)}
+          <Select
+            label="Year Level"
+            options={SHS_YEAR_LEVELS}
+            value={form.shs_year_level}
+            onChange={(e) => update("shs_year_level", e.target.value)}
           />
         </div>
       </div>

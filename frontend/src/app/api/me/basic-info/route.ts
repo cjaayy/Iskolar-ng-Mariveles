@@ -27,15 +27,13 @@ const BASIC_INFO_COLUMNS = [
   "guardian_relation",
   "guardian_contact",
   "primary_school",
-  "primary_address",
-  "primary_year_graduated",
+  "primary_year_level",
   "secondary_school",
-  "secondary_address",
-  "secondary_year_graduated",
+  "secondary_year_level",
   "tertiary_school",
-  "tertiary_address",
-  "tertiary_year_graduated",
-  "tertiary_program",
+  "tertiary_year_level",
+  "current_school",
+  "year_level",
 ] as const;
 
 export async function GET(req: NextRequest) {
