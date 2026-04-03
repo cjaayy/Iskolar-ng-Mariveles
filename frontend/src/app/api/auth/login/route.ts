@@ -74,32 +74,28 @@ export async function POST(req: NextRequest) {
       response.applicantId = applicant?.id ?? null;
 
       if (applicant) {
+        // Get applicant's school info
         const { data: applicantInfo } = await supabase
           .from("applicants")
-          .select("address")
+          .select("current_school")
           .eq("id", applicant.id)
           .limit(1)
-          .single<{ address: string | null }>();
+          .single<{ current_school: string | null }>();
 
-        const address = applicantInfo?.address || "";
-        const parts = address.split(",").map((p: string) => p.trim());
-        const marivIdx = parts.findIndex((p: string) =>
-          p.toLowerCase().includes("mariveles"),
-        );
-        const brgy = marivIdx > 0 ? parts[marivIdx - 1] : parts[0] || "";
+        const school = applicantInfo?.current_school || "";
 
-        if (brgy) {
+        if (school) {
           const { data: access } = await supabase
-            .from("barangay_access")
+            .from("school_access")
             .select("is_open")
-            .eq("barangay", brgy)
+            .eq("school_name", school)
             .limit(1)
             .single<{ is_open: boolean }>();
 
           if (access && !access.is_open) {
             return NextResponse.json(
               {
-                error: `Access for Barangay ${brgy} is currently closed. Please wait for your scheduled date.`,
+                error: `Access for ${school} is currently closed. Please wait for your scheduled date.`,
               },
               { status: 403 },
             );
