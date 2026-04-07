@@ -68,6 +68,7 @@ export async function PATCH(req: NextRequest) {
     const { rows, openSchools, submissionDates } = body as {
       rows?: {
         school_name: string;
+        education_level: string;
         is_open: boolean;
         submission_open_date: string | null;
         submission_close_date: string | null;
@@ -82,6 +83,7 @@ export async function PATCH(req: NextRequest) {
     if (Array.isArray(rows) && rows.length > 0) {
       const payload = rows.map((row) => ({
         school_name: row.school_name,
+        education_level: row.education_level,
         is_open: !!row.is_open,
         submission_open_date: row.submission_open_date || null,
         submission_close_date: row.submission_close_date || null,

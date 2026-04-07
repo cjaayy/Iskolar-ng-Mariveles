@@ -230,12 +230,13 @@ export default function SchoolAccessPage() {
     try {
       const rows = schools.map((s) => ({
         school_name: s.school_name,
+        education_level: s.education_level,
         is_open: !!s.is_open,
         submission_open_date: s.submission_open_date || null,
         submission_close_date: s.submission_close_date || null,
       }));
 
-      await fetch("/api/admin/school-access", {
+      const res = await fetch("/api/admin/school-access", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -243,6 +244,10 @@ export default function SchoolAccessPage() {
         },
         body: JSON.stringify({ rows }),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to update school access");
+      }
       setDirty(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
