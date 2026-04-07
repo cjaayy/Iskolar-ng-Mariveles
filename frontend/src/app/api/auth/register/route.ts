@@ -11,6 +11,139 @@ function generatePassword(): string {
     .join("");
 }
 
+interface ManualRegisterParams {
+  token: string;
+  email: string;
+  fullName: string;
+  address: string;
+  passwordHash: string;
+  barangay?: string;
+  currentSchool?: string;
+  yearLevel?: string;
+  houseStreet?: string;
+}
+
+interface ManualRegisterResult {
+  data?: { user_id: number; applicant_id: number; email: string };
+  error?: string;
+  status?: number;
+}
+
+async function manualRegister(
+  params: ManualRegisterParams,
+): Promise<ManualRegisterResult> {
+  const {
+    token,
+    email,
+    fullName,
+    address,
+    passwordHash,
+    barangay,
+    currentSchool,
+    yearLevel,
+    houseStreet,
+  } = params;
+
+  const { data: link, error: linkError } = await supabase
+    .from("registration_links")
+    .select("id, max_uses, times_used, expires_at")
+    .eq("token", token)
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+
+  if (linkError || !link) {
+    return { error: "Invalid or expired registration link", status: 400 };
+  }
+
+  if (link.expires_at && new Date(link.expires_at) < new Date()) {
+    return { error: "This registration link has expired", status: 400 };
+  }
+
+  if (link.max_uses > 0 && link.times_used >= link.max_uses) {
+    return {
+      error: "This registration link has reached its maximum usage",
+      status: 400,
+    };
+  }
+
+  const { data: existing, error: existingError } = await supabase
+    .from("users")
+    .select("id")
+    .eq("email", email)
+    .limit(1)
+    .maybeSingle();
+
+  if (existingError) {
+    return { error: "Registration failed. Please try again.", status: 500 };
+  }
+
+  if (existing) {
+    return { error: "An account with this email already exists", status: 409 };
+  }
+
+  const { data: user, error: userError } = await supabase
+    .from("users")
+    .insert({
+      email,
+      password_hash: passwordHash,
+      full_name: fullName,
+      role: "applicant",
+    })
+    .select("id")
+    .single();
+
+  if (userError || !user) {
+    return { error: "Registration failed. Please try again.", status: 500 };
+  }
+
+  const cleanupUser = async () => {
+    await supabase.from("users").delete().eq("id", user.id);
+  };
+
+  const { data: applicant, error: applicantError } = await supabase
+    .from("applicants")
+    .insert({
+      user_id: user.id,
+      address,
+      house_street: houseStreet || null,
+      town: "Mariveles",
+      barangay: barangay || null,
+      current_school: currentSchool || null,
+      year_level: yearLevel || null,
+    })
+    .select("id")
+    .single();
+
+  if (applicantError || !applicant) {
+    await cleanupUser();
+    return { error: "Registration failed. Please try again.", status: 500 };
+  }
+
+  const { error: appError } = await supabase
+    .from("applications")
+    .insert({ applicant_id: applicant.id, status: "submitted" });
+
+  if (appError) {
+    await cleanupUser();
+    return { error: "Registration failed. Please try again.", status: 500 };
+  }
+
+  const { error: linkUpdateError } = await supabase
+    .from("registration_links")
+    .update({ times_used: link.times_used + 1 })
+    .eq("id", link.id);
+
+  if (linkUpdateError) {
+    await cleanupUser();
+    return { error: "Registration failed. Please try again.", status: 500 };
+  }
+
+  return {
+    data: { user_id: user.id, applicant_id: applicant.id, email },
+  };
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -75,18 +208,27 @@ export async function POST(req: NextRequest) {
     );
 
     if (rpcError && isMissingFunction(rpcError)) {
-      const fallback = await supabase.rpc("register_applicant", {
-        p_token: token,
-        p_email: email,
-        p_full_name: fullName,
-        p_address: address,
-        p_password_hash: hash,
-        p_barangay: barangay || null,
-        p_current_school: currentSchool || null,
-        p_year_level: yearLevel || null,
+      const manual = await manualRegister({
+        token,
+        email,
+        fullName,
+        address,
+        passwordHash: hash,
+        barangay,
+        currentSchool,
+        yearLevel,
+        houseStreet,
       });
-      result = fallback.data;
-      rpcError = fallback.error;
+
+      if (manual.error) {
+        return NextResponse.json(
+          { error: manual.error },
+          { status: manual.status ?? 400 },
+        );
+      }
+
+      result = manual.data;
+      rpcError = null;
     }
 
     if (rpcError) {
