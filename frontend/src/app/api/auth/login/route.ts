@@ -82,17 +82,29 @@ export async function POST(req: NextRequest) {
           .limit(1)
           .single<{ current_school: string | null }>();
 
-        const school = applicantInfo?.current_school || "";
+        const school = applicantInfo?.current_school?.trim() || "";
 
         if (school) {
-          const { data: access } = await supabase
-            .from("school_access")
-            .select("is_open")
-            .eq("school_name", school)
-            .limit(1)
-            .single<{ is_open: boolean }>();
+          const fetchAccess = async (schoolName: string) =>
+            supabase
+              .from("school_access")
+              .select("is_open")
+              .eq("school_name", schoolName)
+              .limit(1)
+              .maybeSingle<{ is_open: boolean }>();
 
-          if (access && !access.is_open) {
+          let { data: access, error: accessError } = await fetchAccess(school);
+
+          if (!access && !accessError) {
+            const normalizedSchool = school.replace(/\s*\(.*\)\s*$/, "").trim();
+            if (normalizedSchool && normalizedSchool !== school) {
+              const fallback = await fetchAccess(normalizedSchool);
+              access = fallback.data;
+              accessError = fallback.error;
+            }
+          }
+
+          if (accessError || !access || !access.is_open) {
             return NextResponse.json(
               {
                 error: `Access for ${school} is currently closed. Please wait for your scheduled date.`,

@@ -94,7 +94,7 @@ const SCHOOLS_BY_LEVEL: Record<EducationLevel, string[]> = {
   ],
   high_school: [
     // Public Junior High Schools (MNHS Network)
-    "MNHS - Poblacion (Main Campus)",
+    "MNHS - Poblacion",
     "MNHS - Alasasin",
     "MNHS - Alion",
     "MNHS - Baseco",
@@ -117,7 +117,7 @@ const SCHOOLS_BY_LEVEL: Record<EducationLevel, string[]> = {
   ],
   senior_high: [
     // Public Senior High Schools
-    "MNHS - Poblacion (Main Campus)",
+    "MNHS - Poblacion",
     "MNHS - Camaya Campus",
     "Mariveles Senior High School - Sitio Mabuhay",
     "Biaan Integrated School",
@@ -535,7 +535,9 @@ export default function RegisterPage({
                 />
               </div>
               {errors.firstName && (
-                <p className="text-xs text-coral-400 mt-1">{errors.firstName}</p>
+                <p className="text-xs text-coral-400 mt-1">
+                  {errors.firstName}
+                </p>
               )}
             </div>
 
