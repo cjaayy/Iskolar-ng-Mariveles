@@ -49,9 +49,33 @@ export async function POST(req: NextRequest) {
       hash = await bcrypt.hash(plainPassword, 10);
     } catch {}
 
-    const { data: result, error: rpcError } = await supabase.rpc(
+    const isMissingFunction = (err: { code?: string; message?: string }) => {
+      const code = err.code || "";
+      const msg = (err.message || "").toLowerCase();
+      if (code === "PGRST202" || code === "42883") return true;
+      if (!msg.includes("register_applicant")) return false;
+      return msg.includes("could not find") || msg.includes("does not exist");
+    };
+
+    const payload = {
+      p_token: token,
+      p_email: email,
+      p_full_name: fullName,
+      p_address: address,
+      p_password_hash: hash,
+      p_barangay: barangay || null,
+      p_current_school: currentSchool || null,
+      p_year_level: yearLevel || null,
+      p_house_street: houseStreet || null,
+    };
+
+    let { data: result, error: rpcError } = await supabase.rpc(
       "register_applicant",
-      {
+      payload,
+    );
+
+    if (rpcError && isMissingFunction(rpcError)) {
+      const fallback = await supabase.rpc("register_applicant", {
         p_token: token,
         p_email: email,
         p_full_name: fullName,
@@ -60,9 +84,10 @@ export async function POST(req: NextRequest) {
         p_barangay: barangay || null,
         p_current_school: currentSchool || null,
         p_year_level: yearLevel || null,
-        p_house_street: houseStreet || null,
-      },
-    );
+      });
+      result = fallback.data;
+      rpcError = fallback.error;
+    }
 
     if (rpcError) {
       console.error("[POST /api/auth/register] RPC error:", rpcError);
