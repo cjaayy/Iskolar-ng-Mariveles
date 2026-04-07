@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
       email,
       fullName,
       address,
+      houseStreet,
       barangay,
       currentSchool,
       yearLevel,
@@ -27,6 +28,7 @@ export async function POST(req: NextRequest) {
       email: string;
       fullName: string;
       address: string;
+      houseStreet?: string;
       barangay?: string;
       currentSchool?: string;
       yearLevel?: string;
@@ -58,6 +60,7 @@ export async function POST(req: NextRequest) {
         p_barangay: barangay || null,
         p_current_school: currentSchool || null,
         p_year_level: yearLevel || null,
+        p_house_street: houseStreet || null,
       },
     );
 

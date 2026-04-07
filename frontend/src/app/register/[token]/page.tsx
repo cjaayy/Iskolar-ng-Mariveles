@@ -240,8 +240,9 @@ export default function RegisterPage({
     if (!validate()) return;
     setIsLoading(true);
 
-    const address = street.trim()
-      ? `${street.trim()}, ${barangay}, Mariveles, Bataan`
+    const trimmedStreet = street.trim();
+    const address = trimmedStreet
+      ? `${trimmedStreet}, ${barangay}, Mariveles, Bataan`
       : `${barangay}, Mariveles, Bataan`;
 
     // Combine name parts: "LastName, FirstName MiddleName" or "LastName, FirstName"
@@ -263,6 +264,7 @@ export default function RegisterPage({
           email,
           fullName,
           address,
+          houseStreet: trimmedStreet || null,
           barangay,
           currentSchool: schoolName || null,
           yearLevel: yearLevel || null,
