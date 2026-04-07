@@ -228,20 +228,12 @@ export default function SchoolAccessPage() {
     if (!adminId) return;
     setSaving(true);
     try {
-      const openSchools = schools
-        .filter((s) => !!s.is_open)
-        .map((s) => s.school_name);
-
-      const submissionDates: Record<
-        string,
-        { open: string | null; close: string | null }
-      > = {};
-      for (const s of schools) {
-        submissionDates[s.school_name] = {
-          open: s.submission_open_date,
-          close: s.submission_close_date,
-        };
-      }
+      const rows = schools.map((s) => ({
+        school_name: s.school_name,
+        is_open: !!s.is_open,
+        submission_open_date: s.submission_open_date || null,
+        submission_close_date: s.submission_close_date || null,
+      }));
 
       await fetch("/api/admin/school-access", {
         method: "PATCH",
@@ -249,7 +241,7 @@ export default function SchoolAccessPage() {
           "Content-Type": "application/json",
           "x-admin-id": adminId,
         },
-        body: JSON.stringify({ openSchools, submissionDates }),
+        body: JSON.stringify({ rows }),
       });
       setDirty(false);
       setSaved(true);
@@ -496,8 +488,8 @@ export default function SchoolAccessPage() {
                   <Badge
                     className={`${config.bgColor} ${config.color} border-0`}
                   >
-                    {schools.filter((s) => s.is_open).length}
-                    {" "}/ {schools.length} open
+                    {schools.filter((s) => s.is_open).length} / {schools.length}{" "}
+                    open
                   </Badge>
                 </div>
 

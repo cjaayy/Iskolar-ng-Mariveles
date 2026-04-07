@@ -65,52 +65,74 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { openSchools, submissionDates } = body as {
-      openSchools: string[];
+    const { rows, openSchools, submissionDates } = body as {
+      rows?: {
+        school_name: string;
+        is_open: boolean;
+        submission_open_date: string | null;
+        submission_close_date: string | null;
+      }[];
+      openSchools?: string[];
       submissionDates?: Record<
         string,
         { open: string | null; close: string | null }
       >;
     };
 
-    if (!Array.isArray(openSchools)) {
-      return NextResponse.json(
-        { error: "openSchools must be an array" },
-        { status: 400 },
-      );
-    }
+    if (Array.isArray(rows) && rows.length > 0) {
+      const payload = rows.map((row) => ({
+        school_name: row.school_name,
+        is_open: !!row.is_open,
+        submission_open_date: row.submission_open_date || null,
+        submission_close_date: row.submission_close_date || null,
+        updated_by: Number(adminId),
+      }));
 
-    // Close all schools first
-    const { error: closeAllError } = await supabase
-      .from("school_access")
-      .update({ is_open: false, updated_by: Number(adminId) })
-      .neq("id", 0);
+      const { error } = await supabase
+        .from("school_access")
+        .upsert(payload, { onConflict: "school_name" });
 
-    if (closeAllError) throw closeAllError;
-
-    // Open selected schools
-    if (openSchools.length > 0) {
-      for (const school of openSchools) {
-        const { error } = await supabase
-          .from("school_access")
-          .update({ is_open: true, updated_by: Number(adminId) })
-          .eq("school_name", school);
-        if (error) throw error;
+      if (error) throw error;
+    } else {
+      if (!Array.isArray(openSchools)) {
+        return NextResponse.json(
+          { error: "openSchools must be an array" },
+          { status: 400 },
+        );
       }
-    }
 
-    // Update submission dates
-    if (submissionDates && typeof submissionDates === "object") {
-      for (const [school, dates] of Object.entries(submissionDates)) {
-        const { error } = await supabase
-          .from("school_access")
-          .update({
-            submission_open_date: dates.open || null,
-            submission_close_date: dates.close || null,
-            updated_by: Number(adminId),
-          })
-          .eq("school_name", school);
-        if (error) throw error;
+      // Close all schools first
+      const { error: closeAllError } = await supabase
+        .from("school_access")
+        .update({ is_open: false, updated_by: Number(adminId) })
+        .neq("id", 0);
+
+      if (closeAllError) throw closeAllError;
+
+      // Open selected schools
+      if (openSchools.length > 0) {
+        for (const school of openSchools) {
+          const { error } = await supabase
+            .from("school_access")
+            .update({ is_open: true, updated_by: Number(adminId) })
+            .eq("school_name", school);
+          if (error) throw error;
+        }
+      }
+
+      // Update submission dates
+      if (submissionDates && typeof submissionDates === "object") {
+        for (const [school, dates] of Object.entries(submissionDates)) {
+          const { error } = await supabase
+            .from("school_access")
+            .update({
+              submission_open_date: dates.open || null,
+              submission_close_date: dates.close || null,
+              updated_by: Number(adminId),
+            })
+            .eq("school_name", school);
+          if (error) throw error;
+        }
       }
     }
 
