@@ -51,8 +51,8 @@ const EDUCATION_LEVELS: {
 ];
 
 interface ApplicantRow {
-  application_id: number;
-  applicant_id: number;
+  application_id: string | number;
+  applicant_id: string | number;
   applicant_name: string;
   email: string;
   barangay: string | null;
@@ -68,8 +68,8 @@ interface ApplicantRow {
 }
 
 interface ApplicationDetail {
-  id: number;
-  applicant_id: number;
+  id: string | number;
+  applicant_id: string | number;
   status: string;
   submitted_at: string | null;
   applicant_name: string;
@@ -175,9 +175,9 @@ export default function RegisteredApplicantsPage() {
     "personal" | "parents" | "education"
   >("personal");
   const [detailCache, setDetailCache] = useState<
-    Record<number, { app: ApplicationDetail; reqs: RequirementSummary[] }>
+    Record<string, { app: ApplicationDetail; reqs: RequirementSummary[] }>
   >({});
-  const [detailLoading, setDetailLoading] = useState<number | null>(null);
+  const [detailLoading, setDetailLoading] = useState<string | null>(null);
 
   const adminId =
     typeof window !== "undefined" ? localStorage.getItem("adminId") : null;
@@ -221,9 +221,10 @@ export default function RegisteredApplicantsPage() {
   }, [load]);
 
   const fetchDetail = useCallback(
-    async (applicationId: number) => {
-      if (!adminId || detailCache[applicationId]) return;
-      setDetailLoading(applicationId);
+    async (applicationId: string | number) => {
+      const cacheKey = String(applicationId);
+      if (!adminId || detailCache[cacheKey]) return;
+      setDetailLoading(cacheKey);
       try {
         const res = await fetch(`/api/admin/registered/${applicationId}`, {
           headers: { "x-admin-id": adminId },
@@ -232,7 +233,7 @@ export default function RegisteredApplicantsPage() {
           const json = await res.json();
           setDetailCache((prev) => ({
             ...prev,
-            [applicationId]: {
+            [cacheKey]: {
               app: json.data as ApplicationDetail,
               reqs: (json.requirements ?? []).map(
                 (r: { requirement_key: string; status: string }) => ({
@@ -305,10 +306,10 @@ export default function RegisteredApplicantsPage() {
   };
 
   const detail = modalApplicant
-    ? detailCache[modalApplicant.application_id]
+    ? detailCache[String(modalApplicant.application_id)]
     : null;
   const isLoadingDetail = modalApplicant
-    ? detailLoading === modalApplicant.application_id
+    ? detailLoading === String(modalApplicant.application_id)
     : false;
 
   return (

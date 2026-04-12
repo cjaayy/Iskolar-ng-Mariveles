@@ -27,8 +27,8 @@ import { Card, Badge, Button, Skeleton } from "@/components/ui";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
 interface ApplicationDetail {
-  id: number;
-  applicant_id: number;
+  id: string | number;
+  applicant_id: string | number;
   status: string;
   income_at_submission: number | null;
   submitted_at: string | null;
@@ -74,7 +74,7 @@ interface ApplicationDetail {
 
 interface RequirementSubmission {
   id: number;
-  application_id: number;
+  application_id: string | number;
   requirement_key: string;
   status: string;
   progress: number;
@@ -141,7 +141,8 @@ const fadeUp = {
 
 export default function AdminApplicationDetailPage() {
   const params = useParams();
-  const applicationId = Number(params.id);
+  const rawId = params.id;
+  const applicationId = typeof rawId === "string" ? rawId : (rawId?.[0] ?? "");
 
   const [application, setApplication] = useState<ApplicationDetail | null>(
     null,
@@ -160,7 +161,7 @@ export default function AdminApplicationDetailPage() {
     typeof window !== "undefined" ? localStorage.getItem("adminId") : null;
 
   const fetchData = useCallback(async () => {
-    if (!adminId) return;
+    if (!adminId || !applicationId) return;
     try {
       const res = await fetch(`/api/admin/applicants/${applicationId}`, {
         headers: { "x-admin-id": adminId },
