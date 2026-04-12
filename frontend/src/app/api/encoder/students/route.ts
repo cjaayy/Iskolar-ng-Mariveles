@@ -164,7 +164,7 @@ export async function GET(req: NextRequest) {
       })
       .filter((id): id is string | number => id !== null && id !== undefined);
 
-    let latestApps: Record<string, { id: number; status: string }> = {};
+    const latestApps: Record<string, { id: number; status: string }> = {};
 
     if (applicantIds.length > 0) {
       const { data: apps, error: appError } = await supabase
