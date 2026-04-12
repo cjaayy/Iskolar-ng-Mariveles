@@ -2,37 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { coerceId } from "@/lib/adminId";
 
-const APPLICANT_FIELDS = [
-  "id",
-  "user_id",
-  "date_of_birth",
-  "gender",
-  "blood_type",
-  "civil_status",
-  "maiden_name",
-  "spouse_name",
-  "spouse_occupation",
-  "religion",
-  "height_cm",
-  "weight_kg",
-  "birthplace",
-  "contact_number",
-  "house_street",
-  "town",
-  "barangay",
-  "father_name",
-  "father_occupation",
-  "father_contact",
-  "mother_name",
-  "mother_occupation",
-  "mother_contact",
-  "guardian_name",
-  "guardian_relation",
-  "guardian_contact",
-  "current_school",
-  "year_level",
-  "address",
-];
+const APPLICANT_SELECT =
+  "id, user_id, date_of_birth, gender, blood_type, civil_status, maiden_name, spouse_name, spouse_occupation, religion, height_cm, weight_kg, birthplace, contact_number, house_street, town, barangay, father_name, father_occupation, father_contact, mother_name, mother_occupation, mother_contact, guardian_name, guardian_relation, guardian_contact, current_school, year_level, address, users!inner(full_name)" as const;
 
 const UPDATE_FIELDS = new Set([
   "date_of_birth",
@@ -164,7 +135,7 @@ export async function GET(
   try {
     const { data: row, error } = await supabase
       .from("applicants")
-      .select(`${APPLICANT_FIELDS.join(", ")}, users!inner(full_name)`)
+      .select(APPLICANT_SELECT)
       .eq("id", applicantId)
       .eq("current_school", assignedSchool)
       .limit(1)
