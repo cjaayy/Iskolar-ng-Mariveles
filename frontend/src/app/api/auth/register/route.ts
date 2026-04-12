@@ -88,6 +88,7 @@ async function manualRegister(
       email,
       password_hash: passwordHash,
       full_name: fullName,
+      display_name: fullName,
       role: "applicant",
     })
     .select("id")

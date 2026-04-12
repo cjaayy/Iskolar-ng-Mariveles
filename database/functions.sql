@@ -45,8 +45,8 @@ BEGIN
     RETURN json_build_object('error', 'An account with this email already exists');
   END IF;
 
-  INSERT INTO users (email, password_hash, full_name, role)
-  VALUES (p_email, p_password_hash, p_full_name, 'applicant')
+  INSERT INTO users (email, password_hash, full_name, display_name, role)
+  VALUES (p_email, p_password_hash, p_full_name, p_full_name, 'applicant')
   RETURNING id INTO v_user_id;
 
   INSERT INTO applicants (user_id, address, house_street, town, barangay, current_school, year_level)
