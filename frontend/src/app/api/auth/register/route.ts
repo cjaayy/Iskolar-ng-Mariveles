@@ -186,6 +186,8 @@ export async function POST(req: NextRequest) {
       const code = err.code || "";
       const msg = (err.message || "").toLowerCase();
       if (code === "PGRST202" || code === "42883") return true;
+      if (code === "42703") return true;
+      if (msg.includes("column") && msg.includes("does not exist")) return true;
       if (!msg.includes("register_applicant")) return false;
       return msg.includes("could not find") || msg.includes("does not exist");
     };
