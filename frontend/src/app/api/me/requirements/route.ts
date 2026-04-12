@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
+import { coerceId } from "@/lib/adminId";
 
 export async function GET(req: NextRequest) {
   const applicantIdHeader = req.headers.get("x-applicant-id");
   if (!applicantIdHeader) {
     return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
   }
-  const applicantId = Number(applicantIdHeader);
+  const applicantId = coerceId(applicantIdHeader);
 
   try {
     const { data: application, error: appError } = await supabase
@@ -106,7 +107,7 @@ export async function POST(req: NextRequest) {
   if (!applicantIdHeader) {
     return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
   }
-  const applicantId = Number(applicantIdHeader);
+  const applicantId = coerceId(applicantIdHeader);
 
   const body = (await req.json()) as {
     requirementKey: string;
@@ -126,7 +127,7 @@ export async function POST(req: NextRequest) {
   try {
     const { data: applicantInfo, error: applicantInfoError } = await supabase
       .from("applicants")
-      .select("address")
+      .select("current_school, year_level")
       .eq("id", applicantId)
       .limit(1)
       .single();
@@ -135,32 +136,80 @@ export async function POST(req: NextRequest) {
       throw applicantInfoError;
     }
 
-    const address = applicantInfo?.address || "";
-    const parts = address.split(",").map((p: string) => p.trim());
-    const marivIdx = parts.findIndex((p: string) =>
-      p.toLowerCase().includes("mariveles"),
-    );
-    const brgy = marivIdx > 0 ? parts[marivIdx - 1] : parts[0] || "";
+    const school = applicantInfo?.current_school?.trim() || "";
+    const yearLevel = applicantInfo?.year_level?.trim() || "";
 
-    if (brgy) {
-      const { data: access } = await supabase
-        .from("barangay_access")
-        .select("is_open, submission_open_date, submission_close_date")
-        .eq("barangay", brgy)
-        .limit(1)
-        .single();
+    const getEducationLevel = (level: string) => {
+      const elementary = [
+        "Grade 1",
+        "Grade 2",
+        "Grade 3",
+        "Grade 4",
+        "Grade 5",
+        "Grade 6",
+      ];
+      const highSchool = ["Grade 7", "Grade 8", "Grade 9", "Grade 10"];
+      const seniorHigh = ["Grade 11", "Grade 12"];
+
+      if (elementary.includes(level)) return "elementary";
+      if (highSchool.includes(level)) return "high_school";
+      if (seniorHigh.includes(level)) return "senior_high";
+      return null;
+    };
+
+    const level = getEducationLevel(yearLevel);
+    const otherSchoolByLevel: Record<
+      string,
+      "Other (Elementary)" | "Other (High School)" | "Other (Senior High)"
+    > = {
+      elementary: "Other (Elementary)",
+      high_school: "Other (High School)",
+      senior_high: "Other (Senior High)",
+    };
+
+    if (school) {
+      const fetchAccess = async (schoolName: string) =>
+        supabase
+          .from("school_access")
+          .select("is_open, submission_open_date, submission_close_date")
+          .eq("school_name", schoolName)
+          .limit(1)
+          .maybeSingle();
+
+      let { data: access, error: accessError } = await fetchAccess(school);
+
+      if (!access && !accessError) {
+        const normalized = school.replace(/\s*\(.*\)\s*$/, "").trim();
+        if (normalized && normalized !== school) {
+          const fallback = await fetchAccess(normalized);
+          access = fallback.data;
+          accessError = fallback.error;
+        }
+      }
+
+      if (!access && !accessError && level) {
+        const fallbackName = otherSchoolByLevel[level];
+        const fallback = await fetchAccess(fallbackName);
+        access = fallback.data;
+        accessError = fallback.error;
+      }
+
+      if (accessError) {
+        throw accessError;
+      }
 
       if (access) {
         const isOpen = !!access.is_open;
         const openDate = access.submission_open_date;
         const closeDate = access.submission_close_date;
         const today = new Date().toISOString().slice(0, 10);
+        const schoolLabel = school || "your school";
 
         if (openDate || closeDate) {
           if (openDate && today < openDate) {
             return NextResponse.json(
               {
-                error: `Submissions for Barangay ${brgy} will open on ${openDate}. Please come back then.`,
+                error: `Submissions for ${schoolLabel} will open on ${openDate}. Please come back then.`,
               },
               { status: 403 },
             );
@@ -168,7 +217,7 @@ export async function POST(req: NextRequest) {
           if (closeDate && today > closeDate) {
             return NextResponse.json(
               {
-                error: `The submission window for Barangay ${brgy} closed on ${closeDate}.`,
+                error: `The submission window for ${schoolLabel} closed on ${closeDate}.`,
               },
               { status: 403 },
             );
@@ -176,7 +225,7 @@ export async function POST(req: NextRequest) {
         } else if (!isOpen) {
           return NextResponse.json(
             {
-              error: `Submissions for Barangay ${brgy} are currently closed. Please wait for your scheduled date.`,
+              error: `Submissions for ${schoolLabel} are currently closed. Please wait for your scheduled date.`,
             },
             { status: 403 },
           );
