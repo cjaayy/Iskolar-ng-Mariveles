@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
+import { coerceId } from "@/lib/adminId";
 
 const STATUS_PRIORITY: Record<string, number> = {
   submitted: 1,
@@ -19,19 +20,20 @@ export async function GET(req: NextRequest) {
   try {
     const { data: validator, error: valError } = await supabase
       .from("users")
-      .select("assigned_barangay")
-      .eq("id", Number(validatorId))
+      .select("assigned_school")
+      .eq("id", coerceId(validatorId))
       .eq("role", "validator")
       .limit(1)
       .maybeSingle();
 
     if (valError) throw valError;
-    const assignedBarangay = validator?.assigned_barangay ?? null;
+    const assignedSchool = validator?.assigned_school ?? null;
 
     const { searchParams } = req.nextUrl;
     const status = searchParams.get("status") || undefined;
     const search = searchParams.get("search") || undefined;
-    const barangayFilter = searchParams.get("barangay") || undefined;
+    const schoolFilter =
+      searchParams.get("school") || searchParams.get("barangay") || undefined;
     const page = Math.max(1, Number(searchParams.get("page") || 1));
     const limit = Math.min(
       100,
@@ -53,6 +55,7 @@ export async function GET(req: NextRequest) {
         remarks,
         applicants!inner(
           barangay,
+          current_school,
           users!inner(full_name)
         )
       `,
@@ -62,25 +65,31 @@ export async function GET(req: NextRequest) {
 
     let countQuery = supabase
       .from("applications")
-      .select("*, applicants!inner(barangay, users!inner(full_name))", {
-        count: "exact",
-        head: true,
-      })
+      .select(
+        "*, applicants!inner(barangay, current_school, users!inner(full_name))",
+        {
+          count: "exact",
+          head: true,
+        },
+      )
       .neq("status", "draft");
 
     let summaryQuery = supabase
       .from("applications")
-      .select("status, applicants!inner(barangay)")
+      .select("status, applicants!inner(barangay, current_school)")
       .neq("status", "draft");
 
-    if (assignedBarangay) {
-      dataQuery = dataQuery.eq("applicants.barangay", assignedBarangay);
-      countQuery = countQuery.eq("applicants.barangay", assignedBarangay);
-      summaryQuery = summaryQuery.eq("applicants.barangay", assignedBarangay);
-    } else if (barangayFilter) {
-      dataQuery = dataQuery.eq("applicants.barangay", barangayFilter);
-      countQuery = countQuery.eq("applicants.barangay", barangayFilter);
-      summaryQuery = summaryQuery.eq("applicants.barangay", barangayFilter);
+    if (assignedSchool) {
+      dataQuery = dataQuery.eq("applicants.current_school", assignedSchool);
+      countQuery = countQuery.eq("applicants.current_school", assignedSchool);
+      summaryQuery = summaryQuery.eq(
+        "applicants.current_school",
+        assignedSchool,
+      );
+    } else if (schoolFilter) {
+      dataQuery = dataQuery.eq("applicants.current_school", schoolFilter);
+      countQuery = countQuery.eq("applicants.current_school", schoolFilter);
+      summaryQuery = summaryQuery.eq("applicants.current_school", schoolFilter);
     }
 
     if (status && status !== "all") {
@@ -138,6 +147,7 @@ export async function GET(req: NextRequest) {
     const data = (rows ?? []).map((row: Record<string, any>) => {
       const applicants = row.applicants as {
         barangay: string | null;
+        current_school: string | null;
         users: { full_name: string };
       };
       const appId = row.id as number;
@@ -152,6 +162,7 @@ export async function GET(req: NextRequest) {
         remarks: row.remarks,
         applicant_name: applicants?.users?.full_name ?? "",
         barangay: applicants?.barangay ?? null,
+        school: applicants?.current_school ?? null,
         total_requirements: REQUIREMENT_CONFIGS.length,
         approved_requirements: approvedMap[appId] ?? 0,
         pending_requirements: pendingMap[appId] ?? 0,

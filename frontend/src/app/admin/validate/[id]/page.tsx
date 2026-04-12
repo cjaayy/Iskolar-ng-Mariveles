@@ -114,7 +114,8 @@ function getHistoryActionLabel(
 
 export default function AdminValidateDetailPage() {
   const params = useParams();
-  const applicationId = Number(params.id);
+  const rawId = params.id;
+  const applicationId = typeof rawId === "string" ? rawId : (rawId?.[0] ?? "");
 
   const [application, setApplication] = useState<ApplicationDetail | null>(
     null,
@@ -137,7 +138,7 @@ export default function AdminValidateDetailPage() {
     typeof window !== "undefined" ? localStorage.getItem("adminId") : null;
 
   const fetchData = useCallback(async () => {
-    if (!adminId) return;
+    if (!adminId || !applicationId) return;
     try {
       const res = await fetch(`/api/admin/validations/${applicationId}`, {
         headers: { "x-admin-id": adminId },
@@ -196,7 +197,7 @@ export default function AdminValidateDetailPage() {
   };
 
   const handleBulkValidate = async () => {
-    if (!adminId || !bulkAction) return;
+    if (!adminId || !bulkAction || !applicationId) return;
     setBulkLoading(true);
 
     try {

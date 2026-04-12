@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
+import { coerceId } from "@/lib/adminId";
 
 interface ApplicantRow {
   application_id: number;
@@ -26,14 +27,14 @@ export async function GET(req: NextRequest) {
   try {
     const { data: validator, error: valError } = await supabase
       .from("users")
-      .select("assigned_barangay")
-      .eq("id", Number(validatorId))
+      .select("assigned_school")
+      .eq("id", coerceId(validatorId))
       .eq("role", "validator")
       .limit(1)
       .maybeSingle();
 
     if (valError) throw valError;
-    const assignedBarangay = validator?.assigned_barangay ?? null;
+    const assignedSchool = validator?.assigned_school ?? null;
 
     const { searchParams } = req.nextUrl;
     const barangayFilter = searchParams.get("barangay") || undefined;
@@ -49,6 +50,7 @@ export async function GET(req: NextRequest) {
         applicants!inner(
           id,
           barangay,
+          current_school,
           users!inner(full_name, email)
         )
       `,
@@ -56,8 +58,8 @@ export async function GET(req: NextRequest) {
       .neq("status", "draft")
       .order("updated_at", { ascending: false });
 
-    if (assignedBarangay) {
-      dataQuery = dataQuery.eq("applicants.barangay", assignedBarangay);
+    if (assignedSchool) {
+      dataQuery = dataQuery.eq("applicants.current_school", assignedSchool);
     } else if (barangayFilter) {
       dataQuery = dataQuery.eq("applicants.barangay", barangayFilter);
     }

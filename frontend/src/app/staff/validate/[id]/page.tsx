@@ -126,7 +126,8 @@ const fadeUp = {
 
 export default function StaffApplicationReviewPage() {
   const params = useParams();
-  const applicationId = Number(params.id);
+  const rawId = params.id;
+  const applicationId = typeof rawId === "string" ? rawId : (rawId?.[0] ?? "");
 
   const [application, setApplication] = useState<ApplicationDetail | null>(
     null,
@@ -152,7 +153,7 @@ export default function StaffApplicationReviewPage() {
     typeof window !== "undefined" ? localStorage.getItem("staffId") : null;
 
   const fetchData = useCallback(async () => {
-    if (!staffId) return;
+    if (!staffId || !applicationId) return;
     try {
       const res = await fetch(`/api/staff/applications/${applicationId}`, {
         headers: { "x-validator-id": staffId },
@@ -211,7 +212,7 @@ export default function StaffApplicationReviewPage() {
   };
 
   const handleBulkValidate = async () => {
-    if (!staffId || !bulkAction) return;
+    if (!staffId || !bulkAction || !applicationId) return;
     setBulkLoading(true);
 
     try {

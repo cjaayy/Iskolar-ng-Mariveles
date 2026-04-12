@@ -9,13 +9,13 @@ import React, {
 } from "react";
 
 export interface StaffUser {
-  userId: number;
+  userId: string | number;
   email: string;
   fullName: string;
   firstName: string;
   lastName: string;
   role: string;
-  assignedBarangay: string | null;
+  assignedSchool: string | null;
 }
 
 interface StaffSessionContextValue {

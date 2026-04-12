@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
+import { coerceId } from "@/lib/adminId";
 
 interface RouteContext {
   params: { id: string };
@@ -13,10 +14,11 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
   }
 
   try {
-    const id = Number(params.id);
-    if (!Number.isInteger(id) || id < 1) {
+    if (!params.id) {
       return NextResponse.json({ error: "Invalid id" }, { status: 400 });
     }
+
+    const id = coerceId(params.id);
 
     const { data: appRow, error: appError } = await supabase
       .from("applications")

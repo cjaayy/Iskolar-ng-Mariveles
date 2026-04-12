@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
+import { coerceId } from "@/lib/adminId";
+
+const normalizeId = (value: string | number) =>
+  typeof value === "number" ? value : coerceId(value);
 
 export async function PUT(req: NextRequest) {
   const validatorId = req.headers.get("x-validator-id");
@@ -25,10 +29,12 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    const submissionKey = normalizeId(submissionId);
+
     const { data: submission, error: subError } = await supabase
       .from("requirement_submissions")
       .select("id, application_id, status")
-      .eq("id", submissionId)
+      .eq("id", submissionKey)
       .maybeSingle();
 
     if (subError) throw subError;
@@ -43,8 +49,8 @@ export async function PUT(req: NextRequest) {
     const { error: rpcError } = await supabase.rpc(
       "validate_single_requirement",
       {
-        p_submission_id: submissionId,
-        p_validator_id: Number(validatorId),
+        p_submission_id: submissionKey,
+        p_validator_id: coerceId(validatorId),
         p_action: action,
         p_notes: notes ?? null,
       },
@@ -87,11 +93,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const applicationKey = normalizeId(applicationId);
+
     const { data: rpcResult, error: rpcError } = await supabase.rpc(
       "bulk_validate_requirements",
       {
-        p_application_id: applicationId,
-        p_validator_id: Number(validatorId),
+        p_application_id: applicationKey,
+        p_validator_id: coerceId(validatorId),
         p_action: action,
         p_notes: notes ?? null,
       },

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
+import { coerceId } from "@/lib/adminId";
 
 export async function GET(req: NextRequest) {
   const validatorId = req.headers.get("x-validator-id");
@@ -10,8 +11,8 @@ export async function GET(req: NextRequest) {
   try {
     const { data: user, error } = await supabase
       .from("users")
-      .select("id, email, full_name, role, assigned_barangay")
-      .eq("id", Number(validatorId))
+      .select("id, email, full_name, role, assigned_school")
+      .eq("id", coerceId(validatorId))
       .in("role", ["validator", "admin"])
       .eq("is_active", true)
       .limit(1)
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest) {
         firstName: nameParts[0] ?? "",
         lastName: nameParts.slice(1).join(" "),
         role: user.role,
-        assignedBarangay: user.assigned_barangay ?? null,
+        assignedSchool: user.assigned_school ?? null,
       },
     });
   } catch (err) {

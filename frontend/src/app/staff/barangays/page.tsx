@@ -131,7 +131,7 @@ export default function StaffBarangaysPage() {
     typeof window !== "undefined" ? localStorage.getItem("staffId") : null;
 
   const { user } = useStaffSession();
-  const assignedBarangay = user?.assignedBarangay ?? null;
+  const assignedSchool = user?.assignedSchool ?? null;
 
   const load = useCallback(async () => {
     if (!staffId) return;
@@ -226,10 +226,10 @@ export default function StaffBarangaysPage() {
             List of Applicants
           </h1>
           <p className="font-body text-sm text-muted-fg mt-1 flex items-center gap-1.5">
-            {assignedBarangay && (
+            {assignedSchool && (
               <>
                 <MapPin className="w-3.5 h-3.5" />
-                Barangay {assignedBarangay} &middot;{" "}
+                School {assignedSchool} &middot;{" "}
               </>
             )}
             {allApplicants.length} applicant
@@ -267,7 +267,7 @@ export default function StaffBarangaysPage() {
             />
           </div>
 
-          {!assignedBarangay && (
+          {!assignedSchool && (
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-muted-fg" />
               <select
