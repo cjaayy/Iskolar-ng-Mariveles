@@ -153,7 +153,6 @@ export async function POST(req: NextRequest) {
         email,
         password_hash: hash,
         full_name: fullName,
-        display_name: fullName,
         role: "validator",
         assigned_school: assignedSchool,
       })

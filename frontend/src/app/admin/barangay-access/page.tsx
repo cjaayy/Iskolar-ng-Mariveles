@@ -6,381 +6,48 @@ import {
   MapPin,
   ToggleLeft,
   ToggleRight,
-  Save,
-  RefreshCw,
-  CheckCircle2,
-  ShieldCheck,
-  ShieldOff,
-  CalendarDays,
-  X,
-  CheckSquare,
-  Square,
-} from "lucide-react";
-import { Card, Button, Badge } from "@/components/ui";
+  "use client";
 
-interface BarangayRow {
-  id: number;
-  barangay: string;
-  is_open: boolean;
-  submission_open_date: string | null;
-  submission_close_date: string | null;
-  updated_at: string;
-}
+  import React, { useEffect } from "react";
+  import Link from "next/link";
+  import { useRouter } from "next/navigation";
+  import { ArrowRight, ShieldOff } from "lucide-react";
+  import { Button, Card } from "@/components/ui";
 
-const stagger = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.03 } },
-};
-const fadeUp = {
-  hidden: { opacity: 0, y: 10 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.3, ease: "easeOut" as const },
-  },
-};
+  export default function BarangayAccessPage() {
+    const router = useRouter();
 
-export default function BarangayAccessPage() {
-  const [barangays, setBarangays] = useState<BarangayRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [dirty, setDirty] = useState(false);
-  const [dateModalBrgy, setDateModalBrgy] = useState<string | null>(null);
-  const [bulkDateModal, setBulkDateModal] = useState(false);
-  const [bulkOpenDate, setBulkOpenDate] = useState("");
-  const [bulkCloseDate, setBulkCloseDate] = useState("");
-  const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
+    useEffect(() => {
+      router.replace("/admin/school-access");
+    }, [router]);
 
-  const load = useCallback(async () => {
-    const adminId = localStorage.getItem("adminId");
-    if (!adminId) return;
-    setLoading(true);
-    try {
-      const res = await fetch("/api/admin/barangay-access", {
-        headers: { "x-admin-id": adminId },
-      });
-      if (res.ok) {
-        const { data } = await res.json();
-        setBarangays(
-          data.map((b: BarangayRow) => ({
-            ...b,
-            is_open: !!b.is_open,
-            submission_open_date: b.submission_open_date || null,
-            submission_close_date: b.submission_close_date || null,
-          })),
-        );
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  const toggle = (brgy: string) => {
-    setBarangays((prev) =>
-      prev.map((b) =>
-        b.barangay === brgy ? { ...b, is_open: !b.is_open } : b,
-      ),
-    );
-    setDirty(true);
-    setSaved(false);
-  };
-
-  const setDate = (
-    brgy: string,
-    field: "submission_open_date" | "submission_close_date",
-    value: string,
-  ) => {
-    setBarangays((prev) =>
-      prev.map((b) =>
-        b.barangay === brgy ? { ...b, [field]: value || null } : b,
-      ),
-    );
-    setDirty(true);
-    setSaved(false);
-  };
-
-  const toggleAll = (open: boolean) => {
-    setBarangays((prev) =>
-      prev.map((b) => ({
-        ...b,
-        is_open: open,
-        ...(open
-          ? {}
-          : { submission_open_date: null, submission_close_date: null }),
-      })),
-    );
-    setDirty(true);
-    setSaved(false);
-  };
-
-  const openBulkDateModal = () => {
-    setBulkOpenDate("");
-    setBulkCloseDate("");
-    setBulkSelected(new Set(barangays.map((b) => b.barangay)));
-    setBulkDateModal(true);
-  };
-
-  const toggleBulkSelect = (brgy: string) => {
-    setBulkSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(brgy)) next.delete(brgy);
-      else next.add(brgy);
-      return next;
-    });
-  };
-
-  const toggleBulkAll = () => {
-    if (bulkSelected.size === barangays.length) {
-      setBulkSelected(new Set());
-    } else {
-      setBulkSelected(new Set(barangays.map((b) => b.barangay)));
-    }
-  };
-
-  const applyBulkDates = () => {
-    setBarangays((prev) =>
-      prev.map((b) =>
-        bulkSelected.has(b.barangay)
-          ? {
-              ...b,
-              is_open: true,
-              submission_open_date: bulkOpenDate || null,
-              submission_close_date: bulkCloseDate || null,
-            }
-          : b,
-      ),
-    );
-    setDirty(true);
-    setSaved(false);
-    setBulkDateModal(false);
-  };
-
-  const save = async () => {
-    const adminId = localStorage.getItem("adminId");
-    if (!adminId) return;
-    setSaving(true);
-    try {
-      const openBarangays = barangays
-        .filter((b) => !!b.is_open)
-        .map((b) => b.barangay);
-
-      const submissionDates: Record<
-        string,
-        { open: string | null; close: string | null }
-      > = {};
-      for (const b of barangays) {
-        submissionDates[b.barangay] = {
-          open: b.submission_open_date,
-          close: b.submission_close_date,
-        };
-      }
-
-      await fetch("/api/admin/barangay-access", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-id": adminId,
-        },
-        body: JSON.stringify({ openBarangays, submissionDates }),
-      });
-      setDirty(false);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const openCount = barangays.filter((b) => b.is_open).length;
-  const closedCount = barangays.length - openCount;
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-2xl font-bold text-foreground flex items-center gap-2">
-            <MapPin className="w-7 h-7 text-ocean-400" />
-            Barangay Access Control
-          </h1>
-          <p className="font-body text-sm text-muted-fg mt-1">
-            Control which barangays can log in and submit requirements today
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => load()}
-            disabled={loading}
-          >
-            <RefreshCw
-              className={`w-4 h-4 mr-1 ${loading ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </Button>
-          <Button
-            size="sm"
-            onClick={save}
-            disabled={!dirty || saving}
-            isLoading={saving}
-          >
-            {saved ? (
-              <>
-                <CheckCircle2 className="w-4 h-4 mr-1" />
-                Saved!
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4 mr-1" />
-                Save Changes
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <Card className="p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sage-50 dark:bg-sage-400/10 flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5 text-sage-500" />
-          </div>
-          <div>
-            <p className="text-2xl font-heading font-bold text-foreground">
-              {openCount}
-            </p>
-            <p className="text-xs font-body text-muted-fg">Open Barangays</p>
-          </div>
-        </Card>
-        <Card className="p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-coral-50 dark:bg-coral-500/10 flex items-center justify-center">
-            <ShieldOff className="w-5 h-5 text-coral-400" />
-          </div>
-          <div>
-            <p className="text-2xl font-heading font-bold text-foreground">
-              {closedCount}
-            </p>
-            <p className="text-xs font-body text-muted-fg">Closed</p>
-          </div>
-        </Card>
-        <Card className="p-4 flex items-center gap-3 col-span-2 md:col-span-1">
-          <div className="flex flex-col gap-2 w-full">
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1"
-                onClick={() => toggleAll(true)}
-              >
-                Open All
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1"
-                onClick={() => toggleAll(false)}
-              >
-                Close All
+    return (
+      <div className="space-y-4">
+        <Card padding="md">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-coral-50 dark:bg-coral-500/10 flex items-center justify-center">
+              <ShieldOff className="w-5 h-5 text-coral-500" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="font-heading text-lg font-semibold text-foreground">
+                Barangay Access is Deprecated
+              </h1>
+              <p className="text-sm font-body text-muted-fg">
+                This page is no longer used. School access controls submissions
+                and login windows now.
+              </p>
+              <Button asChild size="sm" className="bg-ocean-400 text-white">
+                <Link href="/admin/school-access">
+                  Go to School Access
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </Link>
               </Button>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={openBulkDateModal}
-            >
-              <CalendarDays className="w-4 h-4 mr-1" />
-              Set Dates for All
-            </Button>
           </div>
         </Card>
       </div>
-
-      {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-16 bg-card-bg border border-card-border rounded-xl animate-pulse"
-            />
-          ))}
-        </div>
-      ) : (
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
-        >
-          {barangays.map((b) => (
-            <motion.div key={b.id} variants={fadeUp}>
-              <div
-                className={`
-                    w-full rounded-xl border-2 transition-all duration-200 overflow-hidden
-                    ${
-                      b.is_open
-                        ? "bg-emerald-50/50 dark:bg-emerald-400/5 border-emerald-400 dark:border-emerald-500/50"
-                        : "bg-red-50/50 dark:bg-red-400/5 border-red-400 dark:border-red-500/50"
-                    }
-                  `}
-              >
-                <button
-                  onClick={() => toggle(b.barangay)}
-                  className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:opacity-80 transition-opacity"
-                >
-                  <div className="flex items-center gap-3">
-                    <MapPin
-                      className={`w-4 h-4 ${
-                        b.is_open ? "text-sage-500" : "text-muted-fg"
-                      }`}
-                    />
-                    <span
-                      className={`text-sm font-body font-medium ${
-                        b.is_open ? "text-foreground" : "text-muted-fg"
-                      }`}
-                    >
-                      {b.barangay}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={b.is_open ? "success" : "neutral"}>
-                      {b.is_open ? "Open" : "Closed"}
-                    </Badge>
-                    {b.is_open ? (
-                      <ToggleRight className="w-6 h-6 text-sage-500" />
-                    ) : (
-                      <ToggleLeft className="w-6 h-6 text-muted-fg" />
-                    )}
-                  </div>
-                </button>
-
-                <div className="border-t border-card-border">
-                  <button
-                    onClick={() => setDateModalBrgy(b.barangay)}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-xs font-body text-muted-fg hover:text-foreground transition-colors"
-                  >
-                    <CalendarDays className="w-3.5 h-3.5" />
-                    {b.is_open
-                      ? b.submission_open_date || b.submission_close_date
-                        ? `${b.submission_open_date ?? "—"} → ${b.submission_close_date ?? "—"}`
-                        : "No expiry — open until closed"
-                      : b.submission_open_date || b.submission_close_date
-                        ? `Scheduled: ${b.submission_open_date ?? "—"} → ${b.submission_close_date ?? "—"}`
-                        : "Select a date to schedule"}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
+    );
+  }
       )}
 
       {dateModalBrgy &&
