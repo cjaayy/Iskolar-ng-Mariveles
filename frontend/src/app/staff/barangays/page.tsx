@@ -83,6 +83,8 @@ interface ApplicationDetail {
   guardian_name: string | null;
   guardian_relation: string | null;
   guardian_contact: string | null;
+  current_school: string | null;
+  year_level: string | null;
   primary_school: string | null;
   primary_address: string | null;
   primary_year_graduated: string | null;
@@ -867,53 +869,15 @@ export default function StaffApplicantsPage() {
 
                       {activeInfoTab === "education" && (
                         <div className="space-y-4">
-                          <SectionTitle>Primary</SectionTitle>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-5 gap-y-3">
-                            <InfoRow
-                              label="School Name"
-                              value={detail.app.primary_school}
-                            />
-                            <InfoRow
-                              label="Address"
-                              value={detail.app.primary_address}
-                            />
-                            <InfoRow
-                              label="Year Graduated"
-                              value={detail.app.primary_year_graduated}
-                            />
-                          </div>
-                          <SectionTitle>Secondary</SectionTitle>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-5 gap-y-3">
-                            <InfoRow
-                              label="School Name"
-                              value={detail.app.secondary_school}
-                            />
-                            <InfoRow
-                              label="Address"
-                              value={detail.app.secondary_address}
-                            />
-                            <InfoRow
-                              label="Year Graduated"
-                              value={detail.app.secondary_year_graduated}
-                            />
-                          </div>
-                          <SectionTitle>Tertiary (Post-Secondary)</SectionTitle>
+                          <SectionTitle>Current School</SectionTitle>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-3">
                             <InfoRow
                               label="School Name"
-                              value={detail.app.tertiary_school}
+                              value={detail.app.current_school}
                             />
                             <InfoRow
-                              label="Program"
-                              value={detail.app.tertiary_program}
-                            />
-                            <InfoRow
-                              label="Address"
-                              value={detail.app.tertiary_address}
-                            />
-                            <InfoRow
-                              label="Year Graduated"
-                              value={detail.app.tertiary_year_graduated}
+                              label="Year Level"
+                              value={detail.app.year_level}
                             />
                           </div>
                         </div>

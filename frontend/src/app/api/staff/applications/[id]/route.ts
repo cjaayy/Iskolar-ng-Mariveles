@@ -84,6 +84,8 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       guardian_name: applicant.guardian_name,
       guardian_relation: applicant.guardian_relation,
       guardian_contact: applicant.guardian_contact,
+      current_school: applicant.current_school,
+      year_level: applicant.year_level,
       primary_school: applicant.primary_school,
       primary_address: applicant.primary_address,
       primary_year_graduated: applicant.primary_year_graduated,
