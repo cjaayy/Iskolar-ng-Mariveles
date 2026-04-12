@@ -286,7 +286,7 @@ export default function StaffValidateListPage() {
                         </div>
                       </div>
 
-                      <div className="md:w-40 shrink-0">
+                      <div className="md:w-36 shrink-0">
                         <span className="inline-flex items-center gap-1 text-xs font-body text-muted-fg">
                           <MapPin className="w-3 h-3" />
                           {app.school || "Unknown"}

@@ -19,9 +19,6 @@ import {
   Download,
   ExternalLink,
   Image as ImageIcon,
-  User,
-  Heart,
-  GraduationCap,
 } from "lucide-react";
 import { Card, Badge, Button, Skeleton } from "@/components/ui";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
@@ -146,9 +143,6 @@ export default function StaffApplicationReviewPage() {
     null,
   );
   const [missingSession, setMissingSession] = useState(false);
-  const [activeInfoTab, setActiveInfoTab] = useState<
-    "personal" | "parents" | "education"
-  >("personal");
 
   const staffId =
     typeof window !== "undefined" ? localStorage.getItem("staffId") : null;
@@ -437,198 +431,6 @@ export default function StaffApplicationReviewPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <motion.div variants={fadeUp} initial="hidden" animate="show">
-        <Card>
-          <h2 className="font-heading text-lg font-semibold text-foreground mb-4">
-            Basic Information
-          </h2>
-
-          <div className="flex gap-1 border-b border-card-border mb-5">
-            {[
-              {
-                key: "personal" as const,
-                label: "Personal Information",
-                icon: User,
-              },
-              { key: "parents" as const, label: "Parents", icon: Heart },
-              {
-                key: "education" as const,
-                label: "Education",
-                icon: GraduationCap,
-              },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveInfoTab(tab.key)}
-                className={`
-                  px-4 py-2.5 text-sm font-body font-medium transition-colors relative flex items-center gap-1.5
-                  ${
-                    activeInfoTab === tab.key
-                      ? "text-foreground"
-                      : "text-ocean-400 hover:text-ocean-500"
-                  }
-                `}
-              >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
-                {activeInfoTab === tab.key && (
-                  <motion.div
-                    layoutId="staff-info-tab-underline"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-ocean-400"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  />
-                )}
-              </button>
-            ))}
-          </div>
-
-          {activeInfoTab === "personal" && (
-            <div className="space-y-6">
-              <SectionTitle>Basic Details</SectionTitle>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
-                <InfoRow
-                  label="Birthdate"
-                  value={formatDate(application.date_of_birth)}
-                />
-                <InfoRow label="Gender" value={application.gender} />
-                <InfoRow label="Blood Type" value={application.blood_type} />
-                <InfoRow
-                  label="Civil Status"
-                  value={application.civil_status}
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
-                <InfoRow label="Maiden Name" value={application.maiden_name} />
-                <InfoRow label="Spouse Name" value={application.spouse_name} />
-                <InfoRow
-                  label="Spouse Occupation"
-                  value={application.spouse_occupation}
-                />
-                <InfoRow label="Religion" value={application.religion} />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
-                <InfoRow
-                  label="Height"
-                  value={
-                    application.height_cm != null
-                      ? `${application.height_cm} cm`
-                      : null
-                  }
-                />
-                <InfoRow
-                  label="Weight"
-                  value={
-                    application.weight_kg != null
-                      ? `${application.weight_kg} kg`
-                      : null
-                  }
-                />
-                <InfoRow label="Birthplace" value={application.birthplace} />
-                <InfoRow
-                  label="Contact Number"
-                  value={application.contact_number}
-                />
-              </div>
-              <SectionTitle>Address</SectionTitle>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-                <InfoRow
-                  label="House/Unit/Street"
-                  value={application.house_street}
-                />
-                <InfoRow label="Town" value={application.town} />
-                <InfoRow label="Barangay" value={application.barangay} />
-              </div>
-            </div>
-          )}
-
-          {activeInfoTab === "parents" && (
-            <div className="space-y-6">
-              <SectionTitle>Father&rsquo;s Information</SectionTitle>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-                <InfoRow label="Full Name" value={application.father_name} />
-                <InfoRow
-                  label="Occupation"
-                  value={application.father_occupation}
-                />
-                <InfoRow
-                  label="Contact Number"
-                  value={application.father_contact}
-                />
-              </div>
-              <SectionTitle>Mother&rsquo;s Information</SectionTitle>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-                <InfoRow label="Full Name" value={application.mother_name} />
-                <InfoRow
-                  label="Occupation"
-                  value={application.mother_occupation}
-                />
-                <InfoRow
-                  label="Contact Number"
-                  value={application.mother_contact}
-                />
-              </div>
-              <SectionTitle>Guardian&rsquo;s Information</SectionTitle>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-                <InfoRow label="Full Name" value={application.guardian_name} />
-                <InfoRow
-                  label="Relationship"
-                  value={application.guardian_relation}
-                />
-                <InfoRow
-                  label="Contact Number"
-                  value={application.guardian_contact}
-                />
-              </div>
-            </div>
-          )}
-
-          {activeInfoTab === "education" && (
-            <div className="space-y-6">
-              <SectionTitle>Primary</SectionTitle>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-                <InfoRow
-                  label="School Name"
-                  value={application.primary_school}
-                />
-                <InfoRow label="Address" value={application.primary_address} />
-                <InfoRow
-                  label="Year Graduated"
-                  value={application.primary_year_graduated}
-                />
-              </div>
-              <SectionTitle>Secondary</SectionTitle>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-                <InfoRow
-                  label="School Name"
-                  value={application.secondary_school}
-                />
-                <InfoRow
-                  label="Address"
-                  value={application.secondary_address}
-                />
-                <InfoRow
-                  label="Year Graduated"
-                  value={application.secondary_year_graduated}
-                />
-              </div>
-              <SectionTitle>Tertiary (Post-Secondary)</SectionTitle>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-                <InfoRow
-                  label="School Name"
-                  value={application.tertiary_school}
-                />
-                <InfoRow label="Program" value={application.tertiary_program} />
-                <InfoRow label="Address" value={application.tertiary_address} />
-                <InfoRow
-                  label="Year Graduated"
-                  value={application.tertiary_year_graduated}
-                />
-              </div>
-            </div>
-          )}
-        </Card>
-      </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
@@ -1070,39 +872,5 @@ export default function StaffApplicationReviewPage() {
         )}
       </AnimatePresence>
     </motion.div>
-  );
-}
-
-function formatDate(d: string | null | undefined): string {
-  if (!d) return "\u2014";
-  return new Date(d).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h3 className="font-heading text-base font-semibold text-foreground border-b border-card-border pb-2">
-      {children}
-    </h3>
-  );
-}
-
-function InfoRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | null | undefined;
-}) {
-  return (
-    <div>
-      <p className="text-xs font-body text-muted-fg">{label}</p>
-      <p className="text-sm font-body font-medium text-foreground mt-0.5">
-        {value || "\u2014"}
-      </p>
-    </div>
   );
 }
