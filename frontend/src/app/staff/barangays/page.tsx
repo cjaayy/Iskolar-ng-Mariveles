@@ -118,6 +118,7 @@ export default function StaffBarangaysPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [barangayFilter, setBarangayFilter] = useState("");
+  const [missingSession, setMissingSession] = useState(false);
 
   const [modalApplicant, setModalApplicant] = useState<ApplicantRow | null>(
     null,
@@ -134,7 +135,11 @@ export default function StaffBarangaysPage() {
   const assignedSchool = user?.assignedSchool ?? null;
 
   const load = useCallback(async () => {
-    if (!staffId) return;
+    if (!staffId) {
+      setMissingSession(true);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -216,6 +221,31 @@ export default function StaffBarangaysPage() {
   const isLoadingDetail = modalApplicant
     ? detailLoading === modalApplicant.application_id
     : false;
+
+  if (missingSession) {
+    return (
+      <Card padding="lg">
+        <div className="text-center py-10">
+          <AlertCircle className="w-12 h-12 text-muted-fg mx-auto mb-3 opacity-40" />
+          <h3 className="font-heading text-lg font-semibold text-foreground mb-1">
+            Session Required
+          </h3>
+          <p className="font-body text-sm text-muted-fg mb-4">
+            Please sign in again to load staff applicants.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              window.location.href = "/";
+            }}
+          >
+            Go to Login
+          </Button>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

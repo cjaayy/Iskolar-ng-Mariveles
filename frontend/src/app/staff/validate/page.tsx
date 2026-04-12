@@ -79,6 +79,7 @@ export default function StaffValidateListPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [missingSession, setMissingSession] = useState(false);
 
   const staffId =
     typeof window !== "undefined" ? localStorage.getItem("staffId") : null;
@@ -87,7 +88,12 @@ export default function StaffValidateListPage() {
   const assignedSchool = user?.assignedSchool ?? null;
 
   const fetchData = useCallback(async () => {
-    if (!staffId) return;
+    if (!staffId) {
+      setMissingSession(true);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     try {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
@@ -112,6 +118,31 @@ export default function StaffValidateListPage() {
     const timeout = setTimeout(fetchData, 300);
     return () => clearTimeout(timeout);
   }, [fetchData]);
+
+  if (missingSession) {
+    return (
+      <Card padding="lg">
+        <div className="text-center py-10">
+          <AlertCircle className="w-12 h-12 text-muted-fg mx-auto mb-3 opacity-40" />
+          <h3 className="font-heading text-lg font-semibold text-foreground mb-1">
+            Session Required
+          </h3>
+          <p className="font-body text-sm text-muted-fg mb-4">
+            Please sign in again to load staff validation data.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              window.location.href = "/";
+            }}
+          >
+            Go to Login
+          </Button>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <motion.div

@@ -145,6 +145,7 @@ export default function StaffApplicationReviewPage() {
   const [previewDoc, setPreviewDoc] = useState<RequirementSubmission | null>(
     null,
   );
+  const [missingSession, setMissingSession] = useState(false);
   const [activeInfoTab, setActiveInfoTab] = useState<
     "personal" | "parents" | "education"
   >("personal");
@@ -153,7 +154,11 @@ export default function StaffApplicationReviewPage() {
     typeof window !== "undefined" ? localStorage.getItem("staffId") : null;
 
   const fetchData = useCallback(async () => {
-    if (!staffId || !applicationId) return;
+    if (!staffId || !applicationId) {
+      if (!staffId) setMissingSession(true);
+      setLoading(false);
+      return;
+    }
     try {
       const res = await fetch(`/api/staff/applications/${applicationId}`, {
         headers: { "x-validator-id": staffId },
@@ -240,6 +245,30 @@ export default function StaffApplicationReviewPage() {
       setBulkLoading(false);
     }
   };
+
+  if (missingSession) {
+    return (
+      <Card padding="lg">
+        <div className="text-center py-12">
+          <AlertCircle className="w-12 h-12 text-muted-fg mx-auto mb-3 opacity-40" />
+          <h3 className="font-heading text-lg font-semibold text-foreground mb-1">
+            Session Required
+          </h3>
+          <p className="font-body text-sm text-muted-fg mb-4">
+            Please sign in again to access validation details.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => {
+              window.location.href = "/";
+            }}
+          >
+            Go to Login
+          </Button>
+        </div>
+      </Card>
+    );
+  }
 
   if (loading) {
     return (
