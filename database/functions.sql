@@ -77,8 +77,8 @@ END;
 $$;
 
 CREATE OR REPLACE FUNCTION bulk_validate_requirements(
-  p_application_id INT,
-  p_validator_id   INT,
+  p_application_id public.applications.id%type,
+  p_validator_id   public.users.id%type,
   p_action         TEXT,
   p_notes          TEXT DEFAULT NULL
 )
@@ -125,8 +125,8 @@ END;
 $$;
 
 CREATE OR REPLACE FUNCTION validate_single_requirement(
-  p_submission_id  INT,
-  p_validator_id   INT,
+  p_submission_id  public.requirement_submissions.id%type,
+  p_validator_id   public.users.id%type,
   p_action         TEXT,
   p_notes          TEXT DEFAULT NULL
 )
@@ -135,7 +135,7 @@ LANGUAGE plpgsql
 SET search_path = public
 AS $$
 DECLARE
-  v_app_id     INT;
+  v_app_id     public.requirement_submissions.application_id%type;
   v_total      INT;
   v_approved   INT;
 BEGIN
