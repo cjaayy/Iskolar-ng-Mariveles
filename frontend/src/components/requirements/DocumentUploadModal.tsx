@@ -187,15 +187,13 @@ export function DocumentUploadModal({
         const uploadData = await uploadRes.json();
 
         const requirementsUrl = requirementsEndpoint || "/api/me/requirements";
-        const headers = requirementsEndpoint
-          ? {
-              "Content-Type": "application/json",
-              ...(requirementsHeaders || {}),
-            }
-          : {
-              "Content-Type": "application/json",
-              "x-applicant-id": String(applicantId),
-            };
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+          ...(requirementsHeaders || {}),
+        };
+        if (!requirementsEndpoint) {
+          headers["x-applicant-id"] = String(applicantId);
+        }
 
         const res = await fetch(requirementsUrl, {
           method: "POST",
