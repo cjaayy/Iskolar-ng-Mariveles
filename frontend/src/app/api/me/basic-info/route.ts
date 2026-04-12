@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
+import { coerceId } from "@/lib/adminId";
 
 const BASIC_INFO_COLUMNS = [
   "date_of_birth",
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest) {
   if (!applicantIdHeader) {
     return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
   }
-  const applicantId = Number(applicantIdHeader);
+  const applicantId = coerceId(applicantIdHeader);
 
   try {
     const { data: row, error } = await supabase
@@ -69,7 +70,7 @@ export async function PUT(req: NextRequest) {
   if (!applicantIdHeader) {
     return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
   }
-  const applicantId = Number(applicantIdHeader);
+  const applicantId = coerceId(applicantIdHeader);
 
   let body: Record<string, unknown>;
   try {

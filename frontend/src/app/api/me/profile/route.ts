@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { sanitizeText } from "@db/eligibility";
+import { coerceId } from "@/lib/adminId";
 
 interface ProfileBody {
   firstName?: string;
@@ -14,7 +15,7 @@ export async function PUT(req: NextRequest) {
   if (!applicantIdHeader) {
     return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
   }
-  const applicantId = Number(applicantIdHeader);
+  const applicantId = coerceId(applicantIdHeader);
 
   let body: ProfileBody;
   try {

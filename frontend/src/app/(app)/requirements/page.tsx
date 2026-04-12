@@ -212,7 +212,7 @@ export default function RequirementsPage() {
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-4 border-ocean-400 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm font-body text-muted-fg">
-            Loading requirements\u2026
+            Loading requirements
           </p>
         </div>
       </div>

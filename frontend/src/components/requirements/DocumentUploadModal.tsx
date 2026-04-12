@@ -28,7 +28,7 @@ interface UploadModalProps {
   onClose: () => void;
   requirementName?: string;
   requirementKey?: string;
-  applicantId?: number;
+  applicantId?: string | number;
   onSuccess?: () => void;
 }
 

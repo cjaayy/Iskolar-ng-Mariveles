@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
 import { checkEligibility } from "@db/eligibility";
+import { coerceId } from "@/lib/adminId";
 import type {
   ApplicationWithDetails,
   ApplicantRow,
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
     if (!applicantIdHeader) {
       return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
     }
-    const applicantId = Number(applicantIdHeader);
+    const applicantId = coerceId(applicantIdHeader);
 
     const { data: applicant, error: applicantError } = await supabase
       .from("applicants")

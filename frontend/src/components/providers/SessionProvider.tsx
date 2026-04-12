@@ -7,18 +7,18 @@ import React, {
   useState,
   useCallback,
 } from "react";
+import { coerceId } from "@/lib/adminId";
 
-export function getApplicantId(): number | null {
+export function getApplicantId(): string | number | null {
   if (typeof window === "undefined") return null;
   const raw = localStorage.getItem("applicantId");
   if (!raw) return null;
-  const n = Number(raw);
-  return Number.isNaN(n) ? null : n;
+  return coerceId(raw);
 }
 
 export interface SessionUser {
-  userId: number;
-  applicantId: number;
+  userId: string | number;
+  applicantId: string | number;
   email: string;
   fullName: string;
   firstName: string;

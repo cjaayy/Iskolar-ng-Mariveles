@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
+import { coerceId } from "@/lib/adminId";
 
 interface MeRow {
-  user_id: number;
+  user_id: string | number;
   email: string;
   full_name: string;
   role: string;
-  applicant_id: number;
+  applicant_id: string | number;
   contact_number: string | null;
   address: string | null;
 }
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
   if (!applicantIdHeader) {
     return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
   }
-  const applicantId = Number(applicantIdHeader);
+  const applicantId = coerceId(applicantIdHeader);
 
   try {
     const { data: applicantRow, error: applicantError } = await supabase
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest) {
     }
 
     const user = applicantRow.users as unknown as {
-      id: number;
+      id: string | number;
       email: string;
       full_name: string;
       role: string;
