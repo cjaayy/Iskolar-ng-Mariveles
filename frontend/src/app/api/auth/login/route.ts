@@ -6,7 +6,7 @@ interface UserRow {
   email: string;
   password_hash: string;
   full_name: string;
-  role: "admin" | "validator" | "applicant";
+  role: "admin" | "validator" | "applicant" | "encoder";
   is_active: boolean;
 }
 

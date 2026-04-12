@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
   email         VARCHAR(255)      NOT NULL UNIQUE,
   password_hash VARCHAR(255)      NOT NULL,
   full_name     VARCHAR(150)      NOT NULL,
-  role          ENUM('admin','validator','applicant') NOT NULL DEFAULT 'applicant',
+  role          ENUM('admin','validator','applicant','encoder') NOT NULL DEFAULT 'applicant',
   is_active     TINYINT(1)        NOT NULL DEFAULT 1,
   created_at    TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

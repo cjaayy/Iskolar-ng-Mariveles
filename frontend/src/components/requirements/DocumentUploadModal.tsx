@@ -29,6 +29,8 @@ interface UploadModalProps {
   requirementName?: string;
   requirementKey?: string;
   applicantId?: string | number;
+  requirementsEndpoint?: string;
+  requirementsHeaders?: Record<string, string>;
   onSuccess?: () => void;
 }
 
@@ -38,6 +40,8 @@ export function DocumentUploadModal({
   requirementName,
   requirementKey,
   applicantId,
+  requirementsEndpoint,
+  requirementsHeaders,
   onSuccess,
 }: UploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
@@ -182,12 +186,20 @@ export function DocumentUploadModal({
 
         const uploadData = await uploadRes.json();
 
-        const res = await fetch("/api/me/requirements", {
+        const requirementsUrl = requirementsEndpoint || "/api/me/requirements";
+        const headers = requirementsEndpoint
+          ? {
+              "Content-Type": "application/json",
+              ...(requirementsHeaders || {}),
+            }
+          : {
+              "Content-Type": "application/json",
+              "x-applicant-id": String(applicantId),
+            };
+
+        const res = await fetch(requirementsUrl, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-applicant-id": String(applicantId),
-          },
+          headers,
           body: JSON.stringify({
             requirementKey,
             fileName: file.name,

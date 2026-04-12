@@ -48,6 +48,7 @@ const adminToolItems = [
     label: "Add & Manage Validators",
     icon: ShieldCheck,
   },
+  { href: "/admin/encoders", label: "Encoders", icon: Users },
   { href: "/admin/invites", label: "Registration Links", icon: LinkIcon },
   { href: "/admin/school-access", label: "School Access", icon: School },
 ];

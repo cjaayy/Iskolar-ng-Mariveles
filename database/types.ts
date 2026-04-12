@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "validator" | "applicant";
+export type UserRole = "admin" | "validator" | "applicant" | "encoder";
 
 export type ApplicationStatus =
   | "draft"

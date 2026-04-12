@@ -1,4 +1,4 @@
-CREATE TYPE user_role AS ENUM ('admin', 'validator', 'applicant');
+CREATE TYPE user_role AS ENUM ('admin', 'validator', 'applicant', 'encoder');
 
 CREATE TYPE application_status AS ENUM (
   'draft', 'submitted', 'under_review', 'approved', 'rejected', 'withdrawn'

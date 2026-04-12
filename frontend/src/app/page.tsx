@@ -51,6 +51,9 @@ export default function LoginPage() {
         } else if (data.role === "validator") {
           localStorage.setItem("staffId", String(data.userId));
           window.location.href = "/staff/dashboard";
+        } else if (data.role === "encoder") {
+          localStorage.setItem("encoderId", String(data.userId));
+          window.location.href = "/encoder/students";
         } else {
           if (data.applicantId) {
             localStorage.setItem("applicantId", String(data.applicantId));
