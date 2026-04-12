@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ShieldOff } from "lucide-react";
 import { Button, Card } from "@/components/ui";
@@ -28,11 +27,14 @@ export default function BarangayAccessPage() {
               This page is no longer used. School access controls submissions
               and login windows now.
             </p>
-            <Button asChild size="sm" className="bg-ocean-400 text-white">
-              <Link href="/admin/school-access">
-                Go to School Access
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Link>
+            <Button
+              size="sm"
+              className="bg-ocean-400 text-white"
+              rightIcon={<ArrowRight className="w-4 h-4" />}
+              onClick={() => router.push("/admin/school-access")}
+              type="button"
+            >
+              Go to School Access
             </Button>
           </div>
         </div>
