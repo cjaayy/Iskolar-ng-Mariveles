@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
+import { coerceId } from "@/lib/adminId";
 import crypto from "crypto";
 
 type EducationLevel = "elementary" | "high_school" | "senior_high";
@@ -8,7 +9,7 @@ async function verifyAdmin(adminId: string): Promise<boolean> {
   const { data, error } = await supabase
     .from("users")
     .select("role")
-    .eq("id", Number(adminId))
+    .eq("id", coerceId(adminId))
     .eq("role", "admin")
     .eq("is_active", true)
     .limit(1)
@@ -127,7 +128,7 @@ export async function POST(req: NextRequest) {
         description: description || null,
         max_uses: maxUses ?? 0,
         expires_at: expiresAt || null,
-        created_by: Number(adminId),
+        created_by: coerceId(adminId),
       })
       .select("id")
       .single();

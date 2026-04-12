@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
+import { coerceId } from "@/lib/adminId";
 import { REQUIREMENT_CONFIGS } from "@/config/requirements";
 
-async function verifyAdmin(adminId: string): Promise<{ id: number } | null> {
+async function verifyAdmin(
+  adminId: string,
+): Promise<{ id: string | number } | null> {
   const { data, error } = await supabase
     .from("users")
     .select("id, role")
-    .eq("id", Number(adminId))
+    .eq("id", coerceId(adminId))
     .eq("role", "admin")
     .eq("is_active", true)
     .limit(1)

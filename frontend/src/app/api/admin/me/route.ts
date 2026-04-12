@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
+import { coerceId } from "@/lib/adminId";
 
 export async function GET(req: NextRequest) {
   const adminId = req.headers.get("x-admin-id");
@@ -11,7 +12,7 @@ export async function GET(req: NextRequest) {
     const { data: user, error } = await supabase
       .from("users")
       .select("id, email, full_name, role")
-      .eq("id", Number(adminId))
+      .eq("id", coerceId(adminId))
       .eq("role", "admin")
       .eq("is_active", true)
       .limit(1)

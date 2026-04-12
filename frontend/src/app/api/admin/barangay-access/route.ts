@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@db/connection";
+import { coerceId } from "@/lib/adminId";
 
 async function verifyAdmin(adminId: string): Promise<boolean> {
   const { data, error } = await supabase
     .from("users")
     .select("role")
-    .eq("id", Number(adminId))
+    .eq("id", coerceId(adminId))
     .eq("role", "admin")
     .eq("is_active", true)
     .limit(1)
@@ -72,7 +73,7 @@ export async function PATCH(req: NextRequest) {
 
     const { error: closeAllError } = await supabase
       .from("barangay_access")
-      .update({ is_open: false, updated_by: Number(adminId) })
+      .update({ is_open: false, updated_by: coerceId(adminId) })
       .neq("id", 0);
 
     if (closeAllError) throw closeAllError;
@@ -81,7 +82,7 @@ export async function PATCH(req: NextRequest) {
       for (const brgy of openBarangays) {
         const { error } = await supabase
           .from("barangay_access")
-          .update({ is_open: true, updated_by: Number(adminId) })
+          .update({ is_open: true, updated_by: coerceId(adminId) })
           .eq("barangay", brgy);
         if (error) throw error;
       }
@@ -94,7 +95,7 @@ export async function PATCH(req: NextRequest) {
           .update({
             submission_open_date: dates.open || null,
             submission_close_date: dates.close || null,
-            updated_by: Number(adminId),
+            updated_by: coerceId(adminId),
           })
           .eq("barangay", brgy);
         if (error) throw error;
