@@ -91,6 +91,8 @@ interface RequirementSubmission {
 interface ValidationHistory {
   id: number;
   action: string;
+  scope?: string | null;
+  count?: number | null;
   notes: string | null;
   created_at: string;
   validator_name: string;
@@ -138,6 +140,28 @@ const fadeUp = {
     transition: { duration: 0.35, ease: "easeOut" as const },
   },
 };
+
+function getHistoryActionLabel(
+  action: string,
+  scope?: string | null,
+  count?: number | null,
+) {
+  const verb =
+    action === "approved"
+      ? "approved"
+      : action === "rejected"
+        ? "rejected"
+        : action;
+
+  if (scope === "bulk") {
+    const countText = typeof count === "number" ? ` (${count})` : "";
+    return `${verb} all pending documents${countText}`;
+  }
+  if (scope === "single") {
+    return `${verb} a document`;
+  }
+  return `${verb} the application`;
+}
 
 export default function AdminApplicationDetailPage() {
   const params = useParams();
@@ -718,12 +742,7 @@ export default function AdminApplicationDetailPage() {
                       <p className="text-xs font-body text-foreground">
                         <strong>{h.validator_name}</strong>{" "}
                         <span className="text-muted-fg">
-                          {h.action === "approved"
-                            ? "approved"
-                            : h.action === "rejected"
-                              ? "rejected"
-                              : h.action}{" "}
-                          the application
+                          {getHistoryActionLabel(h.action, h.scope, h.count)}
                         </span>
                       </p>
                       {h.notes && (

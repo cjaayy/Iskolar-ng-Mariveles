@@ -114,8 +114,14 @@ BEGIN
          remarks = v_remarks
    WHERE id = p_application_id;
 
-  INSERT INTO validations (application_id, validator_id, action, notes)
-  VALUES (p_application_id, p_validator_id, p_action::validation_action, p_notes);
+  INSERT INTO validations (application_id, validator_id, action, checklist, notes)
+  VALUES (
+    p_application_id,
+    p_validator_id,
+    p_action::validation_action,
+    jsonb_build_object('scope', 'bulk', 'count', v_affected),
+    p_notes
+  );
 
   RETURN json_build_object(
     'affected_rows', v_affected,
@@ -169,6 +175,22 @@ BEGIN
        SET status = 'under_review'
      WHERE id = v_app_id AND status = 'submitted';
   END IF;
+
+  INSERT INTO validations (application_id, validator_id, action, checklist, notes)
+  VALUES (
+    v_app_id,
+    p_validator_id,
+    p_action::validation_action,
+    jsonb_build_object(
+      'scope',
+      'single',
+      'submission_id',
+      p_submission_id,
+      'count',
+      1
+    ),
+    p_notes
+  );
 
   RETURN json_build_object(
     'success', true,

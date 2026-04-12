@@ -165,10 +165,16 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
 
     const historyRows = (history ?? []).map((h: Record<string, unknown>) => {
       const user = h.users as { full_name: string };
+      const checklist = h.checklist as {
+        scope?: string;
+        count?: number;
+      } | null;
       return {
         ...h,
         users: undefined,
         validator_name: user.full_name,
+        scope: checklist?.scope ?? null,
+        count: typeof checklist?.count === "number" ? checklist?.count : null,
       };
     });
 

@@ -239,20 +239,52 @@ export async function POST(req: NextRequest) {
       .eq("applicant_id", applicantId)
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (applicationError || !application) {
-      return NextResponse.json(
-        { error: "No application found for this applicant" },
-        { status: 404 },
-      );
+    if (applicationError) {
+      throw applicationError;
+    }
+
+    let applicationId = application?.id ?? null;
+
+    if (!applicationId) {
+      const { data: applicant, error: applicantError } = await supabase
+        .from("applicants")
+        .select("id")
+        .eq("id", applicantId)
+        .limit(1)
+        .maybeSingle();
+
+      if (applicantError || !applicant) {
+        return NextResponse.json(
+          { error: "Applicant not found" },
+          { status: 404 },
+        );
+      }
+
+      const { data: inserted, error: insertError } = await supabase
+        .from("applications")
+        .insert({
+          applicant_id: applicantId,
+          status: "submitted",
+          income_at_submission: 0,
+          submitted_at: new Date().toISOString(),
+        })
+        .select("id")
+        .single();
+
+      if (insertError || !inserted) {
+        throw insertError;
+      }
+
+      applicationId = inserted.id;
     }
 
     const { error: upsertError } = await supabase
       .from("requirement_submissions")
       .upsert(
         {
-          application_id: application.id,
+          application_id: applicationId,
           requirement_key: requirementKey,
           status: "pending",
           progress: 100,
@@ -274,7 +306,7 @@ export async function POST(req: NextRequest) {
     const { error: statusError } = await supabase
       .from("applications")
       .update({ status: "under_review" })
-      .eq("id", application.id)
+      .eq("id", applicationId)
       .in("status", ["approved", "rejected"]);
 
     if (statusError) {
