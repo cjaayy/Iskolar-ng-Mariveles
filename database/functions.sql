@@ -18,9 +18,9 @@ DECLARE
   v_max_uses    INT;
   v_times_used  INT;
   v_expires_at  TIMESTAMPTZ;
-  v_user_id     INT;
-  v_applicant_id INT;
-  v_existing    INT;
+  v_user_id     public.users.id%type;
+  v_applicant_id public.applicants.id%type;
+  v_existing    public.users.id%type;
 BEGIN
   SELECT id, max_uses, times_used, expires_at
     INTO v_link_id, v_max_uses, v_times_used, v_expires_at
