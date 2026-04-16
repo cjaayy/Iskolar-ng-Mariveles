@@ -3,6 +3,7 @@
 # dependencies
 /node_modules
 frontend/node_modules
+node_modules
 /.pnp
 .pnp.js
 .yarn/install-state.gz
@@ -11,6 +12,8 @@ frontend/node_modules
 /coverage
 
 # next.js
+.next/
+out/
 frontend/.next/
 frontend/out/
 
@@ -23,6 +26,7 @@ frontend/public/uploads/*
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
 
 # editor
@@ -33,7 +37,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
 *.log
+
+# caches
+.eslintcache
+.stylelintcache
 
 # local env files
 .env
