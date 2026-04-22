@@ -41,6 +41,11 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
           contact_number,
           address,
           barangay,
+          current_school,
+          year_level,
+          primary_school,
+          secondary_school,
+          tertiary_school,
           users!inner(full_name, email)
         )
       `,
@@ -62,6 +67,11 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       contact_number: string | null;
       address: string | null;
       barangay: string | null;
+      current_school: string | null;
+      year_level: string | null;
+      primary_school: string | null;
+      secondary_school: string | null;
+      tertiary_school: string | null;
       users: { full_name: string; email: string };
     };
 
@@ -73,6 +83,11 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       contact_number: applicant.contact_number,
       address: applicant.address,
       barangay: applicant.barangay,
+      current_school: applicant.current_school,
+      year_level: applicant.year_level,
+      primary_school: applicant.primary_school,
+      secondary_school: applicant.secondary_school,
+      tertiary_school: applicant.tertiary_school,
     };
 
     const { data: submissions, error: subError } = await supabase

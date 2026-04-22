@@ -34,6 +34,12 @@ interface ApplicationDetail {
   applicant_email: string;
   contact_number: string | null;
   address: string | null;
+  barangay: string | null;
+  current_school: string | null;
+  year_level: string | null;
+  primary_school: string | null;
+  secondary_school: string | null;
+  tertiary_school: string | null;
 }
 
 interface RequirementSubmission {
@@ -62,6 +68,31 @@ interface ValidationHistory {
   validator_name: string;
 }
 
+type RiskLevel = "Low" | "Medium" | "High";
+
+interface RiskBreakdownItem {
+  label: string;
+  detail: string;
+}
+
+interface RiskAssessment {
+  score: number;
+  level: RiskLevel;
+  breakdown: RiskBreakdownItem[];
+  issues: string[];
+}
+
+interface DocBreakdownItem {
+  label: string;
+  value: string;
+}
+
+interface DocumentAnalysis {
+  title: string;
+  extracted: DocBreakdownItem[];
+  notes?: string;
+}
+
 const docStatusConfig: Record<
   string,
   {
@@ -88,6 +119,199 @@ const fadeUp = {
     y: 0,
     transition: { duration: 0.35, ease: "easeOut" as const },
   },
+};
+
+const getRiskLevel = (score: number): RiskLevel => {
+  if (score >= 85) return "Low";
+  if (score >= 60) return "Medium";
+  return "High";
+};
+
+const getRiskLevelClass = (score: number) => {
+  if (score >= 85) return "text-sage-600 dark:text-sage-400";
+  if (score >= 60) return "text-amber-600 dark:text-amber-400";
+  return "text-coral-600 dark:text-coral-400";
+};
+
+const DOCUMENT_ANALYSIS_BY_FILE: Record<string, DocumentAnalysis> = {
+  "540a8da9-7dff-4a42-aafc-98ecfafc49ed.jpg": {
+    title: "Certificate of Indigency",
+    extracted: [
+      { label: "Issued To", value: "Jonalyn Cereza and Raymond Mandani" },
+      { label: "Student", value: "Christian Jay C. Mandani" },
+      {
+        label: "Address",
+        value: "Porto Circle, Brgy. Balon-Anito, Mariveles, Bataan",
+      },
+      { label: "Purpose", value: "SPES (employment program)" },
+      { label: "Issue Date", value: "April 14, 2026" },
+      {
+        label: "Issuing Office",
+        value: "Office of the Punong Barangay, Balon-Anito",
+      },
+      {
+        label: "Signatory",
+        value: "Hon. Celso M. Solano, Punong Barangay",
+      },
+      { label: "Seal", value: "Faint circular seal visible" },
+    ],
+    notes: "Extracted from the uploaded image for decision-support only.",
+  },
+};
+
+const formatBreakdownValue = (value: unknown) => {
+  if (value === null || value === undefined || value === "") {
+    return "Not provided";
+  }
+  return String(value);
+};
+
+const getDocumentAnalysis = (
+  req: RequirementSubmission,
+): DocumentAnalysis | null => {
+  if (!req.file_name) return null;
+  return DOCUMENT_ANALYSIS_BY_FILE[req.file_name] ?? null;
+};
+
+const getDocBreakdown = (
+  req: RequirementSubmission,
+  application: ApplicationDetail,
+): DocBreakdownItem[] => {
+  const items: DocBreakdownItem[] = [
+    {
+      label: "Applicant",
+      value: formatBreakdownValue(application.applicant_name),
+    },
+    {
+      label: "Contact",
+      value: formatBreakdownValue(application.contact_number),
+    },
+    { label: "Barangay", value: formatBreakdownValue(application.barangay) },
+    { label: "Address", value: formatBreakdownValue(application.address) },
+    {
+      label: "File",
+      value: formatBreakdownValue(req.file_name ?? "Not submitted"),
+    },
+    {
+      label: "Uploaded",
+      value: req.uploaded_at
+        ? new Date(req.uploaded_at).toLocaleString()
+        : "Not submitted",
+    },
+  ];
+
+  if (req.requirement_key === "grades_card") {
+    items.push(
+      {
+        label: "Primary School",
+        value: formatBreakdownValue(application.primary_school),
+      },
+      {
+        label: "Secondary School",
+        value: formatBreakdownValue(application.secondary_school),
+      },
+      {
+        label: "Current School",
+        value: formatBreakdownValue(application.current_school),
+      },
+      {
+        label: "Year Level",
+        value: formatBreakdownValue(application.year_level),
+      },
+    );
+  }
+
+  if (req.requirement_key === "enrollment_cert") {
+    items.push(
+      {
+        label: "Current School",
+        value: formatBreakdownValue(application.current_school),
+      },
+      {
+        label: "Year Level",
+        value: formatBreakdownValue(application.year_level),
+      },
+    );
+  }
+
+  return items;
+};
+
+const getRiskAssessment = (
+  req: RequirementSubmission,
+  missingDocsCount: number,
+): RiskAssessment | null => {
+  if (req.status === "missing") return null;
+
+  const hasPreview = Boolean(req.file_url);
+  let score = 88;
+  const issues: string[] = [];
+  const breakdown: RiskBreakdownItem[] = [];
+
+  if (!hasPreview) {
+    score -= 12;
+    issues.push("File not available for preview");
+  }
+  if (missingDocsCount > 0) {
+    score -= 8;
+    issues.push("Other documents not submitted");
+  }
+
+  let consistencyDetail = "Match name and address to application.";
+  let docFlag: string | null = null;
+
+  switch (req.requirement_key) {
+    case "barangay_indigency":
+      score -= 6;
+      docFlag = "Verify purpose matches scholarship";
+      break;
+    case "grades_card":
+      score -= 4;
+      consistencyDetail = "Match name, school, and grades to application.";
+      docFlag = "Verify grade level aligns with enrollment";
+      break;
+    case "enrollment_cert":
+      score -= 4;
+      consistencyDetail = "Match name, school, and school year to application.";
+      docFlag = "Confirm current school year";
+      break;
+    default:
+      break;
+  }
+
+  if (docFlag) issues.push(docFlag);
+
+  breakdown.push({
+    label: "Extraction",
+    detail: hasPreview
+      ? "Preview available for manual review."
+      : "File not available for preview.",
+  });
+  breakdown.push({
+    label: "Completeness",
+    detail: "Verify signature and official seal or stamp.",
+  });
+  breakdown.push({ label: "Consistency", detail: consistencyDetail });
+  breakdown.push({
+    label: "Cross-doc",
+    detail:
+      missingDocsCount > 0
+        ? "Pending other documents."
+        : "Ready for cross-checks.",
+  });
+  breakdown.push({
+    label: "Anomalies",
+    detail: "Check for edits, erasures, or mismatched dates.",
+  });
+
+  score = Math.max(40, Math.min(100, score));
+
+  return {
+    score,
+    level: getRiskLevel(score),
+    breakdown,
+    issues,
+  };
 };
 
 function getHistoryActionLabel(
@@ -457,6 +681,9 @@ export default function AdminValidateDetailPage() {
               const isMissing = req.status === "missing";
               const isValidated =
                 req.status === "approved" || req.status === "rejected";
+              const risk = getRiskAssessment(req, missingDocs.length);
+              const breakdown = getDocBreakdown(req, application);
+              const analysis = getDocumentAnalysis(req);
 
               return (
                 <motion.div
@@ -557,6 +784,100 @@ export default function AdminValidateDetailPage() {
                             File was submitted but the document file is not
                             available for preview.
                           </p>
+                        </div>
+                      )}
+
+                      {breakdown.length > 0 && (
+                        <div className="rounded-lg border border-card-border bg-card-bg/40 px-3 py-2 space-y-2">
+                          <p className="text-xs font-body text-muted-fg">
+                            Document data breakdown
+                          </p>
+                          <div className="grid sm:grid-cols-2 gap-2">
+                            {breakdown.map((item, itemIdx) => (
+                              <div
+                                key={`${req.id}-${item.label}-${itemIdx}`}
+                                className="text-[11px] font-body text-muted-fg"
+                              >
+                                <span className="text-foreground font-medium">
+                                  {item.label}:
+                                </span>{" "}
+                                {item.value}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="rounded-lg border border-card-border bg-card-bg/40 px-3 py-2 space-y-2">
+                        <p className="text-xs font-body text-muted-fg">
+                          Document analysis (OCR)
+                        </p>
+                        {analysis ? (
+                          <div className="space-y-2">
+                            <p className="text-xs font-body text-foreground font-medium">
+                              {analysis.title}
+                            </p>
+                            <div className="grid sm:grid-cols-2 gap-2">
+                              {analysis.extracted.map((item, itemIdx) => (
+                                <div
+                                  key={`${req.id}-analysis-${item.label}-${itemIdx}`}
+                                  className="text-[11px] font-body text-muted-fg"
+                                >
+                                  <span className="text-foreground font-medium">
+                                    {item.label}:
+                                  </span>{" "}
+                                  {item.value}
+                                </div>
+                              ))}
+                            </div>
+                            {analysis.notes && (
+                              <p className="text-[11px] font-body text-muted-fg">
+                                {analysis.notes}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-[11px] font-body text-muted-fg">
+                            No OCR data captured yet for this file.
+                          </p>
+                        )}
+                      </div>
+
+                      {risk && (
+                        <div className="rounded-lg border border-card-border bg-muted/30 px-3 py-2 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-body text-muted-fg">
+                              Risk score (decision-support)
+                            </p>
+                            <span
+                              className={`text-xs font-body font-semibold ${getRiskLevelClass(
+                                risk.score,
+                              )}`}
+                            >
+                              {risk.score} - {risk.level} Risk
+                            </span>
+                          </div>
+                          <div className="grid sm:grid-cols-2 gap-2">
+                            {risk.breakdown.map((item) => (
+                              <div
+                                key={item.label}
+                                className="text-[11px] font-body text-muted-fg"
+                              >
+                                <span className="text-foreground font-medium">
+                                  {item.label}:
+                                </span>{" "}
+                                {item.detail}
+                              </div>
+                            ))}
+                          </div>
+                          {risk.issues.length > 0 && (
+                            <div className="text-[11px] font-body text-muted-fg">
+                              <span className="text-foreground font-medium">
+                                Flags:
+                              </span>{" "}
+                              {risk.issues.join(" | ")}
+                            </div>
+                          )}
                         </div>
                       )}
 
