@@ -57,6 +57,8 @@ interface ApplicationDetail {
   guardian_name: string | null;
   guardian_relation: string | null;
   guardian_contact: string | null;
+  current_school: string | null;
+  year_level: string | null;
   primary_school: string | null;
   primary_address: string | null;
   primary_year_graduated: string | null;
